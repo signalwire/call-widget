@@ -306,13 +306,12 @@ const CONFIG = {
                       <button id="hangup-button" class="main-button hangup-button">
                         <i class="fas fa-phone-slash"></i>
                       </button>
+                    </div>
+                    <div class="right-controls">
                       <button id="chat-button" class="right-button chat-button">
                         <i class="fas fa-comment-alt"></i>
                         <span class="notification-badge hidden">0</span>
                       </button>
-                    </div>
-                    <div class="right-controls">
-                      <!-- Removed fullscreen button -->
                     </div>
                   </div>
                 </div>
@@ -421,7 +420,8 @@ const CONFIG = {
       // Settings button
       elements.settingsButton?.addEventListener('click', (e) => {
         e.stopPropagation();
-        this._toggleSettings(true);
+        // Toggle the settings panel based on its current state
+        this._toggleSettings();
       });
       
       // Close settings button
@@ -474,13 +474,11 @@ const CONFIG = {
       window.addEventListener('resize', this._handleResize.bind(this));
     }
 
-    _toggleSettings(show) {
+    _toggleSettings() {
       const elements = this.elements;
-      if (show) {
-        elements.deviceSelectors?.classList.add('show');
-      } else {
-        elements.deviceSelectors?.classList.remove('show');
-      }
+      
+      // Toggle the settings panel based on its current state
+      elements.deviceSelectors?.classList.toggle('show');
     }
 
     _updateNotificationBadge() {
