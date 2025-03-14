@@ -127,6 +127,13 @@
     object-fit: cover !important;
   }
   
+  /* Add a fade-in animation for the local video */
+  @keyframes fadeInVideo {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  /* Update the local video styles */
   #local-video {
     position: absolute;
     top: var(--spacing-unit);
@@ -139,7 +146,13 @@
     z-index: var(--z-local-video);
     pointer-events: none;
     border: var(--border-standard);
-    transition: opacity 0.3s ease;
+    transition: opacity 0.5s ease; /* Longer transition for smoother fade */
+    opacity: 0; /* Start with opacity 0 */
+  }
+  
+  /* When the hidden class is removed, apply the animation */
+  #local-video:not(.hidden) {
+    animation: fadeInVideo 1s ease-in-out forwards;
   }
   
   /* ======================================
@@ -339,6 +352,7 @@
   }
   
   .chat-button {
+    position: relative;
     background: var(--primary-90);
     box-shadow: 0 4px 12px var(--primary-30);
     width: var(--size-40);
@@ -359,6 +373,12 @@
     background: #044ef4;
   }
   
+  .chat-button:hover .notification-badge {
+    transform: none !important;
+    top: -4px;
+    right: -4px;
+  }
+  
   .chat-button.active {
     background: var(--primary-color);
     border-color: var(--white-30);
@@ -369,7 +389,7 @@
   .notification-badge {
     position: absolute;
     top: -4px;
-    right: 20px;
+    right: -4px;
     background-color: var(--error-color);
     color: white;
     border-radius: var(--border-radius-50);
@@ -380,14 +400,15 @@
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    transition: var(--transition-standard);
+    transition: opacity 0.3s ease;
     border: var(--border-badge);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     z-index: 1;
     padding: 0;
     margin: 0;
     line-height: 1;
-    pointer-events: none; /* Ensure clicks pass through to the button */
+    pointer-events: none;
+    transform: none !important;
   }
   
   .notification-badge.hidden {
@@ -927,11 +948,13 @@
     .notification-badge {
       top: -4px;
       right: -2px;
+      transform: none !important;
     }
     
     /* Make the chat button position relative in mobile view to ensure badge positioning */
-    .chat-button {
-      position: relative;
+    .chat-button:hover .notification-badge {
+      top: -4px;
+      right: -2px;
     }
   }
   
