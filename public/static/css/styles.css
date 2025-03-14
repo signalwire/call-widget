@@ -2,8 +2,8 @@
 :root {
   --primary-bg: #070C2D;
   --secondary-bg: rgba(15, 23, 70, 0.95);
-  --accent-blue: #0066FF;
-  --accent-pink: #FF1F8F;
+  --accent-blue: #044ef4;
+  --accent-pink: #f72a72;
   --text-primary: #fff;
   --text-secondary: rgba(255, 255, 255, 0.8);
   --spacing-unit: clamp(1rem, 3vw, 2rem);

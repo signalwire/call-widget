@@ -20,5 +20,8 @@
     "webrtc"
   ],
   "author": "Devon White",
-  "license": "CC0-1.0"
+  "license": "CC0-1.0",
+  "devDependencies": {
+    "@signalwire/js": "^3.28.0"
+  }
 }

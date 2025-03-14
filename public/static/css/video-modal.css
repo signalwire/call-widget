@@ -1,357 +1,885 @@
-/* Variables */
-:root {
-    --video-bg-image: url('https://deploy-preview-29--signalwire-docs.netlify.app/img/call-widget/sw_background.webp');
-    --error-color: #FF3B30;
-    --safe-bottom: max(24px, env(safe-area-inset-bottom));
-    --safe-top: max(24px, env(safe-area-inset-top));
-    --z-modal: 1000;
-    --z-video: 1001;
-    --z-placeholder: 1005;
-    --z-controls: 1020;
-    --z-local-video: 1025;
-    --z-settings: 1030;
+:host {
+  /* These variables will be overridden by dynamic styles from JS */
+  --video-bg-image: url('https://deploy-preview-29--signalwire-docs.netlify.app/img/call-widget/sw_background.webp');
+  --primary-color: #044ef4;
+  --secondary-color: #0ee443;
+  --error-color: #FF3B30;
+  --background-color: rgba(7, 12, 45, 0.95);
+  
+  /* Fixed variables */
+  --safe-bottom: max(24px, env(safe-area-inset-bottom));
+  --safe-top: max(24px, env(safe-area-inset-top));
+  --z-modal: 1000;
+  --z-video: 1001;
+  --z-placeholder: 1005;
+  --z-controls: 1020;
+  --z-local-video: 1025;
+  --z-settings: 1030;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.8);
+  --spacing-unit: 16px;
+  --border-radius: 8px;
+  --button-size: 64px;
+  --button-container-height: 100px;
+  
+  /* Additional variables for consistency */
+  --transition-standard: all 0.3s ease;
+  --shadow-standard: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --border-light: 1px solid rgba(255, 255, 255, 0.15);
+  --bg-translucent: rgba(0, 0, 0, 0.5);
 }
 
 /* Base modal styles */
 .modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(7, 12, 45, 0.95);
-    z-index: var(--z-modal);
-    align-items: center;
-    justify-content: center;
-    padding: var(--spacing-unit);
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--background-color);
+  z-index: var(--z-modal);
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-unit);
+  transition: padding 0.3s ease;
 }
 
 .modal-content {
-    position: relative;
-    width: 95%;
-    max-width: 1200px;
-    aspect-ratio: 16/9;
-    background: var(--secondary-bg);
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  position: relative;
+  width: 95%;
+  aspect-ratio: 16/9;
+  max-width: 1200px;
+  background-color: transparent !important;
+  border-radius: var(--border-radius);
+  overflow: visible;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: stretch;
+  transform: translateX(0);
+}
+
+/* When chat is open, shift the modal to the left to center the combined content */
+.modal.chat-open .modal-content {
+  transform: translateX(-160px); /* Half of the chat panel width */
 }
 
 /* Video layout */
 .video-layout {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background: var(--video-bg-image);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+  position: relative;
+  flex: 1;
+  background-image: var(--video-bg-image);
+  background-size: cover;
+  background-position: center;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  width: 100%;
 }
 
-/* Root element styles */
-#root-element.sw-video-layer {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: var(--z-video);
-    opacity: 0;
-    transform: scale(0.95);
-    transition: all 0.3s ease-in-out;
-    background: transparent;
-    pointer-events: none;
+/* Add transform when chat is open to make room for chat panel */
+.video-layout.chat-open {
+  width: 100%;
 }
 
-#root-element.sw-video-layer.active {
-    opacity: 1;
-    transform: scale(1);
-    pointer-events: auto;
+/* Video container */
+.video-container {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+  width: 100%;
+  height: 100%;
 }
 
-/* Local video styles */
+/* Root element */
+#root-element {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-video);
+}
+
+#root-element > div,
+#root-element video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+/* Local video - simplified */
 #local-video {
-    position: absolute;
-    bottom: 1rem;
-    right: 1rem;
-    width: 240px;
-    height: 135px;
-    border-radius: 8px;
-    background: rgba(0, 0, 0, 0.5);
-    object-fit: cover;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    z-index: var(--z-local-video);
-    pointer-events: none;
-    opacity: 1;
-    transform: scale(1);
-    transition: all 0.3s ease-in-out;
+  position: absolute;
+  bottom: var(--spacing-unit);
+  right: var(--spacing-unit);
+  width: 240px;
+  height: 135px;
+  border-radius: var(--border-radius);
+  background: rgba(0, 0, 0, 0.5);
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: var(--z-local-video);
+  pointer-events: none;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: opacity 0.3s ease;
 }
 
-#local-video.hidden {
-    opacity: 0;
-    transform: scale(0.95);
-    visibility: hidden;
-}
-
-/* UI Elements */
-.ui-overlay-layer {
-    position: absolute;
-    inset: 0;
-    z-index: var(--z-controls);
-    pointer-events: none;
-}
-
-.ui-overlay-layer .call-controls,
-.ui-overlay-layer .settings-control,
-.ui-overlay-layer .device-selectors,
-.ui-overlay-layer button,
-.ui-overlay-layer select {
-    pointer-events: auto;
-}
-
+/* Video placeholder - simplified */
 .video-placeholder {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    backdrop-filter: blur(5px);
-    z-index: var(--z-placeholder);
-    gap: 1rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: var(--z-placeholder);
+  gap: 1rem;
 }
 
-/* Controls */
-.call-controls {
-    position: absolute;
-    bottom: var(--safe-bottom);
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-}
-
-.settings-control {
-    position: absolute;
-    bottom: var(--safe-bottom);
-    left: 16px;
-    z-index: var(--z-settings);
-}
-
-.device-selectors {
-    position: absolute;
-    bottom: calc(var(--safe-bottom) + 60px);
-    left: 16px;
-    background: white;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    display: none;
-    flex-direction: column;
-    gap: 10px;
-    min-width: 280px;
-    z-index: var(--z-settings);
-    color: #333;
-}
-
-.device-selectors.show {
-    display: flex;
-}
-
-.select-wrapper {
-    position: relative;
-    width: 100%;
-}
-
-.select-wrapper i {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #666;
-    pointer-events: none;
-}
-
-/* Spinner */
+/* Spinner - kept as is for animation */
 .connecting-spinner {
-    width: 48px;
-    height: 48px;
-    border: 4px solid rgba(255, 255, 255, 0.1);
-    border-left-color: var(--accent-blue);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-left-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+  to { transform: rotate(360deg); }
 }
 
 .connecting-text {
-    font-size: 1.2rem;
-    color: var(--text-secondary);
-    margin: 0;
-    text-align: center;
+  font-size: 1.2rem;
+  color: white;
+  margin: 0;
 }
 
-/* Button styles */
+/* Hidden utility class */
+.hidden {
+  display: none;
+}
+
+/* Controls overlay - simplified */
+.controls-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--z-controls);
+}
+
+.controls-overlay button,
+.controls-overlay select,
+.controls-overlay .device-selectors,
+.controls-overlay .call-controls {
+  pointer-events: auto;
+}
+
+/* Call controls container - simplified */
+.call-controls-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--button-container-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to bottom, rgba(7, 12, 45, 0.7), rgba(0, 0, 0, 0.7));
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  z-index: var(--z-controls);
+}
+
+/* Call controls - simplified */
+.call-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 24px;
+  position: relative;
+}
+
+/* Controls sections - simplified */
+.left-controls {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.main-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.right-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex: 1;
+}
+
+/* Button styles - simplified and consolidated */
+.left-button, .right-button, #settingsButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-translucent);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-standard);
+  transition: var(--transition-standard);
+}
+
+.main-button {
+  width: var(--button-size);
+  height: var(--button-size);
+  border-radius: 50%;
+  background: var(--bg-translucent);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  color: white;
+  box-shadow: var(--shadow-standard);
+  transition: var(--transition-standard);
+}
+
+/* Consolidated hover states */
+.left-button:hover, 
+.right-button:hover,
+#settingsButton:hover {
+  transform: translateY(-2px);
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Consolidated active states */
+.left-button:active, 
+.right-button:active,
+.main-button:active {
+  transform: translateY(1px);
+}
+
+/* Specific button styles - simplified */
 .hangup-button {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: var(--error-color);
-    color: var(--text-primary);
-    font-size: 24px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
-    padding: 0;
-    line-height: 1;
-}
-
-.hangup-button i {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
+  background: var(--error-color);
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3);
 }
 
 .hangup-button:hover {
-    transform: translateY(-2px) scale(1.05);
-    background: #ff1f1f;
-    box-shadow: 0 8px 24px rgba(255, 59, 48, 0.5);
-    border-color: rgba(255, 255, 255, 0.2);
+  background: #ff1f1f;
 }
 
-#settingsButton {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    padding: 0;
-    line-height: 1;
+.chat-button {
+  background: rgba(4, 78, 244, 0.9);
+  box-shadow: 0 4px 12px rgba(4, 78, 244, 0.3);
 }
 
-#settingsButton:hover {
-    transform: translateY(-2px) scale(1.05);
-    background: rgba(0, 0, 0, 0.7);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    border-color: rgba(255, 255, 255, 0.2);
+.chat-button:hover {
+  background: #044ef4;
 }
 
-#settingsButton i {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
+.chat-button.active {
+  background: #044ef4;
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 8px rgba(4, 78, 244, 0.6);
 }
 
+/* Device selectors - simplified */
+.device-selectors {
+  position: absolute;
+  bottom: calc(var(--safe-bottom) + 60px);
+  left: 16px;
+  background: rgba(7, 12, 45, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 15px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 280px;
+  z-index: var(--z-settings);
+  color: white;
+}
+
+.device-selectors.show {
+  display: flex;
+}
+
+.select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.select-wrapper i {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+}
+
+/* Custom dropdown arrow - simplified */
+.select-wrapper::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+}
+
+/* Select styles - simplified */
 .device-selectors select {
-    width: 100%;
-    padding: 8px 8px 8px 35px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    background: white;
-    font-size: 14px;
-    cursor: pointer;
-    outline: none;
-    color: #333;
-    appearance: none;
+  width: 100%;
+  padding: 8px 8px 8px 35px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.4);
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+  color: white;
+  appearance: none;
 }
 
 .device-selectors select:focus {
-    border-color: var(--accent-blue);
-    box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.1);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(4, 78, 244, 0.3);
 }
 
-/* Add a custom dropdown arrow */
-.select-wrapper::after {
-    content: '';
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 5px solid #666;
-    pointer-events: none;
+.device-selectors select option {
+  background-color: #151543;
+  color: white;
 }
 
-/* Mobile styles */
+/* Chat panel - position it at the right edge of the modal when inactive */
+.chat-panel {
+  position: absolute; /* Position relative to the modal-content */
+  top: 0;
+  left: 100%; /* Position it at the right edge of the modal */
+  width: 0; /* Start with zero width */
+  height: 100%; /* Match the height of the modal */
+  background: #151543;
+  transition: all 0.3s ease-in-out; /* Animate width and opacity */
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  border-top-right-radius: var(--border-radius);
+  border-bottom-right-radius: var(--border-radius);
+  z-index: var(--z-controls);
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.3);
+  opacity: 0; /* Start fully transparent */
+}
+
+/* When open, expand width to the right */
+.chat-panel.open {
+  width: 320px; /* Expand to full width */
+  opacity: 1; /* Fade in */
+}
+
+/* Chat header and content */
+.chat-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.chat-header h3 {
+  margin: 0;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.chat-close {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.chat-close:hover {
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Messages container */
+.messages-container {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+/* Consolidated media queries */
+@media (max-width: 992px) {
+  /* Combined mobile and tablet styles */
+  .modal.chat-open .modal-content {
+    transform: translateX(0);
+  }
+  
+  .chat-panel {
+    position: fixed;
+    top: 0;
+    left: auto;
+    right: -100%;
+    width: 100%;
+    height: 100%;
+    z-index: var(--z-settings);
+    border-radius: 0;
+    transition: right 0.3s ease-in-out;
+    opacity: 1;
+  }
+  
+  .chat-panel.open {
+    right: 0;
+    width: 100%;
+  }
+}
+
+/* Mobile-specific styles */
 @media (max-width: 768px) {
-    .modal {
-        padding: 0;
-    }
+  .modal.sm-size .main-controls {
+    gap: 12px;
+  }
+  
+  .modal.sm-size .call-controls-container {
+    height: 80px;
+  }
+  
+  .modal.sm-size #local-video {
+    width: 90px;
+    height: 120px;
+    right: 12px;
+    bottom: 90px;
+  }
+  
+  .modal.sm-size .device-selectors {
+    bottom: 90px;
+    max-width: 90%;
+  }
+}
 
-    .modal-content {
-        width: 100%;
-        height: 100%;
-        max-height: -webkit-fill-available;
-        border-radius: 0;
-        background: transparent;
-    }
+/* Tablet-specific optimizations */
+@media (min-width: 769px) and (max-width: 992px) {
+  .modal.md-size .call-controls {
+    padding: 0 20px;
+  }
+  
+  .modal.md-size #local-video {
+    width: 160px;
+    height: 90px;
+  }
+  
+  .modal.md-size .device-selectors {
+    bottom: calc(var(--safe-bottom) + 70px);
+    left: 20px;
+  }
+  
+  .modal.md-size .chat-panel.open {
+    width: 280px;
+  }
+}
 
-    .video-layout {
-        position: fixed;
-        inset: 0;
-        width: 100vw;
-        height: -webkit-fill-available;
-    }
+/* Landscape mode optimizations */
+@media (max-height: 500px) {
+  .call-controls-container {
+    height: 70px;
+  }
+  
+  .main-button {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .left-button, .right-button {
+    width: 36px;
+    height: 36px;
+  }
+  
+  #local-video {
+    width: 120px;
+    height: 67px;
+    bottom: 80px;
+  }
+  
+  .device-selectors {
+    bottom: 80px;
+  }
+}
 
-    #root-element.sw-video-layer {
-        position: fixed;
-        inset: 0;
-        width: 100vw;
-        height: -webkit-fill-available;
-    }
+/* Touch device optimizations */
+@media (hover: none) {
+  .left-button:hover,
+  .right-button:hover,
+  .main-button:hover,
+  #settingsButton:hover,
+  .chat-button:hover,
+  .hangup-button:hover {
+    transform: none;
+  }
+  
+  .call-controls-container {
+    opacity: 1 !important;
+  }
+  
+  /* Larger touch targets */
+  .left-button, .right-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .main-button {
+    min-width: 60px;
+    min-height: 60px;
+  }
+  
+  /* Improved touch feedback */
+  .left-button:active,
+  .right-button:active,
+  .main-button:active {
+    opacity: 0.7;
+  }
+}
 
-    #local-video {
-        position: fixed;
-        width: 108px;
-        height: 144px;
-        right: 16px;
-        top: var(--safe-top);
-        border-radius: 20px;
-        transform-origin: top right;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-    }
+/* Notification badge styles */
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: var(--error-color);
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
 
-    .ui-overlay-layer {
-        position: fixed;
-        height: 100vh;
-        height: -webkit-fill-available;
-    }
+.notification-badge.hidden {
+  display: none;
+}
 
-    .call-controls {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 100px;
-        padding-bottom: env(safe-area-inset-bottom);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);
-    }
+/* Settings header styles */
+.select-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
 
-    .settings-control {
-        position: fixed;
-        bottom: calc(env(safe-area-inset-bottom) + 30px);
-        left: 16px;
-    }
-} 
+.select-header h4 {
+  margin: 0;
+  color: white;
+  font-size: 16px;
+}
+
+.close-settings {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 4px;
+  transition: all 0.2s ease;
+}
+
+.close-settings:hover {
+  color: white;
+}
+
+/* Partial message styling */
+.message.partial {
+  opacity: 0.7;
+  border-left: 3px solid var(--primary-color);
+  animation: pulse 1.5s infinite;
+}
+
+.ai-message.partial {
+  border-left: 3px solid var(--secondary-color);
+}
+
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 0.9; }
+  100% { opacity: 0.7; }
+}
+
+/* Responsive size classes */
+.modal.xs-size .local-video {
+  width: 90px;
+  height: 120px;
+}
+
+.modal.sm-size .main-button {
+  width: 56px;
+  height: 56px;
+}
+
+.modal.sm-size .left-button,
+.modal.sm-size .right-button {
+  width: 36px;
+  height: 36px;
+}
+
+.modal.sm-size .call-controls {
+  padding: 0 16px;
+}
+
+/* Improved accessibility */
+button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+select:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 0;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .device-selectors {
+    background: rgba(0, 0, 0, 0.8);
+  }
+  
+  .device-selectors select {
+    background: rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* High contrast mode support for accessibility */
+@media (prefers-contrast: high) {
+  .left-button, .right-button, .main-button {
+    border: 2px solid white;
+  }
+  
+  .device-selectors {
+    border: 2px solid white;
+  }
+  
+  .message {
+    border: 1px solid white;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Animation enhancements */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal.visible {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* Improved chat experience */
+.message {
+  position: relative;
+  animation: fadeIn 0.2s ease;
+}
+
+.message::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.user-message::after {
+  right: -8px;
+  bottom: 0;
+  border-left: 8px solid var(--primary-color);
+  border-top: 8px solid transparent;
+}
+
+.ai-message::after {
+  left: -8px;
+  bottom: 0;
+  border-right: 8px solid var(--secondary-color);
+  border-top: 8px solid transparent;
+}
+
+/* Time indicator for messages */
+.message.with-time {
+  margin-bottom: 16px;
+}
+
+.message.with-time::before {
+  content: attr(data-time);
+  position: absolute;
+  bottom: -14px;
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.user-message.with-time::before {
+  right: 8px;
+}
+
+.ai-message.with-time::before {
+  left: 8px;
+}
+
+/* Print styles */
+@media print {
+  .modal {
+    position: static;
+    display: block;
+    background: white;
+    color: black;
+  }
+  
+  .controls-overlay,
+  .device-selectors,
+  .call-controls-container {
+    display: none !important;
+  }
+  
+  .video-container {
+    border: 1px solid #ccc;
+  }
+  
+  .chat-panel {
+    width: 100% !important;
+    position: static;
+    border: 1px solid #ccc;
+    background: white;
+  }
+  
+  .message {
+    color: black;
+    border: 1px solid #ccc;
+    box-shadow: none;
+  }
+  
+  .user-message {
+    background: #f0f0f0;
+  }
+  
+  .ai-message {
+    background: #e0e0e0;
+  }
+}
+
+/* RTL language support */
+[dir="rtl"] .user-message {
+  align-self: flex-start;
+  border-bottom-right-radius: 10px;
+  border-bottom-left-radius: 4px;
+}
+
+[dir="rtl"] .ai-message {
+  align-self: flex-end;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 4px;
+}
+
+[dir="rtl"] .select-wrapper i {
+  left: auto;
+  right: 10px;
+}
+
+[dir="rtl"] .select-wrapper::after {
+  right: auto;
+  left: 10px;
+}
+
+[dir="rtl"] .device-selectors select {
+  padding: 8px 35px 8px 8px;
+}
+
+/* Utility classes for dynamic use */
+.text-error {
+  color: var(--error-color);
+}
+
+.text-primary {
+  color: var(--primary-color);
+}
+
+.text-secondary {
+  color: var(--secondary-color);
+}
+
+/* Improved error state */
+.error-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: var(--z-placeholder);
+  color: white;
+  text-align: center;
+  padding: 20px;
+}
+
+.error-state .error-icon {
+  font-size: 48px;
+  color: var(--error-color);
+  margin-bottom: 16px;
+}
+
+.error-state .error-message {
+  max-width: 80%;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.error-state .error-action {
+  margin-top: 20px;
+  padding: 8px 16px;
+  background: var(--primary-color);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+}
