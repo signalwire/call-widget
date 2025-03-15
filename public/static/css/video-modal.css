@@ -68,13 +68,17 @@
     justify-content: center;
     padding: var(--spacing-unit);
     transition: padding var(--transition-standard);
+    
+    /* Base chat panel width - will be dynamically adjusted */
+    --chat-panel-width: clamp(200px, 25vw, 320px);
+    --content-max-width: 1200px;
   }
   
   .modal-content {
     position: relative;
     width: 95%;
     aspect-ratio: 16/9;
-    max-width: 1200px;
+    max-width: var(--content-max-width);
     background-color: transparent !important;
     border-radius: var(--border-radius);
     overflow: visible;
@@ -85,8 +89,12 @@
     transform: translateX(0);
   }
   
+  /* Dynamic adjustment when chat is open */
   .modal.chat-open .modal-content {
-    transform: translateX(-160px); /* Half of the chat panel width */
+    /* Dynamically calculate width based on available space */
+    width: calc(min(95%, 100vw - var(--chat-panel-width) - 40px));
+    /* Shift left by half the chat panel width */
+    transform: translateX(calc(-1 * var(--chat-panel-width) / 2));
   }
   
   .modal.visible {
@@ -545,8 +553,8 @@
   }
   
   .chat-panel.open {
-    width: 320px; /* Expand to full width */
-    opacity: 1; /* Fade in */
+    width: var(--chat-panel-width);
+    opacity: 1;
   }
   
   .chat-header {
@@ -1085,4 +1093,3 @@
       max-width: 75%;
     }
   }
-  
