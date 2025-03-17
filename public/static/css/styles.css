@@ -1,3 +1,5 @@
+
+
 /* Variables */
 :root {
   --primary-bg: #070C2D;
@@ -122,6 +124,8 @@ body {
   position: relative;
   overflow: hidden;
   will-change: transform;
+  z-index: 100;
+  pointer-events: auto;
 }
 
 .demo-button::after {
