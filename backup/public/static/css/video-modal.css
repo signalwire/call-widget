@@ -213,34 +213,48 @@ SIGNALWIRE VIDEO CHAT WIDGET
   justify-content: center;
   padding: var(--space-md);
   transition: padding var(--transition-standard);
+  
+  /* Base chat panel width - will be dynamically adjusted */
+  --chat-panel-width: clamp(200px, 25vw, 320px);
+  --content-max-width: 1200px;
 }
 
-/* Modal content container - new flexbox layout */
+/* Modal content container */
 :host .modal-content {
   position: relative;
   width: 95%;
+  aspect-ratio: 16/9;
   max-width: var(--content-max-width);
-  height: 95%;
-  max-height: calc(100vh - 40px);
   background-color: transparent !important;
   border-radius: var(--border-radius);
   overflow: visible;
   box-shadow: var(--shadow-standard);
   transition: var(--transition-standard);
   display: flex;
+  align-items: stretch;
+  transform: translateX(0);
   border: 1px solid var(--white-10);
 }
 
-/* Video panel - left side panel */
-:host .video-panel {
+/* Dynamic adjustment when chat is open */
+:host .modal.chat-open .modal-content {
+  /* Dynamically calculate width based on available space */
+  width: calc(min(95%, 100vw - var(--chat-panel-width) - 40px));
+  /* Shift left by half the chat panel width */
+  transform: translateX(calc(-1 * var(--chat-panel-width) / 2));
+}
+
+/* Video layout container */
+:host .video-layout {
   position: relative;
   flex: 1;
-  min-width: 0; /* Prevent overflow in flex layouts */
   background-image: var(--video-bg-image);
   background-size: cover;
   background-position: center;
   border-radius: var(--border-radius) 0 0 var(--border-radius);
   overflow: hidden;
+  transition: var(--transition-standard);
+  width: 100%;
 }
 
 /* Video container */
@@ -252,36 +266,14 @@ SIGNALWIRE VIDEO CHAT WIDGET
   background: rgba(0, 0, 0, 0.2);
 }
 
-/* Chat panel - right side panel, always visible */
-:host .chat-panel {
-  width: 320px;
-  height: 100%;
-  background: linear-gradient(135deg, 
-    var(--primary-30), 
-    var(--secondary-30)
-  ), var(--background-color);
-  display: flex;
-  flex-direction: column;
-  border-left: 1px solid var(--white-20);
-  overflow: hidden;
-  border-top-right-radius: var(--border-radius);
-  border-bottom-right-radius: var(--border-radius);
-  z-index: var(--z-chat-panel);
-  box-shadow: var(--shadow-standard);
-}
-
-/* Always visible chat panel */
-:host .chat-panel.always-open {
-  opacity: 1;
-  display: flex;
-}
-
-/* Root element for SignalWire SDK - full container */
+/* Root element for SignalWire SDK */
 :host #root-element {
-  position: absolute;
+  position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
+  height: -webkit-fill-available;
+  border-radius: 0;
   z-index: var(--z-video);
 }
 
@@ -568,17 +560,6 @@ SIGNALWIRE VIDEO CHAT WIDGET
   box-shadow: 0 8px 24px rgba(255, 59, 48, 0.5);
 }
 
-/* Mute button styles */
-:host .muted {
-  background: var(--error-color) !important;
-  box-shadow: 0 4px 12px var(--error-translucent);
-}
-
-:host .muted:hover {
-  background: #ff1f1f;
-  box-shadow: 0 8px 24px rgba(255, 59, 48, 0.3);
-}
-
 /* Notification badge */
 :host .notification-badge {
   position: absolute;
@@ -750,6 +731,35 @@ SIGNALWIRE VIDEO CHAT WIDGET
 /* ======================================
   8. CHAT PANEL
   ====================================== */
+/* Chat panel container */
+:host .chat-panel {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(135deg, 
+    var(--primary-30), 
+    var(--secondary-30)
+  ), var(--background-color);
+  transition: width 0.3s ease, opacity 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--white-20);
+  overflow: hidden;
+  border-top-right-radius: var(--border-radius);
+  border-bottom-right-radius: var(--border-radius);
+  z-index: var(--z-controls);
+  box-shadow: var(--shadow-standard);
+  opacity: 0;
+}
+
+/* Open state for chat panel */
+:host .chat-panel.open {
+  width: var(--chat-panel-width);
+  opacity: 1;
+}
+
 /* Chat header */
 :host .chat-header {
   padding: var(--header-padding);
@@ -983,6 +993,7 @@ SIGNALWIRE VIDEO CHAT WIDGET
 /* Responsive size classes */
 :host .modal.xs-size #local-video {
   width: 90px;
+  height: 120px;
 }
 
 :host .modal.sm-size .main-button {
@@ -1007,45 +1018,128 @@ SIGNALWIRE VIDEO CHAT WIDGET
 /* ======================================
   10.1 DESKTOP STYLES (Default)
   ====================================== */
-/* Default horizontal layout */
+/* Adjust message sizing for desktop */
+:host .message {
+  font-size: 13px;
+  padding: 7px 10px;
+  line-height: 1.25;
+  max-width: 75%;
+}
 
 /* ======================================
   10.2 MOBILE PORTRAIT (992px and below)
   ====================================== */
-@media (max-width: 992px) and (orientation: portrait) {
+@media (max-width: 992px) {
   /* Core mobile layout adjustments */
   :host .modal {
     padding: 0;
   }
   
   :host .modal-content {
-    width: 100%;
-    height: 100%;
     max-width: 100%;
     max-height: 100%;
-    border-radius: 0;
-    flex-direction: column; /* Stack panels vertically */
-  }
-  
-  /* Video panel takes top 50% */
-  :host .video-panel {
-    flex: 0 0 50%;
-    height: 50%;
-    border-radius: 0;
-  }
-  
-  /* Video container adjustments */
-  :host .video-container {
-    border-radius: 0;
-  }
-  
-  /* Chat panel takes bottom 50% */
-  :host .chat-panel {
     width: 100%;
-    height: 50%;
+    height: 100%;
     border-radius: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  
+  /* Chat panel adjustments for mobile */
+  :host .modal.chat-open .modal-content {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+    transform: none !important;
+    width: 100%;
+  }
+  
+
+  /* Local video positioning */
+  :host #local-video {
+    position: absolute;
+    width: 30%;
+    height: auto;
+    aspect-ratio: 4/3;
+    right: var(--space-md);
+    top: var(--space-md);
+    z-index: var(--z-local-video);
+  }
+  
+  /* Controls overlay adjustments */
+  :host .controls-overlay {
+    border-radius: 0;
+  }
+  
+  /* Call controls container adjustments */
+  :host .call-controls-container {
+    border-radius: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Call controls layout */
+  :host .call-controls {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Chat panel mobile styling */
+  :host .chat-panel {
+    position: fixed;
+    top: 0;
+    left: auto;
+    right: -100%;
+    width: 100%;
+    height: 100%;
+    height: -webkit-fill-available;
+    z-index: var(--z-chat-panel); /* Force highest z-index */
+    border-radius: 0;
+    transition: right 0.3s ease-in-out;
+    opacity: 1;
     border-left: none;
-    border-top: 1px solid var(--white-20);
+    transform: none;
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(135deg, 
+      var(--primary-30), 
+      var(--secondary-30)
+    ), var(--background-color);
+  }
+  
+  :host .chat-panel.open {
+    right: 0;
+    width: 100%;
+    transform: none;
+  }
+  
+  /* Chat header mobile styling */
+  :host .chat-header {
+    padding: calc(var(--space-md) + env(safe-area-inset-top)) var(--space-md) var(--space-md);
+    border-radius: 0;
+  }
+  
+  /* Messages container mobile styling */
+  :host .messages-container {
+    padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom));
+  }
+  
+  /* Message styling for mobile */
+  :host .message {
+    max-width: 85%;
+  }
+  
+  /* Notification badge positioning */
+  :host .notification-badge {
+    right: -5px;
+    top: -5px;
+  }
+  
+  /* Button sizing for mobile */
+  :host .main-button {
+    width: 60px;
+    height: 60px;
+  }
+  
+  :host .left-button, :host .right-button {
+    width: 50px;
+    height: 50px;
   }
 }
 
@@ -1053,34 +1147,37 @@ SIGNALWIRE VIDEO CHAT WIDGET
   10.3 MOBILE LANDSCAPE
   ====================================== */
 @media (max-width: 992px) and (orientation: landscape) {
-  /* For landscape, maintain horizontal layout but adjust ratios */
-  :host .modal {
-    padding: 0;
+  
+  
+  /* Local video positioning for landscape */
+  :host #local-video {
+    width: 15%;
+    height: auto;
+    aspect-ratio: 4/3;
+    right: var(--space-md);
+    top: var(--space-md);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: var(--z-local-video);
+    max-width: 120px; /* Limit maximum size */
+    min-width: 80px; /* Ensure minimum visibility */
   }
   
-  :host .modal-content {
+  /* Chat panel positioning for landscape */
+  :host .chat-panel.open {
+    right: 0;
+    left: auto;
     width: 100%;
     height: 100%;
-    max-width: 100%;
-    max-height: 100%;
-    border-radius: 0;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    box-sizing: border-box;
   }
-  
-  /* Video takes the left 60% */
-  :host .video-panel {
-    flex: 0 0 60%;
-    border-radius: 0;
-  }
-  
-  /* Chat takes the right 40% */
-  :host .chat-panel {
-    width: 40%;
-    border-radius: 0;
-  }
-  
-  /* Adjust call controls position */
-  :host .call-controls-container {
-    height: 70px;
+
+  :host .device-selectors {
+    bottom: calc(var(--safe-bottom) + 90px);
+    left: var(--space-md);
+    right: auto;
   }
 }
 
@@ -1088,12 +1185,6 @@ SIGNALWIRE VIDEO CHAT WIDGET
   10.4 TOUCH DEVICE OPTIMIZATIONS
   ====================================== */
 @media (hover: none) {
-  /* Increase visibility of buttons on touch devices */
-  :host .call-controls button {
-    background-color: rgba(0, 0, 0, 0.7);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-  }
-  
   /* Disable hover effects on touch devices */
   :host .left-button:hover,
   :host .right-button:hover,
@@ -1104,6 +1195,7 @@ SIGNALWIRE VIDEO CHAT WIDGET
     transform: none;
   }
   
+  
   /* Larger touch targets */
   :host .left-button, :host .right-button {
     min-width: 44px;
@@ -1111,8 +1203,8 @@ SIGNALWIRE VIDEO CHAT WIDGET
   }
   
   :host .main-button {
-    min-width: 56px;
-    min-height: 56px;
+    min-width: 60px;
+    min-height: 60px;
   }
   
   /* Improved touch feedback */

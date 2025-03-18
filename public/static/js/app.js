@@ -119,9 +119,9 @@ const CONFIG = {
       
       // Call control events
       CALL_END: 'call:end',
+      TOGGLE_MUTE: 'call:toggle-mute',
       
       // Chat interface events
-      CHAT_TOGGLE: 'chat:toggle',
       CHAT_CLEAR: 'chat:clear',
       
       // Device events
@@ -324,13 +324,13 @@ const CONFIG = {
       modalDiv.className = 'modal';
       modalDiv.id = 'shadow-video-modal';
       
-      // Create modal content
+      // Create modal content with new two-panel structure
       const modalContent = document.createElement('div');
       modalContent.className = 'modal-content';
       
-      // Create video layout
-      const videoLayout = document.createElement('div');
-      videoLayout.className = 'video-layout';
+      // Create video panel (left side)
+      const videoPanel = document.createElement('div');
+      videoPanel.className = 'video-panel';
       
       // Create video container
       const videoContainer = document.createElement('div');
@@ -365,7 +365,7 @@ const CONFIG = {
       videoPlaceholder.appendChild(connectingText);
       
       videoContainer.appendChild(videoPlaceholder);
-      videoLayout.appendChild(videoContainer);
+      videoPanel.appendChild(videoContainer);
       
       // Create controls overlay
       const controlsOverlay = document.createElement('div');
@@ -463,6 +463,17 @@ const CONFIG = {
       const mainControls = document.createElement('div');
       mainControls.className = 'main-controls';
       
+      // Add mute button before hangup button
+      const muteButton = document.createElement('button');
+      muteButton.id = 'muteButton';
+      muteButton.className = 'main-button';
+      
+      const muteIcon = document.createElement('i');
+      muteIcon.className = 'fas fa-microphone';
+      muteButton.appendChild(muteIcon);
+      
+      mainControls.appendChild(muteButton);
+      
       const hangupButton = document.createElement('button');
       hangupButton.id = 'hangup-button';
       hangupButton.className = 'main-button hangup-button';
@@ -474,41 +485,21 @@ const CONFIG = {
       mainControls.appendChild(hangupButton);
       callControls.appendChild(mainControls);
       
-      // Create right controls
+      // Create right controls, but remove chat button since chat is always visible
       const rightControls = document.createElement('div');
       rightControls.className = 'right-controls';
-      
-      const buttonContainer = document.createElement('div');
-      buttonContainer.className = 'button-container';
-      
-      const chatButton = document.createElement('button');
-      chatButton.id = 'chat-button';
-      chatButton.className = 'right-button chat-button';
-      
-      const chatIcon = document.createElement('i');
-      chatIcon.className = 'fas fa-comment-alt';
-      chatButton.appendChild(chatIcon);
-      
-      buttonContainer.appendChild(chatButton);
-      
-      const notificationBadge = document.createElement('span');
-      notificationBadge.className = 'notification-badge hidden';
-      notificationBadge.textContent = '0';
-      buttonContainer.appendChild(notificationBadge);
-      
-      rightControls.appendChild(buttonContainer);
       callControls.appendChild(rightControls);
       
       callControlsContainer.appendChild(callControls);
       controlsOverlay.appendChild(callControlsContainer);
       
-      videoLayout.appendChild(controlsOverlay);
-      modalContent.appendChild(videoLayout);
+      videoPanel.appendChild(controlsOverlay);
+      modalContent.appendChild(videoPanel);
       
-      // Create chat panel
+      // Create chat panel (right side) - always visible
       const chatPanel = document.createElement('div');
       chatPanel.id = 'chat-panel';
-      chatPanel.className = 'chat-panel';
+      chatPanel.className = 'chat-panel always-open';
       
       const chatHeader = document.createElement('div');
       chatHeader.className = 'chat-header';
@@ -517,15 +508,7 @@ const CONFIG = {
       chatTitle.textContent = 'Chat';
       chatHeader.appendChild(chatTitle);
       
-      const chatCloseBtn = document.createElement('button');
-      chatCloseBtn.className = 'chat-close';
-      chatCloseBtn.id = 'chat-close';
-      
-      const chatCloseIcon = document.createElement('i');
-      chatCloseIcon.className = 'fas fa-times';
-      chatCloseBtn.appendChild(chatCloseIcon);
-      
-      chatHeader.appendChild(chatCloseBtn);
+      // No close button for chat since it's always visible
       chatPanel.appendChild(chatHeader);
       
       const messagesContainer = document.createElement('div');
@@ -556,27 +539,21 @@ const CONFIG = {
         videoInput: shadow.getElementById('videoInput'),
         deviceSelectors: shadow.querySelector('.device-selectors'),
         closeSettings: shadow.querySelector('.close-settings'),
-        chatButton: shadow.getElementById('chat-button'),
         chatPanel: shadow.getElementById('chat-panel'),
-        chatClose: shadow.getElementById('chat-close'),
         messagesContainer: shadow.getElementById('messagesContainer'),
-        notificationBadge: shadow.querySelector('.notification-badge'),
+        muteButton: shadow.getElementById('muteButton'),
         shadow: shadow
       };
 
       this.state.set('ui.elements', this.elements);
       
-      // Set initial chat panel state based on device type
-      // Open by default on desktop, closed on mobile
-      const isMobile = window.innerWidth < 992; // Using the tablet breakpoint from CSS
-      this.state.set('isChatOpen', !isMobile);
+      // Set chat as always open
+      this.state.set('isChatOpen', true);
       
-      // Apply the initial state to the UI
-      if (!isMobile && this.elements.chatPanel) {
-        this.elements.chatPanel.classList.add('open');
-        this.elements.chatButton.classList.add('active');
-        this.elements.modal.classList.add('chat-open');
-      }
+      // Add stopPropagation to prevent closing when selecting from dropdowns
+      this.elements.audioInput?.addEventListener('click', (e) => e.stopPropagation());
+      this.elements.videoInput?.addEventListener('click', (e) => e.stopPropagation());
+      this.elements.audioOutput?.addEventListener('click', (e) => e.stopPropagation());
     }
 
     _applyDynamicStyles() {
@@ -700,18 +677,22 @@ const CONFIG = {
       elements.modal.classList.toggle('sm-size', window.innerWidth < 768);
       elements.modal.classList.toggle('md-size', window.innerWidth >= 768 && window.innerWidth < 992);
       
-      // React to changes between mobile and desktop modes by using the state values
-      const isMobile = this.state.get('ui.isMobile');
-      const wasTablet = this.state.get('ui.isTablet');
-      const isActive = this.state.get('isActive');
+      // React to changes between mobile and desktop modes by updating the state values
+      const orientation = window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
+      const isMobile = window.innerWidth < 768;
+      const isTablet = window.innerWidth >= 768 && window.innerWidth < 992;
       
-      // If we're on mobile, ensure chat is closed
-      if (isMobile && isActive) {
-        this.toggleChatPanel(false);
-      } 
-      // If we're switching from mobile to desktop during an active call, open chat
-      else if (!isMobile && wasTablet && isActive) {
-        this.toggleChatPanel(true);
+      // Update state only if values have changed
+      if (this.state.get('ui.orientation') !== orientation) {
+        this.state.set('ui.orientation', orientation);
+      }
+      
+      if (this.state.get('ui.isMobile') !== isMobile) {
+        this.state.set('ui.isMobile', isMobile);
+      }
+      
+      if (this.state.get('ui.isTablet') !== isTablet) {
+        this.state.set('ui.isTablet', isTablet);
       }
     }
 
@@ -721,6 +702,10 @@ const CONFIG = {
       // Hangup button
       elements.hangupButton?.addEventListener('click', () => 
         this.events.emit(EventRegistry.LOCAL.CALL_END));
+        
+      // Mute button
+      elements.muteButton?.addEventListener('click', () => 
+        this.events.emit(EventRegistry.LOCAL.TOGGLE_MUTE));
         
       // Settings button
       elements.settingsButton?.addEventListener('click', (e) => {
@@ -733,27 +718,6 @@ const CONFIG = {
       elements.closeSettings?.addEventListener('click', () => {
         this._toggleSettings(false);
       });
-      
-      // Chat button event listener
-      elements.chatButton?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.events.emit(EventRegistry.LOCAL.CHAT_TOGGLE);
-        // Reset unread count when opening chat
-        if (!this.state.get('isChatOpen')) {
-          this.state.set('unreadMessages', 0);
-          this._updateNotificationBadge();
-        }
-      });
-      
-      // Chat close button event listener
-      elements.chatClose?.addEventListener('click', () => {
-        this.events.emit(EventRegistry.LOCAL.CHAT_TOGGLE, false);
-      });
-      
-      // Add stopPropagation to prevent closing when selecting from dropdowns
-      elements.audioInput?.addEventListener('click', (e) => e.stopPropagation());
-      elements.videoInput?.addEventListener('click', (e) => e.stopPropagation());
-      elements.audioOutput?.addEventListener('click', (e) => e.stopPropagation());
       
       // Close settings when clicking outside
       document.addEventListener('click', (event) => {
@@ -866,9 +830,14 @@ const CONFIG = {
       if (elements.hangupButton) {
         elements.hangupButton.classList.toggle('show', isCallActive);
       }
-      
-      if (elements.chatButton) {
-        elements.chatButton.classList.toggle('show', isCallActive);
+
+      if (elements.muteButton) {
+        elements.muteButton.classList.toggle('show', isCallActive);
+        
+        // Reset mute button state when call is not active
+        if (!isCallActive) {
+          this.toggleMute(false);
+        }
       }
 
       // Control container visibility with classes
@@ -899,54 +868,9 @@ const CONFIG = {
         elements.root.classList.toggle('active', isCallActive);
       }
       
-      // When call becomes active, set chat panel according to device type
-      if (isCallActive) {
-        const isMobile = window.innerWidth < 992;
-        
-        // For desktop, always open chat panel when call becomes active
-        if (!isMobile) {
-          this.toggleChatPanel(true);
-        } else {
-          // For mobile, always close chat panel when call becomes active
-          this.toggleChatPanel(false);
-        }
-      } else {
-        // Hide chat panel when call is not active
-        this.toggleChatPanel(false);
-      }
-      
       if (!isShowing && elements.localVideo) {
         elements.localVideo.srcObject = null;
         this._toggleLocalVideo(false);
-      }
-    }
-
-    toggleChatPanel(forceState) {
-      const elements = this.elements;
-      const isOpen = forceState !== undefined ? forceState : !this.state.get('isChatOpen');
-      this.state.set('isChatOpen', isOpen);
-      
-      if (isOpen) {
-        elements.chatPanel.classList.add('open');
-        elements.chatButton.classList.add('active');
-        
-        // Add chat-open class to the modal content for centering
-        elements.modal.classList.add('chat-open');
-        
-        // Reset unread messages when opening chat
-        this.state.set('unreadMessages', 0);
-        this._updateNotificationBadge();
-        
-        // Scroll to bottom of messages
-        if (elements.messagesContainer) {
-          elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
-        }
-      } else {
-        elements.chatPanel.classList.remove('open');
-        elements.chatButton.classList.remove('active');
-        
-        // Remove chat-open class from modal content when closing
-        elements.modal.classList.remove('chat-open');
       }
     }
 
@@ -955,8 +879,6 @@ const CONFIG = {
         this.elements.messagesContainer.innerHTML = '';
       }
       this.state.set('currentPartialMessageDiv', null);
-      this.state.set('unreadMessages', 0);
-      this._updateNotificationBadge();
     }
 
     appendMessage(text, sender) {
@@ -987,13 +909,6 @@ const CONFIG = {
       
       // Auto-scroll to bottom
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      
-      // Increment unread messages if chat is closed and this is an AI message
-      if (sender === 'ai' && !this.state.get('isChatOpen') && !this.state.get('aiMessageInProgress')) {
-        const currentCount = this.state.get('unreadMessages');
-        this.state.set('unreadMessages', currentCount + 1);
-        this._updateNotificationBadge();
-      }
       
       return messageDiv;
     }
@@ -1078,6 +993,25 @@ const CONFIG = {
         localVideo.style.opacity = '0';
       }
     }
+
+    /**
+     * Toggle mute state and update button appearance
+     * @param {boolean} isMuted - Whether audio is muted
+     */
+    toggleMute(isMuted) {
+      const muteButton = this.elements.muteButton;
+      if (!muteButton) return;
+      
+      const icon = muteButton.querySelector('i');
+      
+      if (isMuted) {
+        muteButton.classList.add('muted');
+        icon.className = 'fas fa-microphone-slash';
+      } else {
+        muteButton.classList.remove('muted');
+        icon.className = 'fas fa-microphone';
+      }
+    }
   }
 
   /**
@@ -1089,10 +1023,7 @@ const CONFIG = {
       this.events = events;
       this.state = state;
       this.logger = logger || new Logger('DeviceManager');
-      
-      navigator.mediaDevices.addEventListener('devicechange', () => {
-        this.loadDevices();
-      });
+      this.deviceWatcher = null;
     }
 
     _handleError(message, error) {
@@ -1104,7 +1035,28 @@ const CONFIG = {
 
     async loadDevices() {
       try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
+        // Load SignalWire SDK if not already loaded
+        await loadSignalWireSDK();
+        
+        // Use SignalWire's enumerateDevices instead of navigator.mediaDevices
+        const devices = await SignalWire.WebRTC.enumerateDevices();
+        
+        // Create device watchers for automatic device change detection
+        if (!this.deviceWatcher) {
+          try {
+            // Use SignalWire's device watcher to monitor all device changes
+            this.deviceWatcher = await SignalWire.WebRTC.createDeviceWatcher();
+            
+            // Listen for device changes and reload the device list
+            this.deviceWatcher.on("changed", () => {
+              this.logger.log("Device change detected, reloading devices");
+              this.loadDevices();
+            });
+          } catch (watcherError) {
+            this.logger.error("Error creating device watcher:", watcherError);
+          }
+        }
+        
         this.events.emit(EventRegistry.LOCAL.DEVICES_LOADED, devices);
         return devices;
       } catch (error) {
@@ -1134,23 +1086,23 @@ const CONFIG = {
       if (!this.state.get('isActive')) return;
       
       try {
+        // Load SignalWire SDK if not already loaded
+        await loadSignalWireSDK();
+        
         const constraints = await this.getMediaConstraints();
         const mediaConstraints = {
           audio: changedDeviceType === 'audioInput' ? constraints.audio : false,
           video: changedDeviceType === 'videoInput' ? constraints.video : false
         };
 
-        // Get new stream before cleaning up old one to avoid flickering
-        const newStream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+        // Use SignalWire's getUserMedia for better cross-browser support
+        const newStream = await SignalWire.WebRTC.getUserMedia(mediaConstraints);
         const newTrack = changedDeviceType === 'audioInput' ? 
           newStream.getAudioTracks()[0] : newStream.getVideoTracks()[0];
         
         if (!newTrack) {
-          // Clean up the new stream if we didn't get the track we wanted
-          newStream.getTracks().forEach(track => {
-            track.enabled = false;
-            track.stop();
-          });
+          // Clean up the new stream using SignalWire's stopStream
+          SignalWire.WebRTC.stopStream(newStream);
           return;
         }
 
@@ -1162,8 +1114,8 @@ const CONFIG = {
             localStream.getAudioTracks()[0] : localStream.getVideoTracks()[0];
           
           if (oldTrack) {
-            oldTrack.enabled = false;
-            oldTrack.stop();
+            // Use SignalWire's stopTrack for proper cleanup
+            SignalWire.WebRTC.stopTrack(oldTrack);
             localStream.removeTrack(oldTrack);
           }
           
@@ -1200,15 +1152,89 @@ const CONFIG = {
     }
 
     async updateAudioOutput(deviceId) {
-      const currentCall = this.state.get('currentCall');
-      if (!currentCall) return;
-    
+      // Load SignalWire SDK if not already loaded
+      await loadSignalWireSDK();
+      
       try {
-        await currentCall.updateSpeaker({
-          deviceId: deviceId
-        });
+        // Check if output selection is supported
+        if (!SignalWire.WebRTC.supportsMediaOutput()) {
+          this.logger.log('Audio output selection not supported in this browser');
+          return;
+        }
+        
+        // Update the call's speaker if there's an active call
+        const currentCall = this.state.get('currentCall');
+        if (currentCall) {
+          await currentCall.updateSpeaker({
+            deviceId: deviceId
+          });
+        }
+        
+        // Also update any video/audio elements on the page
+        const elements = this.state.get('ui.elements');
+        if (elements && elements.localVideo) {
+          await SignalWire.WebRTC.setMediaElementSinkId(elements.localVideo, deviceId);
+        }
       } catch (error) {
         this._handleError('Error setting audio output:', error);
+      }
+    }
+    
+    async checkPermissions() {
+      // Load SignalWire SDK if not already loaded
+      await loadSignalWireSDK();
+      
+      try {
+        const cameraPermission = await SignalWire.WebRTC.checkCameraPermissions();
+        const microphonePermission = await SignalWire.WebRTC.checkMicrophonePermissions();
+        const speakerPermission = await SignalWire.WebRTC.checkSpeakerPermissions();
+        
+        return {
+          camera: cameraPermission,
+          microphone: microphonePermission,
+          speaker: speakerPermission
+        };
+      } catch (error) {
+        this._handleError('Error checking permissions:', error);
+        return {
+          camera: false,
+          microphone: false,
+          speaker: false
+        };
+      }
+    }
+    
+    async requestAllPermissions() {
+      // Load SignalWire SDK if not already loaded
+      await loadSignalWireSDK();
+      
+      try {
+        // Request permissions for both audio and video
+        await SignalWire.WebRTC.requestPermissions({
+          audio: true,
+          video: true
+        });
+        
+        // Reload devices after permissions are granted
+        await this.loadDevices();
+      } catch (error) {
+        this._handleError('Error requesting permissions:', error);
+      }
+    }
+    
+    cleanup() {
+      // Clean up device watcher if it exists
+      if (this.deviceWatcher) {
+        this.deviceWatcher.off("changed");
+        this.deviceWatcher = null;
+      }
+      
+      // Clean up any existing stream
+      const localStream = this.state.get('localStream');
+      if (localStream) {
+        // Use SignalWire's stopStream for proper cleanup
+        SignalWire.WebRTC.stopStream(localStream);
+        this.state.set('localStream', null);
       }
     }
   }
@@ -1247,6 +1273,10 @@ const CONFIG = {
         if (!window.isSecureContext) {
           throw new Error('WebRTC requires a secure context (HTTPS or localhost). Please use HTTPS.');
         }
+        
+        // Load SignalWire SDK if not already loaded
+        await loadSignalWireSDK();
+        
 
         if (this.state.get('currentCall')) {
           await this.endCall();
@@ -1257,21 +1287,18 @@ const CONFIG = {
         // Clear chat messages when starting a new call
         this.events.emit(EventRegistry.LOCAL.CHAT_CLEAR);
 
-        // Get devices first without requesting media
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        let initialStream;
-        if (!devices.some(device => device.label)) {
-          // Only request the media types we'll actually use
-          initialStream = await navigator.mediaDevices.getUserMedia({
-            audio: audioEnabled,
-            video: videoEnabled
-          });
+        // Check permissions using SignalWire WebRTC methods
+        const permissions = await this.deviceManager.checkPermissions();
+        
+        // Request permissions if needed using SignalWire method
+        if ((videoEnabled && !permissions.camera) || (audioEnabled && !permissions.microphone)) {
+          await this.deviceManager.requestAllPermissions();
         }
+
+        // Get updated device list after permissions
         await this.deviceManager.loadDevices();
 
-        // Ensure SignalWire SDK is loaded
-        await loadSignalWireSDK();
-
+        // Get client or create one
         let client = this.state.get('client');
         if (!client) {
           client = await SignalWire.SignalWire({
@@ -1283,28 +1310,23 @@ const CONFIG = {
           this.events.emit(EventRegistry.LOCAL.CLIENT_CREATED, client);
         }
 
-        // Clean up any existing stream
+        // Clean up any existing stream using SignalWire methods
         this._cleanupExistingStream();
         
         // Get media constraints
         const constraints = await this.deviceManager.getMediaConstraints();
         
-        // Get new media stream
+        // Get new media stream using SignalWire WebRTC
         let localStream;
         try {
-          // Use the initial stream if we have it, otherwise request a new one
-          if (initialStream) {
-            localStream = initialStream;
-          } else {
-            localStream = await navigator.mediaDevices.getUserMedia({
-              audio: audioEnabled && constraints.audio,
-              video: videoEnabled && constraints.video
-            });
-          }
+          localStream = await SignalWire.WebRTC.getUserMedia({
+            audio: audioEnabled && constraints.audio,
+            video: videoEnabled && constraints.video
+          });
         } catch (streamError) {
           if (streamError.name === 'OverconstrainedError') {
             // Fallback to default devices
-            localStream = await navigator.mediaDevices.getUserMedia({
+            localStream = await SignalWire.WebRTC.getUserMedia({
               audio: audioEnabled,
               video: videoEnabled && {
                 width: { ideal: 1280 },
@@ -1373,10 +1395,8 @@ const CONFIG = {
       // Enhanced helper method to clean up existing stream
       const localStream = this.state.get('localStream');
       if (localStream) {
-        localStream.getTracks().forEach(track => {
-          track.stop();
-          track.enabled = false;
-        });
+        // Use SignalWire's stopStream for proper cleanup
+        SignalWire.WebRTC.stopStream(localStream);
         
         // Clear video elements that might be using this stream
         const elements = this.state.get('ui.elements');
@@ -1452,7 +1472,7 @@ const CONFIG = {
           await currentCall.hangup();
         }
         
-        // Clean up the stream using our helper method
+        // Clean up the stream using SignalWire's method
         this._cleanupExistingStream();
         
         // Clear the video element
@@ -1470,6 +1490,33 @@ const CONFIG = {
         // Always reset the guard flag
         this._endingCall = false;
       }
+    }
+
+    /**
+     * Toggle microphone mute state
+     * @returns {boolean} New mute state (true if muted, false if unmuted)
+     */
+    toggleMicrophone() {
+      const localStream = this.state.get('localStream');
+      if (!localStream) return false;
+      
+      const audioTrack = localStream.getAudioTracks()[0];
+      if (!audioTrack) return false;
+      
+      // Toggle the enabled state using native track API
+      audioTrack.enabled = !audioTrack.enabled;
+      
+      // Also mute the call audio if in a call
+      const currentCall = this.state.get('currentCall');
+      if (currentCall && currentCall.localStream) {
+        const callAudioTrack = currentCall.localStream.getAudioTracks()[0];
+        if (callAudioTrack) {
+          callAudioTrack.enabled = !callAudioTrack.enabled;
+        }
+      }
+      
+      // Return the new mute state (true = muted, false = unmuted)
+      return !audioTrack.enabled;
     }
 
     _handleError(message, error) {
@@ -1528,15 +1575,25 @@ const CONFIG = {
    * Dynamically loads the SignalWire SDK if it's not already loaded
    * @returns {Promise} A promise that resolves when the SDK is loaded
    */
+  // Track SDK loading state
+  let signalWireSDKLoaded = false;
+  let signalWireSDKLoading = null;
+  
   function loadSignalWireSDK() {
-    return new Promise((resolve, reject) => {
-      // Check if SDK is already loaded
-      if (window.SignalWire) {
-        logger.state('SignalWireSDK', 'already_loaded');
-        resolve(window.SignalWire);
-        return;
-      }
-      
+    // Return existing loading promise if in progress
+    if (signalWireSDKLoading) {
+      return signalWireSDKLoading;
+    }
+    
+    // Return resolved promise if already loaded
+    if (signalWireSDKLoaded || window.SignalWire) {
+      signalWireSDKLoaded = true;
+      logger.state('SignalWireSDK', 'already_loaded');
+      return Promise.resolve(window.SignalWire);
+    }
+    
+    // Create a new loading promise
+    signalWireSDKLoading = new Promise((resolve, reject) => {
       logger.state('SignalWireSDK', 'loading');
       
       // Create script element
@@ -1547,9 +1604,12 @@ const CONFIG = {
       // Set up load and error handlers
       script.onload = () => {
         if (window.SignalWire) {
+          signalWireSDKLoaded = true;
+          signalWireSDKLoading = null;
           logger.state('SignalWireSDK', 'loaded');
           resolve(window.SignalWire);
         } else {
+          signalWireSDKLoading = null;
           const error = new Error('SignalWire SDK loaded but global object not found');
           logger.error('SignalWireSDK', error.message);
           reject(error);
@@ -1557,6 +1617,7 @@ const CONFIG = {
       };
       
       script.onerror = () => {
+        signalWireSDKLoading = null;
         const error = new Error('Failed to load SignalWire SDK');
         logger.error('SignalWireSDK', 'error', error.message);
         reject(error);
@@ -1565,6 +1626,8 @@ const CONFIG = {
       // Add to document
       document.head.appendChild(script);
     });
+    
+    return signalWireSDKLoading;
   }
 
   /**
@@ -1627,8 +1690,8 @@ const CONFIG = {
       // Initialize UI asynchronously with FontAwesome loading
       this._initializeUI();
       
-      // Load devices
-      this.deviceManager.loadDevices();
+      // Load devices using SignalWire WebRTC methods when SDK is loaded
+      this._initializeDeviceAccess();
     }
 
     async _initializeUI() {
@@ -1679,8 +1742,13 @@ const CONFIG = {
       // Call events
       this.events.on(EventRegistry.LOCAL.CALL_END, () => this.callManager.endCall());
       
-      // Chat interface events
-      this.events.on(EventRegistry.LOCAL.CHAT_TOGGLE, forceState => this.ui.toggleChatPanel(forceState));
+      // Mute events
+      this.events.on(EventRegistry.LOCAL.TOGGLE_MUTE, () => {
+        const isMuted = this.callManager.toggleMicrophone();
+        this.ui.toggleMute(isMuted);
+      });
+      
+      // Chat interface events - just keep clear event, remove toggle
       this.events.on(EventRegistry.LOCAL.CHAT_CLEAR, () => this.ui.clearChatMessages());
       
       // SignalWire chat message events
@@ -1710,14 +1778,6 @@ const CONFIG = {
           this.state.set('aiMessageInProgress', false);
         } else {
           this.ui.appendMessage(text, 'ai');
-          
-          // Only increment unread count for new AI messages when chat is closed
-          // and there wasn't already a message in progress
-          if (!this.state.get('isChatOpen') && !this.state.get('aiMessageInProgress')) {
-            const currentCount = this.state.get('unreadMessages');
-            this.state.set('unreadMessages', currentCount + 1);
-            this.ui._updateNotificationBadge();
-          }
         }
       });
 
@@ -1750,13 +1810,6 @@ const CONFIG = {
           
           // Set flag that an AI message is in progress
           this.state.set('aiMessageInProgress', true);
-          
-          // Only increment unread count when a new AI message starts and chat is closed
-          if (!this.state.get('isChatOpen')) {
-            const currentCount = this.state.get('unreadMessages');
-            this.state.set('unreadMessages', currentCount + 1);
-            this.ui._updateNotificationBadge();
-          }
         } else if (currentDiv.classList.contains('first') && currentDiv.dataset.updated) {
           // Remove 'first' class after the first update to prevent re-triggering the animation
           currentDiv.classList.remove('first');
@@ -1788,8 +1841,21 @@ const CONFIG = {
       });
     }
 
+    async _initializeDeviceAccess() {
+      try {
+        // Load SignalWire SDK before accessing devices
+        await loadSignalWireSDK();
+        
+        // Load devices without requesting permissions first
+        await this.deviceManager.loadDevices();
+      } catch (error) {
+        this.logger.error('Error initializing device access:', error);
+      }
+    }
+
     cleanup() {
       this.callManager.endCall();
+      this.deviceManager.cleanup(); // Clean up device watchers and streams
       this.state.set('client', null);
     }
   }
@@ -1800,6 +1866,6 @@ const CONFIG = {
   // Expose app to window for external access
   window.SignalWireDemo = app;
   
-  // Cleanup on page hide
+  // Cleanup on page hide or unload
   window.addEventListener('pagehide', () => app.cleanup());
 })(); 
