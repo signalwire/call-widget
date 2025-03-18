@@ -1,0 +1,23 @@
+{
+  "name": "src",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "_copy_public": "cp -rf ./public/* ./dist/",
+    "_typecheck": "tsc --noEmit",
+    "build": "npm run _typecheck && node esbuild.js && npm run _copy_public",
+    "build_no_typecheck": "node esbuild.js && npm run _copy_public",
+    "serve": "npx serve ./dist"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@signalwire/js": "^3.28.0-dev.202502271238.03698cd.0",
+    "@types/node": "^22.13.10",
+    "dotenv": "^16.4.7",
+    "esbuild": "^0.25.1",
+    "tslib": "^2.8.1",
+    "typescript": "^5.8.2"
+  }
+}
