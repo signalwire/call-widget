@@ -17,18 +17,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-// Serve the test page without SignalWire SDK
-app.get('/test', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/test.html'));
-});
-
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 }); 
-
-
-app.get('/video-modal-css', (req, res) => {
-  res.setHeader('Content-Type', 'text/css');
-  res.sendFile(path.join(__dirname, '../public/static/css/video-modal.css'));
-});
 
