@@ -805,6 +805,11 @@ class UIManager {
       shadow: shadow,
     };
 
+    // Ensure local video is muted
+    if (this.elements.localVideo) {
+      this.elements.localVideo.muted = true;
+    }
+
     this.state.set('ui.elements', this.elements);
     
     const isMobile = window.innerWidth < 992;
@@ -1302,6 +1307,7 @@ class DeviceManager {
       } else {
         this.state.set('localStream', newStream);
         elements.localVideo.srcObject = newStream;
+        elements.localVideo.muted = true;  // Ensure muted state is maintained
         
         // If this is an audio device and we're muted, mute the new device
         if (changedDeviceType === 'audioInput' && this._isMuted) {
@@ -1415,14 +1421,8 @@ class CallManager {
       // Clean up any existing stream
       this._cleanupMediaStream();
 
-      // Now request permissions only when starting the call
-      if (videoEnabled) {
-        await SignalWire.WebRTC.requestPermissions({ video: true });
-      }
-      if (audioEnabled) {
-        await SignalWire.WebRTC.requestPermissions({ audio: true });
-      }
 
+      await SignalWire.WebRTC.requestPermissions({ video: videoEnabled, audio: audioEnabled });
       // After permissions, get devices and update UI
       await this.deviceManager.loadDevices();
 
@@ -1476,6 +1476,7 @@ class CallManager {
 
       const elements = this.state.get('ui.elements');
       elements.localVideo.srcObject = localStream;
+      elements.localVideo.muted = true;  // Ensure muted state is maintained
       
       // Show local video when we have a stream
       if (localStream.getVideoTracks().length > 0) {
