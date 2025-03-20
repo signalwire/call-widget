@@ -48,34 +48,6 @@ class EventHandler {
   }
 }
 
-class StateManager {
-  constructor() {
-    this._state = new Proxy({}, {
-      set: (target, property, value) => {
-        const oldValue = target[property];
-        target[property] = value;
-        this._notifyListeners(property, value, oldValue);
-        return true;
-      }
-    });
-    this._listeners = new Map();
-  }
-
-  subscribe(path, callback) {
-    if (!this._listeners.has(path)) {
-      this._listeners.set(path, new Set());
-    }
-    this._listeners.get(path).add(callback);
-  }
-
-  _notifyListeners(path, newValue, oldValue) {
-    if (this._listeners.has(path)) {
-      this._listeners.get(path).forEach(callback => 
-        callback(newValue, oldValue));
-    }
-  }
-}
-
 class UIUpdateManager {
   static updateVisibility(elements, isVisible) {
     Object.entries(elements).forEach(([key, element]) => {
@@ -169,6 +141,11 @@ const CONFIG = {
   DEBUG: {
     enabled: true,
     level: 'error' // 'debug' | 'info' | 'warn' | 'error'
+  },
+  CDN : {
+    videoModal: 'https://assets.swrooms.com/video-modal.css',
+    fontAwesome: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css',
+    signalwireSDK: 'https://cdn.signalwire.com/@signalwire/js@dev',
   },
   UI: {
     backgroundImage: 'https://developer.signalwire.com/img/call-widget/sw_background.webp',
@@ -439,16 +416,16 @@ class UIManager {
       // Load stylesheets into shadow DOM
       const shadow = document.getElementById('video-modal').shadowRoot;
       await Promise.all([
-        ResourceLoader.loadStylesheet('https://assets.swrooms.com/video-modal.css').then(() => {
+        ResourceLoader.loadStylesheet(CONFIG.CDN.videoModal).then(() => {
           const cssLink = DOMUtils.createElement('link', {
             attributes: {
               rel: 'stylesheet',
-              href: 'https://assets.swrooms.com/video-modal.css'
+              href: CONFIG.CDN.videoModal
             }
           });
           shadow.appendChild(cssLink);
         }),
-        ResourceLoader.loadStylesheet('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css', {
+        ResourceLoader.loadStylesheet(CONFIG.CDN.fontAwesome, {
           integrity: 'sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==',
           crossOrigin: 'anonymous',
           referrerPolicy: 'no-referrer'
@@ -456,7 +433,7 @@ class UIManager {
           const fontAwesomeLink = DOMUtils.createElement('link', {
             attributes: {
               rel: 'stylesheet',
-              href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css',
+              href: CONFIG.CDN.fontAwesome,
               integrity: 'sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==',
               crossorigin: 'anonymous',
               referrerpolicy: 'no-referrer'
@@ -1822,7 +1799,7 @@ async function loadSignalWireSDK() {
   logger.info('Loading SignalWire SDK...');
   
   try {
-    await ResourceLoader.loadScript('https://cdn.signalwire.com/@signalwire/js@dev');
+    await ResourceLoader.loadScript(CONFIG.CDN.signalwireSDK);
     
     if (!window.SignalWire) {
       throw new Error('SignalWire SDK loaded but global object not found');
