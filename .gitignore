@@ -29,6 +29,10 @@ bower_components
 # node-waf configuration
 .lock-wscript
 
+
+# ignore local files
+test.html
+
 # IDEs and editors
 .idea
 .project
@@ -49,6 +53,7 @@ bower_components
 .sass-cache
 connect.lock
 typings
+.cursorrules
 
 # Logs
 logs
