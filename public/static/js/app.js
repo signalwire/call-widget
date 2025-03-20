@@ -8,6 +8,159 @@
 (function() {
   'use strict';
 
+/**
+ * Utility Classes
+ */
+class DOMUtils {
+  static createElement(type, options = {}) {
+    const element = document.createElement(type);
+    if (options.className) element.className = options.className;
+    if (options.id) element.id = options.id;
+    if (options.attributes) {
+      Object.entries(options.attributes).forEach(([key, value]) => 
+        element.setAttribute(key, value));
+    }
+    if (options.text) element.textContent = options.text;
+    return element;
+  }
+
+  static toggleClasses(element, classMap) {
+    Object.entries(classMap).forEach(([className, condition]) => 
+      element.classList.toggle(className, condition));
+  }
+}
+
+class EventHandler {
+  static handleDeviceEvents(type, callback) {
+    return async (e) => {
+      e.stopPropagation();
+      localStorage.setItem(`selected${type}`, e.target.value);
+      await callback(type, e.target.value);
+    };
+  }
+
+  static setupCommonListeners(eventMap) {
+    eventMap.forEach(({ element, event, handler }) => {
+      if (element) {
+        element.addEventListener(event, handler);
+      }
+    });
+  }
+}
+
+class StateManager {
+  constructor() {
+    this._state = new Proxy({}, {
+      set: (target, property, value) => {
+        const oldValue = target[property];
+        target[property] = value;
+        this._notifyListeners(property, value, oldValue);
+        return true;
+      }
+    });
+    this._listeners = new Map();
+  }
+
+  subscribe(path, callback) {
+    if (!this._listeners.has(path)) {
+      this._listeners.set(path, new Set());
+    }
+    this._listeners.get(path).add(callback);
+  }
+
+  _notifyListeners(path, newValue, oldValue) {
+    if (this._listeners.has(path)) {
+      this._listeners.get(path).forEach(callback => 
+        callback(newValue, oldValue));
+    }
+  }
+}
+
+class UIUpdateManager {
+  static updateVisibility(elements, isVisible) {
+    Object.entries(elements).forEach(([key, element]) => {
+      if (element?.classList) {
+        element.classList.toggle('show', isVisible);
+      }
+    });
+  }
+
+  static updateControlsState(elements, isActive) {
+    const controlsMap = {
+      'call-controls-container': 'visible',
+      'left-controls': 'show',
+      'right-controls': 'show',
+      'main-controls': 'show'
+    };
+
+    Object.entries(controlsMap).forEach(([className, toggleClass]) => {
+      const element = elements.shadow.querySelector(`.${className}`);
+      if (element) {
+        element.classList.toggle(toggleClass, isActive);
+      }
+    });
+  }
+}
+
+class ResourceLoader {
+  static async loadScript(src, options = {}) {
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) return Promise.resolve();
+
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.async = true;
+      Object.assign(script, options);
+      
+      script.onload = resolve;
+      script.onerror = reject;
+      
+      document.head.appendChild(script);
+    });
+  }
+
+  static async loadStylesheet(href, options = {}) {
+    const existing = document.querySelector(`link[href="${href}"]`);
+    if (existing) return Promise.resolve();
+
+    return new Promise((resolve, reject) => {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      Object.assign(link, options);
+      
+      link.onload = resolve;
+      link.onerror = reject;
+      
+      document.head.appendChild(link);
+    });
+  }
+}
+
+class MessageManager {
+  static createMessageGroup(type) {
+    return DOMUtils.createElement('div', {
+      className: `messages-group ${type}-messages`
+    });
+  }
+
+  static createMessage(text, options = {}) {
+    return DOMUtils.createElement('div', {
+      className: `message ${options.partial ? 'partial' : ''} ${options.last ? 'last' : ''}`,
+      text
+    });
+  }
+
+  static updateMessage(messageDiv, text, options = {}) {
+    messageDiv.textContent = text;
+    DOMUtils.toggleClasses(messageDiv, {
+      'partial': options.partial || false,
+      'last': options.last || false
+    });
+  }
+}
+
 // Configuration
 const CONFIG = {
   // Guest restricted token
@@ -271,312 +424,58 @@ class UIManager {
     this.logger = logger || new Logger('UIManager');
     this.elements = null;
     
-    // Listen for orientation changes
-    window.addEventListener('resize', this._handleResize.bind(this));
+    this._handleResize = this._handleResize.bind(this);
+    window.addEventListener('resize', this._handleResize);
   }
 
   async initialize() {
-    // Create the modal with basic structure
-    this._createVideoModal();
+    // Load required resources first
+    try {
+      // Create video modal if it doesn't exist yet
+      if (!document.getElementById('video-modal')) {
+        this._createVideoModal();
+      }
+
+      // Load stylesheets into shadow DOM
+      const shadow = document.getElementById('video-modal').shadowRoot;
+      await Promise.all([
+        ResourceLoader.loadStylesheet('https://assets.swrooms.com/video-modal.css').then(() => {
+          const cssLink = DOMUtils.createElement('link', {
+            attributes: {
+              rel: 'stylesheet',
+              href: 'https://assets.swrooms.com/video-modal.css'
+            }
+          });
+          shadow.appendChild(cssLink);
+        }),
+        ResourceLoader.loadStylesheet('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css', {
+          integrity: 'sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==',
+          crossOrigin: 'anonymous',
+          referrerPolicy: 'no-referrer'
+        }).then(() => {
+          const fontAwesomeLink = DOMUtils.createElement('link', {
+            attributes: {
+              rel: 'stylesheet',
+              href: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css',
+              integrity: 'sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==',
+              crossorigin: 'anonymous',
+              referrerpolicy: 'no-referrer'
+            }
+          });
+          shadow.appendChild(fontAwesomeLink);
+        })
+      ]);
+    } catch (error) {
+      this.logger.warn('Failed to load some resources:', error);
+      // Continue anyway as we have fallbacks
+    }
+
     this._initializeElements();
-    
-    // Apply styles and initialize UI components
     this._applyDynamicStyles();
     this._initializeEventListeners();
     
     this.state.set('ui.initialized', true);
-    
     return Promise.resolve();
-  }
-
-  _createVideoModal() {
-    // Create container
-    const modal = document.createElement('div');
-    modal.className = 'signalwire-widget-container';
-    modal.id = 'video-modal';
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-label', 'Video Chat');
-    modal.setAttribute('aria-modal', 'true');
-    
-    // Create shadow DOM
-    modal.attachShadow({mode: 'open'});
-    
-    // Add CSS stylesheets using proper DOM methods
-    const cssLink = document.createElement('link');
-    cssLink.rel = 'stylesheet';
-    cssLink.href = 'static/css/video-modal.css'
-    modal.shadowRoot.appendChild(cssLink);
-    
-    // Create main modal div
-    const modalDiv = document.createElement('div');
-    modalDiv.className = 'modal';
-    modalDiv.id = 'shadow-video-modal';
-    
-    // Create modal content
-    const modalContent = document.createElement('div');
-    modalContent.className = 'modal-content';
-    
-    // Create video layout
-    const videoLayout = document.createElement('div');
-    videoLayout.className = 'video-layout';
-    
-    // Create video container
-    const videoContainer = document.createElement('div');
-    videoContainer.className = 'video-container';
-    
-    // Create root element
-    const rootElement = document.createElement('div');
-    rootElement.id = 'root-element';
-    videoContainer.appendChild(rootElement);
-    
-    // Create local video
-    const localVideo = document.createElement('video');
-    localVideo.id = 'local-video';
-    localVideo.className = 'hidden';
-    localVideo.autoplay = true;
-    localVideo.playsInline = true;
-    localVideo.muted = true;
-    videoContainer.appendChild(localVideo);
-    
-    // Create video placeholder
-    const videoPlaceholder = document.createElement('div');
-    videoPlaceholder.id = 'video-placeholder';
-    videoPlaceholder.className = 'video-placeholder';
-    
-    const connectingSpinner = document.createElement('div');
-    connectingSpinner.className = 'connecting-spinner';
-    videoPlaceholder.appendChild(connectingSpinner);
-    
-    const connectingText = document.createElement('div');
-    connectingText.className = 'connecting-text';
-    connectingText.textContent = 'Connecting to agent';
-    videoPlaceholder.appendChild(connectingText);
-    
-    videoContainer.appendChild(videoPlaceholder);
-    videoLayout.appendChild(videoContainer);
-    
-    // Create controls overlay
-    const controlsOverlay = document.createElement('div');
-    controlsOverlay.className = 'controls-overlay';
-    
-    // Create device selectors
-    const deviceSelectors = document.createElement('div');
-    deviceSelectors.className = 'device-selectors';
-    
-    const selectHeader = document.createElement('div');
-    selectHeader.className = 'select-header';
-    
-    const headerTitle = document.createElement('h4');
-    headerTitle.textContent = 'Device Settings';
-    selectHeader.appendChild(headerTitle);
-    
-    const closeSettingsBtn = document.createElement('button');
-    closeSettingsBtn.className = 'close-settings';
-    
-    const closeIcon = document.createElement('i');
-    closeIcon.className = 'fas fa-times';
-    closeSettingsBtn.appendChild(closeIcon);
-    selectHeader.appendChild(closeSettingsBtn);
-    
-    deviceSelectors.appendChild(selectHeader);
-    
-    // Create audio input selector
-    const audioInputWrapper = document.createElement('div');
-    audioInputWrapper.className = 'select-wrapper';
-    
-    const micIcon = document.createElement('i');
-    micIcon.className = 'fas fa-microphone';
-    audioInputWrapper.appendChild(micIcon);
-    
-    const audioInputSelect = document.createElement('select');
-    audioInputSelect.id = 'audioInput';
-    audioInputWrapper.appendChild(audioInputSelect);
-    
-    deviceSelectors.appendChild(audioInputWrapper);
-    
-    // Create audio output selector
-    const audioOutputWrapper = document.createElement('div');
-    audioOutputWrapper.className = 'select-wrapper';
-    
-    const speakerIcon = document.createElement('i');
-    speakerIcon.className = 'fas fa-volume-up';
-    audioOutputWrapper.appendChild(speakerIcon);
-    
-    const audioOutputSelect = document.createElement('select');
-    audioOutputSelect.id = 'audioOutput';
-    audioOutputWrapper.appendChild(audioOutputSelect);
-    
-    deviceSelectors.appendChild(audioOutputWrapper);
-    
-    // Create video input selector
-    const videoInputWrapper = document.createElement('div');
-    videoInputWrapper.className = 'select-wrapper';
-    
-    const videoIcon = document.createElement('i');
-    videoIcon.className = 'fas fa-video';
-    videoInputWrapper.appendChild(videoIcon);
-    
-    const videoInputSelect = document.createElement('select');
-    videoInputSelect.id = 'videoInput';
-    videoInputWrapper.appendChild(videoInputSelect);
-    
-    deviceSelectors.appendChild(videoInputWrapper);
-    
-    controlsOverlay.appendChild(deviceSelectors);
-    
-    // Create call controls container
-    const callControlsContainer = document.createElement('div');
-    callControlsContainer.className = 'call-controls-container';
-    
-    const callControls = document.createElement('div');
-    callControls.className = 'call-controls';
-    
-    // Create left controls
-    const leftControls = document.createElement('div');
-    leftControls.className = 'left-controls';
-    
-    const settingsButton = document.createElement('button');
-    settingsButton.id = 'settingsButton';
-    settingsButton.type = 'button';
-    settingsButton.className = 'left-button';
-    
-    const settingsIcon = document.createElement('i');
-    settingsIcon.className = 'fas fa-cog';
-    settingsButton.appendChild(settingsIcon);
-    
-    leftControls.appendChild(settingsButton);
-    callControls.appendChild(leftControls);
-    
-    // Create main controls
-    const mainControls = document.createElement('div');
-    mainControls.className = 'main-controls';
-    
-    // Add mute button before hangup button
-    const muteButton = document.createElement('button');
-    muteButton.id = 'muteButton';
-    muteButton.className = 'main-button';
-    
-    const muteIcon = document.createElement('i');
-    muteIcon.className = 'fas fa-microphone';
-    muteButton.appendChild(muteIcon);
-    
-    mainControls.appendChild(muteButton);
-    
-    const hangupButton = document.createElement('button');
-    hangupButton.id = 'hangup-button';
-    hangupButton.className = 'main-button hangup-button';
-    
-    const hangupIcon = document.createElement('i');
-    hangupIcon.className = 'fas fa-phone-slash';
-    hangupButton.appendChild(hangupIcon);
-    
-    mainControls.appendChild(hangupButton);
-    callControls.appendChild(mainControls);
-    
-    // Create right controls
-    const rightControls = document.createElement('div');
-    rightControls.className = 'right-controls';
-    
-    const buttonContainer = document.createElement('div');
-    buttonContainer.className = 'button-container';
-    
-    const chatButton = document.createElement('button');
-    chatButton.id = 'chat-button';
-    chatButton.className = 'right-button chat-button';
-    
-    const chatIcon = document.createElement('i');
-    chatIcon.className = 'fas fa-comment-alt';
-    chatButton.appendChild(chatIcon);
-    
-    buttonContainer.appendChild(chatButton);
-    
-    const notificationBadge = document.createElement('span');
-    notificationBadge.className = 'notification-badge hidden';
-    notificationBadge.textContent = '0';
-    buttonContainer.appendChild(notificationBadge);
-    
-    rightControls.appendChild(buttonContainer);
-    callControls.appendChild(rightControls);
-    
-    callControlsContainer.appendChild(callControls);
-    controlsOverlay.appendChild(callControlsContainer);
-    
-    videoLayout.appendChild(controlsOverlay);
-    modalContent.appendChild(videoLayout);
-    
-    // Create chat panel
-    const chatPanel = document.createElement('div');
-    chatPanel.id = 'chat-panel';
-    chatPanel.className = 'chat-panel';
-    
-    const chatHeader = document.createElement('div');
-    chatHeader.className = 'chat-header';
-    
-    const chatTitle = document.createElement('h3');
-    chatTitle.textContent = 'Conversation Log';
-    chatHeader.appendChild(chatTitle);
-    
-    const chatCloseBtn = document.createElement('button');
-    chatCloseBtn.className = 'chat-close';
-    chatCloseBtn.id = 'chat-close';
-    
-    const chatCloseIcon = document.createElement('i');
-    chatCloseIcon.className = 'fas fa-times';
-    chatCloseBtn.appendChild(chatCloseIcon);
-    
-    chatHeader.appendChild(chatCloseBtn);
-    chatPanel.appendChild(chatHeader);
-    
-    const messagesContainer = document.createElement('div');
-    messagesContainer.id = 'messagesContainer';
-    messagesContainer.className = 'messages-container';
-    chatPanel.appendChild(messagesContainer);
-    
-    modalContent.appendChild(chatPanel);
-    modalDiv.appendChild(modalContent);
-    modal.shadowRoot.appendChild(modalDiv);
-    
-    document.body.appendChild(modal);
-  }
-
-  _initializeElements() {
-    const container = document.getElementById('video-modal');
-    const shadow = container.shadowRoot;
-    
-    this.elements = {
-      modal: shadow.getElementById('shadow-video-modal'),
-      root: shadow.getElementById('root-element'),
-      localVideo: shadow.getElementById('local-video'),
-      hangupButton: shadow.getElementById('hangup-button'),
-      placeholder: shadow.getElementById('video-placeholder'),
-      settingsButton: shadow.getElementById('settingsButton'),
-      audioInput: shadow.getElementById('audioInput'),
-      audioOutput: shadow.getElementById('audioOutput'),
-      videoInput: shadow.getElementById('videoInput'),
-      deviceSelectors: shadow.querySelector('.device-selectors'),
-      closeSettings: shadow.querySelector('.close-settings'),
-      chatButton: shadow.getElementById('chat-button'),
-      chatPanel: shadow.getElementById('chat-panel'),
-      chatClose: shadow.getElementById('chat-close'),
-      messagesContainer: shadow.getElementById('messagesContainer'),
-      notificationBadge: shadow.querySelector('.notification-badge'),
-      muteButton: shadow.getElementById('muteButton'),
-      shadow: shadow,
-    };
-
-    this.state.set('ui.elements', this.elements);
-    
-    // Set initial chat panel state based on device type
-    // Open by default on desktop, closed on mobile
-    const isMobile = window.innerWidth < 992; // Using the tablet breakpoint from CSS
-    this.state.set('isChatOpen', !isMobile);
-    
-    // Apply the initial state to the UI
-    if (!isMobile && this.elements.chatPanel) {
-      this.elements.chatPanel.classList.add('open');
-      this.elements.chatButton.classList.add('active');
-      this.elements.modal.classList.add('chat-open');
-    }
   }
 
   _applyDynamicStyles() {
@@ -665,8 +564,507 @@ class UIManager {
     }
   }
 
+  _createVideoModal() {
+    // Create container
+    const modal = DOMUtils.createElement('div', {
+      className: 'signalwire-widget-container',
+      id: 'video-modal',
+      attributes: {
+        role: 'dialog',
+        'aria-label': 'Video Chat',
+        'aria-modal': 'true'
+      }
+    });
+    
+    // Create shadow DOM
+    modal.attachShadow({mode: 'open'});
+    
+    // Create main modal div
+    const modalDiv = DOMUtils.createElement('div', {
+      className: 'modal',
+      id: 'shadow-video-modal'
+    });
+    
+    // Create modal content
+    const modalContent = DOMUtils.createElement('div', {
+      className: 'modal-content'
+    });
+    
+    // Create video layout
+    const videoLayout = DOMUtils.createElement('div', {
+      className: 'video-layout'
+    });
+    
+    // Create video container
+    const videoContainer = DOMUtils.createElement('div', {
+      className: 'video-container'
+    });
+    
+    // Create root element
+    const rootElement = DOMUtils.createElement('div', {
+      id: 'root-element'
+    });
+    videoContainer.appendChild(rootElement);
+    
+    // Create local video
+    const localVideo = DOMUtils.createElement('video', {
+      id: 'local-video',
+      className: 'hidden',
+      attributes: {
+        autoplay: 'true',
+        playsinline: 'true',
+        muted: 'true'
+      }
+    });
+    videoContainer.appendChild(localVideo);
+    
+    // Create video placeholder
+    const videoPlaceholder = DOMUtils.createElement('div', {
+      id: 'video-placeholder',
+      className: 'video-placeholder'
+    });
+    
+    const connectingSpinner = DOMUtils.createElement('div', {
+      className: 'connecting-spinner'
+    });
+    videoPlaceholder.appendChild(connectingSpinner);
+    
+    const connectingText = DOMUtils.createElement('div', {
+      className: 'connecting-text',
+      text: 'Connecting to agent'
+    });
+    videoPlaceholder.appendChild(connectingText);
+    
+    videoContainer.appendChild(videoPlaceholder);
+    videoLayout.appendChild(videoContainer);
+    
+    // Create controls overlay
+    const controlsOverlay = DOMUtils.createElement('div', {
+      className: 'controls-overlay'
+    });
+    
+    // Create device selectors
+    const deviceSelectors = DOMUtils.createElement('div', {
+      className: 'device-selectors'
+    });
+    
+    const selectHeader = DOMUtils.createElement('div', {
+      className: 'select-header'
+    });
+    
+    const headerTitle = DOMUtils.createElement('h4', {
+      text: 'Device Settings'
+    });
+    selectHeader.appendChild(headerTitle);
+    
+    const closeSettingsBtn = DOMUtils.createElement('button', {
+      className: 'close-settings'
+    });
+    
+    const closeIcon = DOMUtils.createElement('i', {
+      className: 'fas fa-times'
+    });
+    closeSettingsBtn.appendChild(closeIcon);
+    selectHeader.appendChild(closeSettingsBtn);
+    
+    deviceSelectors.appendChild(selectHeader);
+    
+    // Create device select wrappers
+    const deviceTypes = [
+      { id: 'audioInput', icon: 'microphone', label: 'Audio Input' },
+      { id: 'audioOutput', icon: 'volume-up', label: 'Audio Output' },
+      { id: 'videoInput', icon: 'video', label: 'Video Input' }
+    ];
+    
+    deviceTypes.forEach(device => {
+      const wrapper = DOMUtils.createElement('div', {
+        className: 'select-wrapper'
+      });
+      
+      const icon = DOMUtils.createElement('i', {
+        className: `fas fa-${device.icon}`
+      });
+      wrapper.appendChild(icon);
+      
+      const select = DOMUtils.createElement('select', {
+        id: device.id
+      });
+      wrapper.appendChild(select);
+      
+      deviceSelectors.appendChild(wrapper);
+    });
+    
+    controlsOverlay.appendChild(deviceSelectors);
+    
+    // Create call controls
+    const callControlsContainer = DOMUtils.createElement('div', {
+      className: 'call-controls-container'
+    });
+    
+    const callControls = DOMUtils.createElement('div', {
+      className: 'call-controls'
+    });
+    
+    // Create control sections
+    const sections = {
+      left: { className: 'left-controls', buttons: [
+        { id: 'settingsButton', icon: 'cog', className: 'left-button' }
+      ]},
+      main: { className: 'main-controls', buttons: [
+        { id: 'muteButton', icon: 'microphone', className: 'main-button' },
+        { id: 'hangup-button', icon: 'phone-slash', className: 'main-button hangup-button' }
+      ]},
+      right: { className: 'right-controls', buttons: [
+        { id: 'chat-button', icon: 'comment-alt', className: 'right-button chat-button', withBadge: true }
+      ]}
+    };
+    
+    Object.entries(sections).forEach(([sectionName, section]) => {
+      const sectionDiv = DOMUtils.createElement('div', {
+        className: section.className
+      });
+      
+      section.buttons.forEach(button => {
+        const buttonContainer = button.withBadge ? 
+          DOMUtils.createElement('div', { className: 'button-container' }) : null;
+        
+        const buttonElement = DOMUtils.createElement('button', {
+          id: button.id,
+          className: button.className
+        });
+        
+        const icon = DOMUtils.createElement('i', {
+          className: `fas fa-${button.icon}`
+        });
+        buttonElement.appendChild(icon);
+        
+        if (buttonContainer) {
+          buttonContainer.appendChild(buttonElement);
+          if (button.withBadge) {
+            const badge = DOMUtils.createElement('span', {
+              className: 'notification-badge hidden',
+              text: '0'
+            });
+            buttonContainer.appendChild(badge);
+          }
+          sectionDiv.appendChild(buttonContainer);
+        } else {
+          sectionDiv.appendChild(buttonElement);
+        }
+      });
+      
+      callControls.appendChild(sectionDiv);
+    });
+    
+    callControlsContainer.appendChild(callControls);
+    controlsOverlay.appendChild(callControlsContainer);
+    
+    videoLayout.appendChild(controlsOverlay);
+    modalContent.appendChild(videoLayout);
+    
+    // Create chat panel
+    const chatPanel = DOMUtils.createElement('div', {
+      id: 'chat-panel',
+      className: 'chat-panel'
+    });
+    
+    const chatHeader = DOMUtils.createElement('div', {
+      className: 'chat-header'
+    });
+    
+    const chatTitle = DOMUtils.createElement('h3', {
+      text: 'Conversation Log'
+    });
+    chatHeader.appendChild(chatTitle);
+    
+    const chatCloseBtn = DOMUtils.createElement('button', {
+      id: 'chat-close',
+      className: 'chat-close'
+    });
+    
+    const chatCloseIcon = DOMUtils.createElement('i', {
+      className: 'fas fa-times'
+    });
+    chatCloseBtn.appendChild(chatCloseIcon);
+    
+    chatHeader.appendChild(chatCloseBtn);
+    chatPanel.appendChild(chatHeader);
+    
+    const messagesContainer = DOMUtils.createElement('div', {
+      id: 'messagesContainer',
+      className: 'messages-container'
+    });
+    chatPanel.appendChild(messagesContainer);
+    
+    modalContent.appendChild(chatPanel);
+    modalDiv.appendChild(modalContent);
+    modal.shadowRoot.appendChild(modalDiv);
+    
+    document.body.appendChild(modal);
+  }
+
+  _initializeElements() {
+    const container = document.getElementById('video-modal');
+    const shadow = container.shadowRoot;
+    
+    this.elements = {
+      modal: shadow.getElementById('shadow-video-modal'),
+      root: shadow.getElementById('root-element'),
+      localVideo: shadow.getElementById('local-video'),
+      hangupButton: shadow.getElementById('hangup-button'),
+      placeholder: shadow.getElementById('video-placeholder'),
+      settingsButton: shadow.getElementById('settingsButton'),
+      audioInput: shadow.getElementById('audioInput'),
+      audioOutput: shadow.getElementById('audioOutput'),
+      videoInput: shadow.getElementById('videoInput'),
+      deviceSelectors: shadow.querySelector('.device-selectors'),
+      closeSettings: shadow.querySelector('.close-settings'),
+      chatButton: shadow.getElementById('chat-button'),
+      chatPanel: shadow.getElementById('chat-panel'),
+      chatClose: shadow.getElementById('chat-close'),
+      messagesContainer: shadow.getElementById('messagesContainer'),
+      notificationBadge: shadow.querySelector('.notification-badge'),
+      muteButton: shadow.getElementById('muteButton'),
+      shadow: shadow,
+    };
+
+    this.state.set('ui.elements', this.elements);
+    
+    const isMobile = window.innerWidth < 992;
+    this.state.set('isChatOpen', !isMobile);
+    
+    if (!isMobile && this.elements.chatPanel) {
+      DOMUtils.toggleClasses(this.elements.chatPanel, { 'open': true });
+      DOMUtils.toggleClasses(this.elements.chatButton, { 'active': true });
+      DOMUtils.toggleClasses(this.elements.modal, { 'chat-open': true });
+    }
+  }
+
+  _initializeEventListeners() {
+    const elements = this.elements;
+    
+    const eventMap = [
+      { element: elements.hangupButton, event: 'click', handler: () => 
+        this.events.emit(EventRegistry.LOCAL.CALL_END) },
+      { element: elements.muteButton, event: 'click', handler: () => 
+        this.events.emit(EventRegistry.LOCAL.CALL_TOGGLE) },
+      { element: elements.settingsButton, event: 'click', handler: (e) => {
+        e.stopPropagation();
+        this._toggleSettings();
+      }},
+      { element: elements.closeSettings, event: 'click', handler: () => 
+        this._toggleSettings(false) },
+      { element: elements.chatButton, event: 'click', handler: (e) => {
+        e.stopPropagation();
+        this.events.emit(EventRegistry.LOCAL.CHAT_TOGGLE);
+        if (!this.state.get('isChatOpen')) {
+          this.state.set('unreadMessages', 0);
+          this._updateNotificationBadge();
+        }
+      }},
+      { element: elements.chatClose, event: 'click', handler: () => 
+        this.events.emit(EventRegistry.LOCAL.CHAT_TOGGLE, false) }
+    ];
+    
+    EventHandler.setupCommonListeners(eventMap);
+    
+    // Device selection handlers
+    ['audioInput', 'videoInput', 'audioOutput'].forEach(type => {
+      elements[type]?.addEventListener('click', (e) => e.stopPropagation());
+      elements[type]?.addEventListener('change', 
+        EventHandler.handleDeviceEvents(type, (type, value) => 
+          this.events.emit(EventRegistry.LOCAL.DEVICE_CHANGED, type, value))
+      );
+    });
+    
+    // Close settings when clicking outside
+    document.addEventListener('click', (event) => {
+      if (elements.deviceSelectors?.classList.contains('show') &&
+          !elements.settingsButton?.contains(event.target) &&
+          !elements.deviceSelectors?.contains(event.target)) {
+        this._toggleSettings(false);
+      }
+    });
+  }
+
+  updateUI(isShowing) {
+    const elements = this.elements;
+    const isCallActive = isShowing && this.state.get('currentCall')?.state === 'active';
+    
+    const container = document.getElementById('video-modal');
+    if (container) {
+      DOMUtils.toggleClasses(container, { 'active': isShowing });
+    }
+    
+    if (elements.modal) {
+      DOMUtils.toggleClasses(elements.modal, { 'show': isShowing });
+      elements.modal.style.display = isShowing ? 'flex' : 'none';
+    }
+    
+    if (elements.placeholder) {
+      DOMUtils.toggleClasses(elements.placeholder, { 'show': isShowing && !isCallActive });
+    }
+    
+    UIUpdateManager.updateVisibility({
+      settingsButton: elements.settingsButton,
+      hangupButton: elements.hangupButton,
+      chatButton: elements.chatButton,
+      muteButton: elements.muteButton
+    }, isCallActive);
+    
+    UIUpdateManager.updateControlsState(elements, isCallActive);
+    
+    if (elements.root) {
+      DOMUtils.toggleClasses(elements.root, { 'active': isCallActive });
+    }
+    
+    if (isCallActive) {
+      const isMobile = window.innerWidth < 992;
+      this.toggleChatPanel(!isMobile);
+    } else {
+      this.toggleChatPanel(false);
+    }
+    
+    if (!isShowing && elements.localVideo) {
+      elements.localVideo.srcObject = null;
+      this._toggleLocalVideo(false);
+    }
+  }
+
+  toggleChatPanel(forceState) {
+    const elements = this.elements;
+    const isOpen = forceState !== undefined ? forceState : !this.state.get('isChatOpen');
+    this.state.set('isChatOpen', isOpen);
+    
+    DOMUtils.toggleClasses(elements.chatPanel, { 'open': isOpen });
+    DOMUtils.toggleClasses(elements.chatButton, { 'active': isOpen });
+    DOMUtils.toggleClasses(elements.modal, { 'chat-open': isOpen });
+    
+    if (isOpen) {
+      this.state.set('unreadMessages', 0);
+      this._updateNotificationBadge();
+      
+      if (elements.messagesContainer) {
+        elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
+      }
+    }
+  }
+
+  clearChatMessages() {
+    if (this.elements.messagesContainer) {
+      this.elements.messagesContainer.innerHTML = '';
+    }
+    this.state.set('currentPartialMessage', null);
+    this.state.set('unreadMessages', 0);
+    this._updateNotificationBadge();
+  }
+
+  appendMessage(text, sender) {
+    const messagesContainer = this.elements.messagesContainer;
+    if (!messagesContainer) return;
+
+    const messageGroup = MessageManager.createMessageGroup(sender);
+    messagesContainer.appendChild(messageGroup);
+
+    const messageDiv = MessageManager.createMessage(text, { last: true });
+    messageGroup.appendChild(messageDiv);
+
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    if (sender === 'ai' && !this.state.get('isChatOpen')) {
+      const currentCount = this.state.get('unreadMessages');
+      this.state.set('unreadMessages', currentCount + 1);
+      this._updateNotificationBadge();
+    }
+
+    return messageDiv;
+  }
+
+  _updateChatMessage(text, isPartial = false) {
+    const messagesContainer = this.elements.messagesContainer;
+    if (!messagesContainer) return;
+
+    let currentDiv = this.state.get('currentPartialMessageDiv');
+
+    if (!currentDiv) {
+      const messageGroup = MessageManager.createMessageGroup('ai');
+      messagesContainer.appendChild(messageGroup);
+
+      currentDiv = MessageManager.createMessage('', { 
+        partial: isPartial, 
+        first: true, 
+        last: true 
+      });
+      messageGroup.appendChild(currentDiv);
+
+      if (isPartial) {
+        this.state.set('currentPartialMessageDiv', currentDiv);
+      }
+    }
+
+    MessageManager.updateMessage(currentDiv, text, { 
+      partial: isPartial,
+      last: true 
+    });
+
+    if (!isPartial) {
+      this.state.set('currentPartialMessageDiv', null);
+
+      if (!this.state.get('isChatOpen')) {
+        const currentCount = this.state.get('unreadMessages');
+        this.state.set('unreadMessages', currentCount + 1);
+        this._updateNotificationBadge();
+      }
+    }
+
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    return currentDiv;
+  }
+
+  _toggleSettings(forceState) {
+    const elements = this.elements;
+    const shouldShow = forceState !== undefined ? forceState : 
+      !elements.deviceSelectors?.classList.contains('show');
+    
+    DOMUtils.toggleClasses(elements.deviceSelectors, { 'show': shouldShow });
+    DOMUtils.toggleClasses(elements.settingsButton, { 'active': shouldShow });
+  }
+
+  _updateNotificationBadge() {
+    const count = this.state.get('unreadMessages');
+    const badge = this.elements.notificationBadge;
+    
+    if (!badge) return;
+    
+    if (count > 0) {
+      badge.textContent = count > 9 ? '9+' : count;
+      DOMUtils.toggleClasses(badge, { 'hidden': false });
+    } else {
+      DOMUtils.toggleClasses(badge, { 'hidden': true });
+    }
+  }
+
+  _toggleLocalVideo(show) {
+    if (!this.elements.localVideo) return;
+    
+    DOMUtils.toggleClasses(this.elements.localVideo, { 'hidden': !show });
+    requestAnimationFrame(() => {
+      this.elements.localVideo.style.opacity = show ? '1' : '0';
+    });
+  }
+
+  toggleMute(isMuted) {
+    const muteButton = this.elements.muteButton;
+    if (!muteButton) return;
+    
+    const icon = muteButton.querySelector('i');
+    
+    DOMUtils.toggleClasses(muteButton, { 'muted': isMuted });
+    icon.className = `fas fa-microphone${isMuted ? '-slash' : ''}`;
+  }
+
   _handleResize() {
-    // Update responsive classes based on window size and state
+    // Apply responsive classes based on window size and state
     const elements = this.elements;
     if (!elements?.modal) return;
     
@@ -687,99 +1085,6 @@ class UIManager {
     // If we're switching from mobile to desktop during an active call, open chat
     else if (!isMobile && wasTablet && isActive) {
       this.toggleChatPanel(true);
-    }
-  }
-
-  _initializeEventListeners() {
-    const elements = this.elements;
-    
-    // Hangup button
-    elements.hangupButton?.addEventListener('click', () => 
-      this.events.emit(EventRegistry.LOCAL.CALL_END));
-      
-    // Mute button
-    elements.muteButton?.addEventListener('click', () => 
-      this.events.emit(EventRegistry.LOCAL.CALL_TOGGLE));
-    
-    // Settings button
-    elements.settingsButton?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      // Toggle the settings panel based on its current state
-      this._toggleSettings();
-    });
-    
-    // Close settings button
-    elements.closeSettings?.addEventListener('click', () => {
-      this._toggleSettings(false);
-    });
-    
-    // Chat button event listener
-    elements.chatButton?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.events.emit(EventRegistry.LOCAL.CHAT_TOGGLE);
-      // Reset unread count when opening chat
-      if (!this.state.get('isChatOpen')) {
-        this.state.set('unreadMessages', 0);
-        this._updateNotificationBadge();
-      }
-    });
-    
-    // Chat close button event listener
-    elements.chatClose?.addEventListener('click', () => {
-      this.events.emit(EventRegistry.LOCAL.CHAT_TOGGLE, false);
-    });
-    
-    // Add stopPropagation to prevent closing when selecting from dropdowns
-    elements.audioInput?.addEventListener('click', (e) => e.stopPropagation());
-    elements.videoInput?.addEventListener('click', (e) => e.stopPropagation());
-    elements.audioOutput?.addEventListener('click', (e) => e.stopPropagation());
-    
-    // Close settings when clicking outside
-    document.addEventListener('click', (event) => {
-      if (elements.deviceSelectors?.classList.contains('show') &&
-          !elements.settingsButton?.contains(event.target) &&
-          !elements.deviceSelectors?.contains(event.target)) {
-        this._toggleSettings(false);
-      }
-    });
-
-    // Device change listeners with device type and preference saving
-    ['audioInput', 'videoInput', 'audioOutput'].forEach(type => {
-      elements[type]?.addEventListener('change', async (e) => {
-        e.stopPropagation();
-        localStorage.setItem(`selected${type}`, e.target.value);
-        this.events.emit(EventRegistry.LOCAL.DEVICE_CHANGED, type, e.target.value);
-      });
-    });
-  }
-
-  _toggleSettings(forceState) {
-    const elements = this.elements;
-    const shouldShow = forceState !== undefined ? forceState : !elements.deviceSelectors?.classList.contains('show');
-    
-    if (shouldShow) {
-      elements.deviceSelectors?.classList.add('show');
-      elements.settingsButton?.classList.add('active');
-    } else {
-      elements.deviceSelectors?.classList.remove('show');
-      elements.settingsButton?.classList.remove('active');
-    }
-  }
-
-  _updateNotificationBadge() {
-    const count = this.state.get('unreadMessages');
-    const badge = this.elements.notificationBadge;
-    
-    if (!badge) {
-      // Silently fail if badge element not found
-      return;
-    }
-    
-    if (count > 0) {
-      badge.textContent = count > 9 ? '9+' : count;
-      badge.classList.remove('hidden');
-    } else {
-      badge.classList.add('hidden');
     }
   }
 
@@ -812,263 +1117,6 @@ class UIManager {
         element.value = saved || element.options[0].value;
       }
     });
-  }
-
-  updateUI(isShowing) {
-    const elements = this.elements;
-    const isCallActive = isShowing && this.state.get('currentCall')?.state === 'active';
-    
-    // Get the container element
-    const container = document.getElementById('video-modal');
-    
-    if (container) {
-      // Toggle the active class based on visibility
-      container.classList.toggle('active', isShowing);
-    }
-    
-    if (elements.modal) {
-      elements.modal.classList.toggle('show', isShowing);
-      // Use display flex through CSS instead of JavaScript
-      elements.modal.style.display = isShowing ? 'flex' : 'none';
-    }
-    
-    if (elements.placeholder) {
-      // Show the placeholder when starting a call, but hide it once call is active
-      elements.placeholder.classList.toggle('show', isShowing && !isCallActive);
-    }
-    
-    // Make sure the controls are visible or hidden based on call state
-    if (elements.settingsButton) {
-      elements.settingsButton.classList.toggle('show', isCallActive);
-    }
-    
-    if (elements.hangupButton) {
-      elements.hangupButton.classList.toggle('show', isCallActive);
-    }
-    
-    if (elements.chatButton) {
-      elements.chatButton.classList.toggle('show', isCallActive);
-    }
-
-    if (elements.muteButton) {
-      elements.muteButton.classList.toggle('show', isCallActive);
-    }
-
-    // Control container visibility with classes
-    const controlsContainer = elements.shadow.querySelector('.call-controls-container');
-    if (controlsContainer) {
-      controlsContainer.classList.toggle('visible', isCallActive);
-    }
-    
-    // Ensure the left controls section is visible with classes
-    const leftControls = elements.shadow.querySelector('.left-controls');
-    if (leftControls) {
-      leftControls.classList.toggle('show', isCallActive);
-    }
-    
-    // Ensure the right controls section is visible with classes
-    const rightControls = elements.shadow.querySelector('.right-controls');
-    if (rightControls) {
-      rightControls.classList.toggle('show', isCallActive);
-    }
-    
-    // Ensure the main controls section is visible with classes
-    const mainControls = elements.shadow.querySelector('.main-controls');
-    if (mainControls) {
-      mainControls.classList.toggle('show', isCallActive);
-    }
-    
-    if (elements.root) {
-      elements.root.classList.toggle('active', isCallActive);
-    }
-    
-    // When call becomes active, set chat panel according to device type
-    if (isCallActive) {
-      const isMobile = window.innerWidth < 992;
-      
-      // For desktop, always open chat panel when call becomes active
-      if (!isMobile) {
-        this.toggleChatPanel(true);
-      } else {
-        // For mobile, always close chat panel when call becomes active
-        this.toggleChatPanel(false);
-      }
-    } else {
-      // Hide chat panel when call is not active
-      this.toggleChatPanel(false);
-    }
-    
-    if (!isShowing && elements.localVideo) {
-      elements.localVideo.srcObject = null;
-      this._toggleLocalVideo(false);
-    }
-  }
-
-  toggleChatPanel(forceState) {
-    const elements = this.elements;
-    const isOpen = forceState !== undefined ? forceState : !this.state.get('isChatOpen');
-    this.state.set('isChatOpen', isOpen);
-    
-    if (isOpen) {
-      elements.chatPanel.classList.add('open');
-      elements.chatButton.classList.add('active');
-      
-      // Add chat-open class to the modal content for centering
-      elements.modal.classList.add('chat-open');
-      
-      // Reset unread messages when opening chat
-      this.state.set('unreadMessages', 0);
-      this._updateNotificationBadge();
-      
-      // Scroll to bottom of messages
-      if (elements.messagesContainer) {
-        elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
-      }
-    } else {
-      elements.chatPanel.classList.remove('open');
-      elements.chatButton.classList.remove('active');
-      
-      // Remove chat-open class from modal content when closing
-      elements.modal.classList.remove('chat-open');
-    }
-  }
-
-  clearChatMessages() {
-    if (this.elements.messagesContainer) {
-      this.elements.messagesContainer.innerHTML = '';
-    }
-    this.state.set('currentPartialMessage', null);
-    this.state.set('unreadMessages', 0);
-    this._updateNotificationBadge();
-  }
-
-  appendMessage(text, sender) {
-    const messagesContainer = this.elements.messagesContainer;
-    if (!messagesContainer) return;
-
-    // Determine message group type
-    const groupClass = sender === 'user' ? 'user-messages' : 'ai-messages';
-
-    // Create a new message group
-    const messageGroup = document.createElement('div');
-    messageGroup.className = `messages-group ${groupClass}`;
-    messagesContainer.appendChild(messageGroup);
-
-    // Create the message div
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'message last';
-    messageDiv.textContent = text;
-    messageGroup.appendChild(messageDiv);
-
-    // Auto-scroll to bottom
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-    // Increment unread messages if chat is closed and this is an AI message
-    if (sender === 'ai' && !this.state.get('isChatOpen')) {
-      const currentCount = this.state.get('unreadMessages');
-      this.state.set('unreadMessages', currentCount + 1);
-      this._updateNotificationBadge();
-    }
-
-    return messageDiv;
-  }
-
-  _updateChatMessage(text, isPartial = false) {
-    const messagesContainer = this.elements.messagesContainer;
-    if (!messagesContainer) return;
-
-    let currentDiv = this.state.get('currentPartialMessageDiv');
-
-    if (!currentDiv) {
-      // Create new message group for AI
-      const messageGroup = document.createElement('div');
-      messageGroup.className = 'messages-group ai-messages';
-      messagesContainer.appendChild(messageGroup);
-
-      // Create new message div
-      currentDiv = document.createElement('div');
-      currentDiv.className = `message ${isPartial ? 'partial' : ''} first last`;
-      messageGroup.appendChild(currentDiv);
-
-      if (isPartial) {
-        this.state.set('currentPartialMessageDiv', currentDiv);
-      }
-    }
-
-    currentDiv.textContent = text;
-
-    if (!isPartial) {
-      currentDiv.classList.remove('partial');
-      this.state.set('currentPartialMessageDiv', null);
-
-      // Only increment unread count for final messages when chat is closed
-      if (!this.state.get('isChatOpen')) {
-        const currentCount = this.state.get('unreadMessages');
-        this.state.set('unreadMessages', currentCount + 1);
-        this._updateNotificationBadge();
-      }
-    }
-
-    // Auto-scroll to bottom
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-    return currentDiv;
-  }
-
-  showError(error) {
-    this.logger.error('UI Error:', error);
-    
-    // Group similar errors together for cleaner handling
-    const errorMessages = {
-      // Camera/microphone permission errors
-      NotAllowedError: 'Camera/Microphone access denied. Please check your browser permissions.',
-      PermissionDeniedError: 'Camera/Microphone access denied. Please check your browser permissions.',
-      
-      // Device not found or in use
-      NotFoundError: 'Camera/Microphone not found. Please check your device connections.',
-      NotReadableError: 'Device in use by another application. Please close other apps using your camera/microphone.',
-      TrackStartError: 'Device in use by another application. Please close other apps using your camera/microphone.',
-      
-      // Configuration errors
-      OverconstrainedError: 'The requested device settings are not supported by your device.',
-      TypeError: 'Invalid media constraints. Please check your device settings.'
-    };
-    
-    // Get the error message or use a fallback with the error details
-    const message = errorMessages[error.name] || `${error.name}: ${error.message}` || 'An error occurred';
-    alert(message);
-  }
-
-  /**
-   * Helper method to toggle local video visibility
-   * @param {boolean} show - Whether to show or hide the video
-   */
-  _toggleLocalVideo(show) {
-    if (!this.elements.localVideo) return;
-    
-    this.elements.localVideo.classList.toggle('hidden', !show);
-    requestAnimationFrame(() => {
-      this.elements.localVideo.style.opacity = show ? '1' : '0';
-    });
-  }
-
-  /**
-   * Toggle mute state and update button appearance
-   * @param {boolean} isMuted - Whether audio is muted
-   */
-  toggleMute(isMuted) {
-    const muteButton = this.elements.muteButton;
-    if (!muteButton) return;
-    
-    const icon = muteButton.querySelector('i');
-    
-    if (isMuted) {
-      muteButton.classList.add('muted');
-      icon.className = 'fas fa-microphone-slash';
-    } else {
-      muteButton.classList.remove('muted');
-      icon.className = 'fas fa-microphone';
-    }
   }
 }
 
@@ -1693,13 +1741,6 @@ class ChatManager {
           messageDiv.textContent = params.text;
           aiGroup.appendChild(messageDiv);
         }
-        
-        // Update unread count if chat is closed
-        if (!this.state.get('isChatOpen')) {
-          const currentCount = this.state.get('unreadMessages');
-          this.state.set('unreadMessages', currentCount + 1);
-          this.ui._updateNotificationBadge();
-        }
       }
     });
 
@@ -1710,6 +1751,13 @@ class ChatManager {
         // Empty utterance signals start of new AI message
         this._finalizeCurrentAIMessage();
         this.state.set('aiMessageInProgress', true);
+        
+        // Increment unread count when a new AI message starts and chat is closed
+        if (!this.state.get('isChatOpen')) {
+          const currentCount = this.state.get('unreadMessages');
+          this.state.set('unreadMessages', currentCount + 1);
+          this.ui._updateNotificationBadge();
+        }
       } else if (params.utterance && this.state.get('aiMessageInProgress')) {
         // Get or create AI message div
         let currentDiv = this.state.get('currentPartialMessageDiv');
@@ -1764,95 +1812,28 @@ class ChatManager {
  * Dynamically loads the SignalWire SDK if it's not already loaded
  * @returns {Promise} A promise that resolves when the SDK is loaded
  */
-function loadSignalWireSDK() {
-  return new Promise((resolve, reject) => {
-    // Check if SDK is already loaded
-    if (window.SignalWire) {
-      logger.debug('SignalWire SDK already loaded');
-      resolve(window.SignalWire);
-      return;
+async function loadSignalWireSDK() {
+  // Check if SDK is already loaded
+  if (window.SignalWire) {
+    logger.debug('SignalWire SDK already loaded');
+    return window.SignalWire;
+  }
+
+  logger.info('Loading SignalWire SDK...');
+  
+  try {
+    await ResourceLoader.loadScript('https://cdn.signalwire.com/@signalwire/js@dev');
+    
+    if (!window.SignalWire) {
+      throw new Error('SignalWire SDK loaded but global object not found');
     }
     
-    logger.info('Loading SignalWire SDK...');
-    
-    // Create script element
-    const script = document.createElement('script');
-    script.src = 'https://cdn.signalwire.com/@signalwire/js@dev';
-    script.async = true;
-    
-    let retryCount = 0;
-    const maxRetries = 3;
-    const retryDelay = 2000; // 2 seconds
-    
-    const tryLoad = () => {
-      // Set up load and error handlers
-      script.onload = () => {
-        if (window.SignalWire) {
-          logger.info('SignalWire SDK loaded successfully');
-          resolve(window.SignalWire);
-        } else {
-          const error = new Error('SignalWire SDK loaded but global object not found');
-          logger.error('SignalWire SDK load error:', error);
-          handleLoadError();
-        }
-      };
-      
-      script.onerror = handleLoadError;
-      
-      // Add to document if not already there
-      if (!document.head.contains(script)) {
-        document.head.appendChild(script);
-      }
-    };
-    
-    const handleLoadError = () => {
-      if (retryCount < maxRetries) {
-        retryCount++;
-        logger.warn(`Retrying SignalWire SDK load (attempt ${retryCount}/${maxRetries})...`);
-        setTimeout(tryLoad, retryDelay);
-      } else {
-        const error = new Error('Failed to load SignalWire SDK after multiple attempts');
-        logger.error('SignalWire SDK load error:', error);
-        reject(error);
-      }
-    };
-    
-    // Start loading
-    tryLoad();
-  });
-}
-
-/**
- * Dynamically loads Font Awesome
- * @returns {Promise} A promise that resolves when Font Awesome is loaded
- */
-function loadFontAwesome() {
-  return new Promise((resolve, reject) => {
-    logger.info('Loading Font Awesome...');
-    
-    // Create link element for Font Awesome
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
-    link.integrity = 'sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==';
-    link.crossOrigin = 'anonymous';
-    link.referrerPolicy = 'no-referrer';
-    
-    // Set up load and error handlers
-    link.onload = () => {
-      logger.info('Font Awesome loaded successfully');
-      resolve();
-    };
-    
-    link.onerror = () => {
-      const error = new Error('Failed to load Font Awesome');
-      logger.error('Font Awesome load error:', error);
-      reject(error);
-    };
-    
-    // Add to document
-    document.head.appendChild(link);
-  });
+    logger.info('SignalWire SDK loaded successfully');
+    return window.SignalWire;
+  } catch (error) {
+    logger.error('Failed to load SignalWire SDK:', error);
+    throw error;
+  }
 }
 
 /**
@@ -1870,12 +1851,14 @@ class App {
     // Initialize central state
     this.state = new AppState(this.events, this.logger);
     
-    // Set initial states with initial values to prevent undefined changes
+    // Add initialization state tracking
     this.state.state = {
-      ...this.state.state,  // Keep existing default state
+      ...this.state.state,
       initialization: {
         started: false,
-        completed: false
+        completed: false,
+        sdkLoaded: false,
+        resourcesLoaded: false
       },
       ui: {
         ...this.state.state.ui,
@@ -1889,6 +1872,9 @@ class App {
     
     // Set up event handlers between modules
     this._wireUpEvents();
+    
+    // Initialize demo buttons first
+    this._initializeDemoButtons();
     
     // Start async initialization
     this._startInitialization();
@@ -1906,36 +1892,28 @@ class App {
     this.state.set('initialization.started', true);
 
     try {
-      // Load resources in parallel with proper error handling
-      const [fontAwesomeResult, signalWireResult] = await Promise.allSettled([
-        loadFontAwesome().catch(error => {
-          this.logger.error('Font Awesome loading failed, continuing without icons:', error);
-          return null;
-        }),
-        loadSignalWireSDK().catch(error => {
-          this.logger.error('SignalWire SDK loading failed:', error);
-          throw error; // Re-throw as this is critical
-        })
-      ]);
+      // Load SignalWire SDK first
+      await loadSignalWireSDK().catch(error => {
+        this.logger.error('SignalWire SDK loading failed:', error);
+        throw error;
+      });
+      this.state.set('initialization.sdkLoaded', true);
+      this.logger.debug('SDK loaded successfully');
 
-      // Check SignalWire result as it's critical
-      if (signalWireResult.status === 'rejected') {
-        throw signalWireResult.reason;
-      }
-
-      // Initialize UI first
+      // Initialize UI and load resources
       await this.ui.initialize();
-      this.state.set('ui.ready', true);
+      this.state.set('initialization.resourcesLoaded', true);
+      this.logger.debug('Resources loaded successfully');
 
       // Load devices
       await this.deviceManager.loadDevices();
 
-      // Initialize demo buttons
-      await this._initializeDemoButtons();
-
       // Mark initialization as complete
       this.state.set('initialization.completed', true);
       this.logger.info('Initialization completed successfully');
+
+      // Enable all demo buttons now that everything is loaded
+      this._enableDemoButtons();
 
     } catch (error) {
       this.logger.error('Error during initialization:', error);
@@ -1944,53 +1922,66 @@ class App {
     }
   }
 
+  _enableDemoButtons() {
+    const buttons = Array.from(document.querySelectorAll('.demo-button'));
+    buttons.forEach(button => {
+      button.classList.remove('sw-inactive');
+      button.classList.add('sw-ready');
+      this.logger.debug(`Button ${button.getAttribute('data-demo-type')} enabled`);
+    });
+  }
+
   async _initializeDemoButtons() {
     const buttons = Array.from(document.querySelectorAll('.demo-button'));
     if (buttons.length === 0) {
       this.logger.info('No demo buttons found to initialize');
       return;
     }
-    await Promise.all(buttons.map(button => this._initializeDemoButton(button)));
-  }
 
-  async _initializeDemoButton(button) {
-    // Add inactive state initially
-    button.classList.add('sw-inactive');
-    
-    // Get the demo type from the button's data attribute
-    const demoType = button.getAttribute('data-demo-type');
-    if (!demoType || !CONFIG.ENDPOINTS[demoType]) {
-      this.logger.error(`Invalid demo type for button:`, demoType);
-      return;
-    }
-
-    // Create click handler
-    const clickHandler = async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      // If initialization isn't complete, log and return
-      if (!this.state.get('initialization.completed')) {
-        this.logger.info('Button clicked before initialization complete');
+    buttons.forEach(button => {
+      // Add inactive state initially
+      button.classList.add('sw-inactive');
+      button.classList.remove('sw-ready');
+      
+      // Get the demo type from the button's data attribute
+      const demoType = button.getAttribute('data-demo-type');
+      if (!demoType || !CONFIG.ENDPOINTS[demoType]) {
+        this.logger.error(`Invalid demo type for button:`, demoType);
         return;
       }
 
-      // Start the demo if initialization is complete
-      await this.callManager.startDemo(demoType);
-    };
+      // Create click handler
+      const clickHandler = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
 
-    // Add click handler
-    button.addEventListener('click', clickHandler);
+        // If initialization isn't complete, log and return
+        if (!this.state.get('initialization.completed')) {
+          this.logger.info('Button clicked before initialization complete');
+          return;
+        }
 
-    // Watch for initialization state
-    this.events.on(EventRegistry.LOCAL.STATE_CHANGED, (path, value) => {
-      if (path === 'initialization.completed' && value === true) {
-        button.classList.remove('sw-inactive');
-        button.classList.add('sw-ready');
-      }
+        // Start the demo if initialization is complete
+        await this.callManager.startDemo(demoType);
+      };
+
+      // Add click handler
+      button.addEventListener('click', clickHandler);
     });
 
-    return button;
+    // Watch for initialization state changes
+    this.events.on(EventRegistry.LOCAL.STATE_CHANGED, (path, value) => {
+      if (path === 'initialization.sdkLoaded' || path === 'initialization.resourcesLoaded') {
+        const sdkLoaded = this.state.get('initialization.sdkLoaded');
+        const resourcesLoaded = this.state.get('initialization.resourcesLoaded');
+        
+        this.logger.debug('Checking button states:', { sdkLoaded, resourcesLoaded });
+        
+        if (sdkLoaded && resourcesLoaded) {
+          this._enableDemoButtons();
+        }
+      }
+    });
   }
 
   _wireUpEvents() {
