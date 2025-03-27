@@ -2068,7 +2068,7 @@ class App {
     });
     
     // Error handling
-    this.events.on(EventRegistry.LOCAL.ERROR, error => this.ui.showError(error));
+    this.events.on(EventRegistry.LOCAL.ERROR, error => this.logger.error('Error:', error));
   }
 
   cleanup() {
