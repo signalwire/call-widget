@@ -1,0 +1,82 @@
+@use "variables" as *;
+@use "sass:color";
+
+.error-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background: white;
+  padding: 0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  max-width: 90%;
+  min-width: 400px;
+  font-family: $font;
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: 768px) {
+    transform: translate(-50%, calc(-50% - 50px));
+    min-width: unset;
+  }
+
+  .error-header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #eee;
+
+    .error-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #111;
+    }
+  }
+
+  .error-content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    .error-text {
+      font-size: 15px;
+      color: #333;
+      line-height: 1.5;
+      text-align: left;
+    }
+
+    .action-button {
+      align-self: flex-end;
+      padding: 10px 24px;
+      border: none;
+      border-radius: 6px;
+      background: $accent-blue;
+      color: white;
+      font-family: $font;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+
+      &:hover {
+        background: color.adjust($accent-blue, $lightness: -5%);
+      }
+
+      &:active {
+        transform: scale(0.98);
+        background: color.adjust($accent-blue, $lightness: -10%);
+      }
+    }
+  }
+}
+
+.modal-container:has(.error) {
+  .modal {
+    filter: blur(4px);
+  }
+}

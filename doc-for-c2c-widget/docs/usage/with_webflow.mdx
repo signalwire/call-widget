@@ -1,0 +1,40 @@
+# Using the C2C Widget with Webflow
+
+Put something like the following at the end of body section in webflow:
+
+```html
+<!-- START for call [nirav]-->
+   <style>
+   /* This class will be removed from button when the widget loads.
+   */
+   .demo-button-disabled {
+     opacity: 0.7;
+     pointer-events: none;
+   }
+   </style>
+
+	 <!-- add widgets -->
+   <c2c-widget
+      buttonId="demo-1"
+      callDetails='{"destination":"/private/demo-1","supportsVideo":true,"supportsAudio":true}'
+      token="<token>"
+   ></c2c-widget>
+   <c2c-widget
+      buttonId="demo-1-duplicate"
+      callDetails='{"destination":"/private/demo-1","supportsVideo":true,"supportsAudio":true}'
+      token="<token>"
+   ></c2c-widget>
+   <c2c-widget
+      buttonId="demo-3"
+      callDetails='{"destination":"/private/demo-3","supportsVideo":false,"supportsAudio":true}'
+      token="<token>"
+   ></c2c-widget>
+
+   <script src="https://assets.swrooms.com/c2c-widget.js"></script>
+<!-- END for call [nirav]-->
+```
+
+In webflow, set the triggering button's id to match `buttonId`.
+
+Set the button to also have the class `demo-button-disabled`. 
+The widget, on load, will remove this class. And make it clickable again.

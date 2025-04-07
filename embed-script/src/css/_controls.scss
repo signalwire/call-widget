@@ -1,0 +1,137 @@
+.controls {
+  display: flex;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  height: 50px;
+  justify-content: center;
+  align-items: center;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+}
+
+.control-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.control-group .control-button {
+  border-radius: 20px 0 0 20px;
+  margin-right: 1px;
+}
+
+.standalone {
+  border-radius: 50% !important;
+  margin-right: 0;
+}
+
+.device-select-button {
+  height: 40px;
+  border-radius: 0 20px 20px 0;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.control-button:hover,
+.device-select-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.control-button svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+
+.device-select-button svg {
+  width: 12px;
+  height: 12px;
+  color: white;
+}
+
+.hangup {
+  border-radius: 50% !important;
+  background: #ff4444;
+}
+
+.hangup:hover {
+  background: #ff6666;
+}
+
+.device-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 8px;
+  padding: 8px;
+  min-width: 200px;
+  z-index: 1000;
+}
+
+.device-option {
+  font-size: 15px;
+  font-family: sans-serif;
+  color: white;
+  padding: 6px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.device-option.selected {
+  font-weight: bold;
+}
+
+.device-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.device-option svg {
+  width: 16px;
+  height: 16px;
+  color: #007bff;
+  flex-shrink: 0;
+}
+
+.muted-icon,
+.unmuted-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#menuContainer {
+  position: relative;
+}
+
+.device-select-wrapper {
+  position: relative;
+}
+
+.device-select-button {
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
