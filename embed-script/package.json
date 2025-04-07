@@ -1,0 +1,24 @@
+{
+  "name": "embed-script",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build && cp dist/widget.js ../doc-for-c2c-widget/static/c2c-widget.js",
+    "pushToCDN": "npm run build && cd ../doc-for-c2c-widget && node scripts/generate-commit-hash.js --cdn && cd ../embed-script && scp dist/widget.js swrooms:/root/cdn/c2c-widget.js",
+    "preview": "vite preview",
+    "serve": "vite preview --host",
+    "push": "npm run build && npm run pushToCDN && npm run pushToCDN:dev"
+  },
+  "devDependencies": {
+    "sass": "^1.86.0",
+    "terser": "^5.39.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0"
+  },
+  "dependencies": {
+    "@signalwire/js": "@dev",
+    "tslib": "^2.8.1"
+  }
+}

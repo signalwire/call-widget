@@ -1,0 +1,266 @@
+@use "variables" as *;
+
+.modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.93);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-out forwards;
+  z-index: 1000;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes springIn {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes springOut {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+}
+
+.modal {
+  position: relative;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 1700px;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: springIn 0.8s cubic-bezier(0.22, 1.2, 0.36, 1) forwards;
+
+  @media (min-width: 2000px) and (max-height: 700px) {
+    max-width: 900px;
+  }
+  @media (min-width: 1000px) and (max-height: 400px) {
+    max-width: 700px;
+  }
+}
+
+.modal-container.closing {
+  animation: fadeOut 0.3s ease-out forwards;
+}
+
+.modal.closing {
+  animation: springOut 0.8s cubic-bezier(0.22, 1.2, 0.36, 1) forwards;
+}
+
+.video-panel {
+  position: relative;
+  width: calc(100% - 300px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  justify-content: center;
+
+  @media (min-width: 801px) {
+    padding-bottom: 50px;
+  }
+}
+
+/* note: this bg-image placeholder to be hardcoded into the widget is for image at https://developer.signalwire.com/img/call-widget/sw_background.webp */
+/* see modal.ui.ts for replacement on full image load */
+/* also, TODO: should be a build process thing, use sth like lqip-modern or just sharp */
+.video-panel-background {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -100;
+
+  background-color: #000;
+  background-image: url("data:image/webp;base64,UklGRv4BAABXRUJQVlA4IPIBAAAQDgCdASpkADgAPm0wlEgkIqIlpvVbQLANiWUIcAF/N0SNSoFwLlO5RP2YPzaIbnj2FRb+bYMVMO2hQaOhoOYVcYas+y/tUm1/zmSSq5AUjQJ+cqL2Z4Z7qXLgXDAOWYT82r5bm+2mFDM38Q0ruBiEoVE+LSAJdoHQAP7gQtoYHET/VcymFbJngGPQnLANH4pBKeNTCNh83JD/q72P9SVEf91Mx4GHZGI07V8EIhDuJRWajJcwkrY9epV7HluQk5qhMElwzHER6a3Zc/OaBy35/gKiNW/4Wd0oEovwE2r9jyX1HImaWtlcTNyPPjyqvi7m5rKNN82p/S01kcM9spuizE4Pba01gNXE5vPW68xKBA/5rLkd/4UosKilKe9PXgPgEgNiTV8tlHZ33yDJQSojodoGsBvOsVgYm06hOx2FqbPFSVY/2mjEsBcCuGQAy1+sBIt2FygUENMwQ4jSOFHEQZ7C9Sc/t1gIlR2bZtNtp1BWIQW/Iu6DDMwjSSTX4qjCwnN6/sqzlv0ZFBAKVIX4uy9DbwSWFKGKqDlsrbAmVFaioKHX3IX/Xm49jyIK7/0PIre8rpPO7DBAX5JbGQCYg8mbG2uf5xTT1gAWy0N4hyjd8bt6FFnL6eUOrt6Hjzy5gP+/8lb0glwD14Mjd9AAAAA=");
+  background-size: cover;
+  background-position: center;
+
+  transform: scale(1.1);
+  filter: blur(10px);
+
+  transition: transform 0.2s linear, filter 0.2s linear;
+}
+
+.video-panel-background.loaded {
+  transform: scale(1);
+  filter: blur(0);
+}
+
+.video-area {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+}
+
+.local-video-content {
+  position: absolute;
+  bottom: 60px;
+  right: 10px;
+  width: min(230px, 22%);
+  max-height: 40%;
+  overflow: hidden;
+  z-index: 10;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  cursor: pointer;
+  transition: transform 0.3s ease;
+
+  @media (min-width: 801px) {
+    position: fixed;
+    bottom: 60px;
+    right: 310px;
+  }
+
+  @media (max-width: 600px) {
+    width: 40%;
+  }
+
+  &:hover {
+    cursor: alias;
+    transform: translateZ(0) scale(1.02);
+  }
+
+  video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transform: translateZ(0) scaleX(-1);
+    -webkit-transform: translateZ(0) scaleX(-1);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 8px;
+  }
+
+  &.flipped video {
+    transform: translateZ(0) scaleX(1);
+    -webkit-transform: translateZ(0) scaleX(1);
+  }
+}
+
+.video-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.video-controls {
+  height: 50px;
+  width: 100%;
+  position: relative;
+
+  @media (min-width: 801px) {
+    position: fixed;
+    bottom: 0;
+    width: calc(100% - 300px);
+    left: 0;
+  }
+}
+
+.chat-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 300px;
+  background: #f5f5f5;
+  overflow-y: auto;
+}
+
+@media (max-width: 800px) {
+  .modal {
+    margin: 20px;
+    max-height: none;
+    max-width: none;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    overflow: hidden;
+  }
+
+  .video-panel {
+    width: 100%;
+  }
+
+  .chat-panel {
+    position: static;
+    width: auto;
+  }
+}
+
+@media (max-width: 800px) and (orientation: portrait) {
+  .modal {
+    width: calc(100% - 40px);
+    height: calc(100% - 40px);
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+}
+
+@media (max-width: 800px) and (orientation: landscape) {
+  .modal {
+    grid-template-columns: 1fr 250px;
+  }
+}
+
+@media (max-width: 800px) and (max-height: 400px) {
+  .modal {
+    width: calc(100vw - 40px);
+    height: calc(100vh - 40px);
+    margin: 20px;
+    max-width: none;
+    max-height: none;
+  }
+
+  .controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: calc(100% - 250px);
+  }
+}

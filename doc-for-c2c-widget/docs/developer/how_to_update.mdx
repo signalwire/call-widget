@@ -1,0 +1,17 @@
+# How to update the widget
+
+Clone the repo, `npm install` in the `embed-script` folder, and `npm run build` to make sure the widget builds. 
+Then:
+
+1. Make changes in the `embed-script` folder.
+2. test your changes in the dev server (`npm run dev`)
+3. Run `npm run build` to build the widget.
+4. Run `npm run pushToCDN` to push the widget to the swrooms temporary CDN.
+
+:::warning
+if you want to push to the swrooms CDN, you need to have credentials to swrooms.
+
+If you don't have the creds, simply put the `dist/widget.js` file wherever you want.
+:::
+
+
