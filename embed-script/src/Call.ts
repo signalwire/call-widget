@@ -98,6 +98,10 @@ export class Call {
       audio: this.callDetails.supportsAudio,
       video: this.callDetails.supportsVideo,
       negotiateVideo: this.callDetails.supportsVideo,
+
+      userVariables: {
+        callOriginHref: window.location.href,
+      },
     });
     this.currentCall = currentCallLocal;
 
