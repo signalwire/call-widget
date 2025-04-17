@@ -6,12 +6,12 @@ This is the repository for the C2C Widget for SignalWire.
 
 ## Demo and Docs:
 
-The documentation and the demo are hosted at [signalwire.github.io/temp-c2c-widget](https://signalwire.github.io/temp-c2c-widget/)
+The documentation and the demo are hosted at [signalwire.github.io/call-widget](https://signalwire.github.io/call-widget/)
 
 ## Usage
 
-See the [docs](https://signalwire.github.io/temp-c2c-widget/docs) for usage in your site.
+See the [docs](https://signalwire.github.io/call-widget/docs) for usage in your site.
 
 ## Development
 
-See the [Developer notes](https://signalwire.github.io/temp-c2c-widget/docs/developer/) for development info.
+See the [Developer notes](https://signalwire.github.io/call-widget/docs/developer/) for development info.

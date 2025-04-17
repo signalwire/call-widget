@@ -10,10 +10,10 @@ const simpleConfig = {
   tagline: "This is the documentation for the C2C Widget.",
 
   ghUser: "signalwire",
-  ghRepo: "temp-c2c-widget",
+  ghRepo: "call-widget",
 
   url: "https://signalwire.github.io",
-  baseUrl: "/temp-c2c-widget",
+  baseUrl: "/call-widget",
 };
 
 const config: Config = {

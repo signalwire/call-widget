@@ -8,7 +8,7 @@ const getCommitHash = () => {
 
 const generateCommitHashDoc = () => {
   const commitHash = getCommitHash();
-  const commitUrl = `https://github.com/signalwire/temp-c2c-widget/commit/${commitHash}`;
+  const commitUrl = `https://github.com/signalwire/call-widget/commit/${commitHash}`;
   const content = `[${commitHash}](${commitUrl})`;
 
   const outputPath = path.join(__dirname, "../docs/_generated/commit_hash.mdx");
@@ -17,7 +17,7 @@ const generateCommitHashDoc = () => {
 
 const generateCdnCommitHashDoc = () => {
   const commitHash = getCommitHash();
-  const commitUrl = `https://github.com/signalwire/temp-c2c-widget/commit/${commitHash}`;
+  const commitUrl = `https://github.com/signalwire/call-widget/commit/${commitHash}`;
   const content = `[${commitHash}](${commitUrl})`;
 
   const outputPath = path.join(
