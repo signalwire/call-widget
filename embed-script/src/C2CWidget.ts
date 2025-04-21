@@ -202,6 +202,12 @@ export default class C2CWidget extends HTMLElement {
         this.closeModal();
       });
 
+      // widget is destroyed when the call is ended
+      // github.com/signalwire/call-widget/issues/7
+      callInstance?.on("destroy", () => {
+        this.closeModal();
+      });
+
       controlsPanel.appendChild(control);
 
       try {
