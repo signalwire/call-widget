@@ -3,8 +3,6 @@ import C2CWidgetInternal from "./C2CWidgetInternal";
 import useIsBrowser from "@docusaurus/useIsBrowser";
 import { useState } from "react";
 
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
-
 export default function C2CWidget({
   destination,
   supportsVideo,
@@ -19,10 +17,6 @@ export default function C2CWidget({
   children: React.ReactNode;
 }) {
   const isBrowser = useIsBrowser();
-  const {
-    siteConfig: { customFields },
-  } = useDocusaurusContext();
-
   const [randomId, setRandomId] = useState(
     Math.random().toString(36).substring(2, 15)
   );
@@ -47,7 +41,7 @@ export default function C2CWidget({
             destination={destination}
             supportsVideo={supportsVideo}
             supportsAudio={supportsAudio}
-            token={token ?? (customFields.callWidgetToken as string)}
+            token={token}
           />
         </>
       )}

@@ -53,6 +53,8 @@ The buttons below are created by the react wrapper for the widget.
 
 The react wrapper is used as follows:
 
+import token from "./_token"
+
 ```jsx
 <C2CWidget
   destination="/private/demo-1"
@@ -66,16 +68,19 @@ The react wrapper is used as follows:
   destination="/private/demo-1"
   supportsVideo={true}
   supportsAudio={true}
+  token={token}
 >Call with Video</C2CWidget>
 
 <C2CWidget
   destination="/private/demo-3"
   supportsVideo={false}
   supportsAudio={true}
+  token={token}
 >Call only audio 2</C2CWidget>
 
 <C2CWidget
   destination="/private/demo-4"
   supportsVideo={false}
   supportsAudio={true}
+  token={token}
 >Call only audio 3</C2CWidget>
