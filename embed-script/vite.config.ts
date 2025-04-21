@@ -2,21 +2,21 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   build: {
+    lib: {
+      entry: "src/index.ts",
+      name: "C2CWidget",
+      formats: ["es", "umd"],
+      fileName: (format) => `c2c-widget.${format}.js`,
+    },
     rollupOptions: {
-      output: [
-        {
-          entryFileNames: "widget.js",
-          dir: "dist",
-          format: "iife",
+      external: ["@signalwire/js"],
+      output: {
+        globals: {
+          "@signalwire/js": "SignalWire",
         },
-      ],
+      },
     },
     minify: true,
     sourcemap: true,
-    terserOptions: {
-      compress: {
-        drop_console: true,
-      },
-    },
   },
 });

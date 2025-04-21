@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import BrowserOnly from "@docusaurus/BrowserOnly";
+import "@niravcodes/call-widget";
 
 export default function C2CWidgetInternal({
   buttonId,
@@ -42,7 +43,7 @@ export default function C2CWidgetInternal({
         rootRef.current.innerHTML = "";
       }
     };
-  }, [buttonId, destination, supportsVideo, supportsAudio]);
+  }, [buttonId, destination, supportsVideo, supportsAudio, token]);
 
   return <BrowserOnly>{() => <div ref={rootRef} />}</BrowserOnly>;
 }
