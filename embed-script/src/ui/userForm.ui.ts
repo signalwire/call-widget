@@ -3,11 +3,30 @@ import { UserVariables } from "../Call";
 
 export interface UserFormOptions {
   onSubmit: (variables: UserVariables) => void;
+  onClose: () => void;
 }
 
-export function createUserForm({ onSubmit }: UserFormOptions) {
-  const { userFormContainer, userName, userEmail, userPhone, skipButton } =
-    userForm();
+export function createUserForm({ onSubmit, onClose }: UserFormOptions) {
+  const {
+    userFormContainer,
+    userName,
+    userEmail,
+    userPhone,
+    skipButton,
+    closeButton,
+  } = userForm();
+
+  const fadeAndRemove = (callback: () => void) => {
+    userFormContainer.classList.add("fade-out");
+    setTimeout(() => {
+      userFormContainer.remove();
+      callback();
+    }, 300);
+  };
+
+  closeButton.addEventListener("click", () => {
+    fadeAndRemove(onClose);
+  });
 
   skipButton.addEventListener("click", () => {
     const emptyVariables = {
@@ -15,8 +34,7 @@ export function createUserForm({ onSubmit }: UserFormOptions) {
       userEmail: "",
       userPhone: "",
     };
-    userFormContainer.remove();
-    onSubmit(emptyVariables);
+    fadeAndRemove(() => onSubmit(emptyVariables));
   });
 
   const form = userFormContainer.querySelector("form");
@@ -29,12 +47,11 @@ export function createUserForm({ onSubmit }: UserFormOptions) {
       userPhone: (userPhone as HTMLInputElement).value,
     };
 
-    userFormContainer.remove();
-    onSubmit(userVariables);
+    fadeAndRemove(() => onSubmit(userVariables));
   });
 
   return {
     userFormContainer,
-    destroy: () => userFormContainer.remove(),
+    destroy: () => fadeAndRemove(() => {}),
   };
 }

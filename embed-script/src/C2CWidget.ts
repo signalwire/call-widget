@@ -232,6 +232,9 @@ export default class C2CWidget extends HTMLElement {
         onSubmit: (variables) => {
           startCall(variables);
         },
+        onClose: () => {
+          this.closeModal();
+        },
       });
       videoArea.appendChild(form.userFormContainer);
     } else {
