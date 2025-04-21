@@ -1,8 +1,19 @@
 # Using the C2C Widget with React
 
+install the package:
+
+```bash
+npm install @niravcodes/call-widget
+```
+
+then:
+
 ```tsx
 import { useRef, useEffect } from "react";
 import BrowserOnly from "@docusaurus/BrowserOnly";
+
+//this makes the c2c-widget tag available in the react component
+import "@niravcodes/call-widget";
 
 export default function C2CWidgetInternal({
   buttonId,

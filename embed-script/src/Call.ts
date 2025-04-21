@@ -7,12 +7,20 @@ import { CallDetails } from "./C2CWidget";
 import { Chat, ChatEntry } from "./Chat";
 import html from "./lib/html";
 import devices from "./Devices";
+
+export interface UserVariables {
+  userName: string;
+  userEmail: string;
+  userPhone: string;
+}
+
 export class Call {
   private client: SignalWireClient | null = null;
   private callDetails: CallDetails | null = null;
   chat: Chat | null = null;
   currentCall: FabricRoomSession | null = null;
   token: string | null = null;
+  private userVariables: UserVariables | null = null;
 
   constructor(callDetails: CallDetails, token: string) {
     this.callDetails = callDetails;
@@ -80,6 +88,10 @@ export class Call {
     return client;
   }
 
+  addUserVariables(variables: UserVariables) {
+    this.userVariables = variables;
+  }
+
   async dial(
     container: HTMLElement,
     onChatChange: (chatHistory: ChatEntry[]) => void,
@@ -92,22 +104,27 @@ export class Call {
       throw new Error("Call details are not set");
     }
 
-    const currentCallLocal = await client.dial({
+    // Add user variables to the room session
+    const roomSession = await client.dial({
       to: this.callDetails.destination,
       rootElement: container,
       audio: this.callDetails.supportsAudio,
       video: this.callDetails.supportsVideo,
       negotiateVideo: this.callDetails.supportsVideo,
+      userVariables: {
+        callOriginHref: window.location.href,
+        userName: this.userVariables?.userName ?? "",
+        userEmail: this.userVariables?.userEmail ?? "",
+        userPhone: this.userVariables?.userPhone ?? "",
+      },
     });
-    this.currentCall = currentCallLocal;
+    this.currentCall = roomSession;
 
-    currentCallLocal.on("call.joined", () => {
-      console.log("call.joined", currentCallLocal);
+    roomSession.on("call.joined", () => {
       // @ts-ignore
-      window.call = currentCallLocal;
-      if (currentCallLocal?.localStream) {
+      window.call = roomSession;
+      if (roomSession?.localStream) {
         devices.updateVideoAspectRatio();
-        console.log(currentCallLocal.localStream);
         const { localVideo } = html`<video
           autoplay
           playsinline
@@ -116,29 +133,22 @@ export class Call {
         ></video>`();
 
         (localVideo as HTMLVideoElement).onloadedmetadata = () => {
-          console.log(
-            "localVideo.onloadedmetadata",
-            (localVideo as HTMLVideoElement).videoWidth /
-              (localVideo as HTMLVideoElement).videoHeight
-          );
-
           devices.onAspectRatioChange(
             (localVideo as HTMLVideoElement).videoWidth /
               (localVideo as HTMLVideoElement).videoHeight
           );
         };
 
-        (localVideo as HTMLVideoElement).srcObject =
-          currentCallLocal.localStream;
+        (localVideo as HTMLVideoElement).srcObject = roomSession.localStream;
         onLocalVideo(localVideo as HTMLVideoElement);
       }
     });
 
-    currentCallLocal.on("call.updated", () => {
+    roomSession.on("call.updated", () => {
       // we want to track mute states
       // what does the server know about the client's mute states?
       // we ofc also have a local state
-      console.log("call.updated", currentCallLocal);
+      console.log("call.updated", roomSession);
     });
 
     if (this.chat) {
@@ -147,7 +157,7 @@ export class Call {
       };
     }
 
-    return currentCallLocal;
+    return roomSession;
   }
 
   async start() {

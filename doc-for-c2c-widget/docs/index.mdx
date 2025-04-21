@@ -3,13 +3,13 @@ title: Introduction
 sidebar_position: 1
 ---
 
-# Introduction to the C2C widget
+# Introduction to the Call Widget
 
-The C2C widget, short for "Click to Call widget" is a JavaScript widget which uses the SignalWire SDK and the SignalWire C2C service to 
-allow you to very easily embed calls in your website. The calls can be routed to a phone number, a SIP address, custom AI agents, custom SWML scripts, and
-nearly infinite combinations of the above.
+The Call Widget is a Click-to-Call style JavaScript widget which uses the SignalWire SDK and the SignalWire C2C service 
+to allow you to embed calls in your website. 
+The calls can be routed to a phone number, a SIP address, custom AI agents, custom SWML scripts, and nearly infinite combinations of the above.
 
-Usage of the C2C widget:
+Usage of the Call Widget:
 
 ```html
 <!-- wherever in the html, your button -->
@@ -22,17 +22,17 @@ Usage of the C2C widget:
   token="<token>"
 ></c2c-widget>
 
-<script src="https://assets.swrooms.com/c2c-widget.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@niravcodes/call-widget@1.0.0/dist/c2c-widget.umd.min.js" defer></script>
 ```
 
 ![screenshot of the widget](./screenshot.png)
 
 ## CDN URL
 
-The CDN URL is https://assets.swrooms.com/c2c-widget.js. This is a temporary URL, and will be put in `cdn.signalwire.com` later (maybe).
+The CDN URL is https://cdn.jsdelivr.net/npm/@niravcodes/call-widget@1.0.0/dist/c2c-widget.umd.min.js. This is a temporary URL, and will be put in `cdn.signalwire.com` later (maybe).
 
 ```html
-<script src="https://assets.swrooms.com/c2c-widget.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@niravcodes/call-widget@1.0.0/dist/c2c-widget.umd.min.js" defer></script>
 ```
 
 But if you don't want to use the CDN, you can put the widget.js file wherever you want, and then include it like this:
@@ -50,9 +50,10 @@ But if you don't want to use the CDN, you can put the widget.js file wherever yo
 import C2CWidget from "@site/src/components/C2CWidget";
 
 The buttons below are created by the react wrapper for the widget. 
-I have added links to 4 demos, but the first audio demo doesn't work, probably because the address was deleted. But the rest should work.
 
 The react wrapper is used as follows:
+
+import token from "./_token"
 
 ```jsx
 <C2CWidget
@@ -67,43 +68,19 @@ The react wrapper is used as follows:
   destination="/private/demo-1"
   supportsVideo={true}
   supportsAudio={true}
-  token="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20iLCJ0eXAiOiJTQVQifQ..QYHghlPEOE4HjtJb.1WKLEg09c05-g3RujrS0io5h6AJ4mfpKMWtykpMIERJlMuomtOLHrU8picaFHeppbb_-593GjxHfeZiVmYdPZiIPYuNw2znqBuySuPArPfb2NMvXtZHEgfl3sXAdy5xpqSpphxFKStXwylo0EGeC91cVQgn3_lmSBcp13JvwArnu5ULltGmjPJogRbE1PrBsBbEJJioumVSZuuMH5lo7am-wE37Q5GXgou1a9iJWBiBtgk5ysmW4HTvbZ7pZHL5VcnWVy4V0OJL3J4WXl-m47L6bgFmHUijvVWxoFDu4Z7aUfx551OEhefr04F5NuJaHzTWUpgNzQ_VgWho04K96MK--wH_dEyIxtbfUHJSZyk1-Ef_dDCgFK6Rlnl2H5HM4G05gEKWcSjXGGk4tN0g6YvHsrUrAgsZiQeVQ-ggCHHRcmYX1OeXYbv1vEPml8i5JPUHAak5VvOQLYoG2ydb5kVv3WdM0oWKGHzTFPLFmjTaRxSC2b378BGbR7hCxbY9NdaLFnSn45KDkv1_a-saR9gDCBa2ZCPbkFmWRKLtGORFoiN-mLYAPTugidqZx40Ue4hav-jX178udYpVgSmun_rMHoN81t0Sb4xqMovs2i47-WLyzTwaGBK2CgLeHohGBvB9aWsFOV7F_YrZlcn7ptKo7RdNSrfBkiw7F6Sf8oIOz.426h9VZWDSVYDUIL9a1wDg"
+  token={token}
 >Call with Video</C2CWidget>
-
-<C2CWidget
-  destination="/private/demo-2"
-  supportsVideo={false}
-  supportsAudio={true}
-  token="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20iLCJ0eXAiOiJTQVQifQ..QYHghlPEOE4HjtJb.1WKLEg09c05-g3RujrS0io5h6AJ4mfpKMWtykpMIERJlMuomtOLHrU8picaFHeppbb_-593GjxHfeZiVmYdPZiIPYuNw2znqBuySuPArPfb2NMvXtZHEgfl3sXAdy5xpqSpphxFKStXwylo0EGeC91cVQgn3_lmSBcp13JvwArnu5ULltGmjPJogRbE1PrBsBbEJJioumVSZuuMH5lo7am-wE37Q5GXgou1a9iJWBiBtgk5ysmW4HTvbZ7pZHL5VcnWVy4V0OJL3J4WXl-m47L6bgFmHUijvVWxoFDu4Z7aUfx551OEhefr04F5NuJaHzTWUpgNzQ_VgWho04K96MK--wH_dEyIxtbfUHJSZyk1-Ef_dDCgFK6Rlnl2H5HM4G05gEKWcSjXGGk4tN0g6YvHsrUrAgsZiQeVQ-ggCHHRcmYX1OeXYbv1vEPml8i5JPUHAak5VvOQLYoG2ydb5kVv3WdM0oWKGHzTFPLFmjTaRxSC2b378BGbR7hCxbY9NdaLFnSn45KDkv1_a-saR9gDCBa2ZCPbkFmWRKLtGORFoiN-mLYAPTugidqZx40Ue4hav-jX178udYpVgSmun_rMHoN81t0Sb4xqMovs2i47-WLyzTwaGBK2CgLeHohGBvB9aWsFOV7F_YrZlcn7ptKo7RdNSrfBkiw7F6Sf8oIOz.426h9VZWDSVYDUIL9a1wDg"
->Call only audio</C2CWidget>
 
 <C2CWidget
   destination="/private/demo-3"
   supportsVideo={false}
   supportsAudio={true}
-  token="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20iLCJ0eXAiOiJTQVQifQ..QYHghlPEOE4HjtJb.1WKLEg09c05-g3RujrS0io5h6AJ4mfpKMWtykpMIERJlMuomtOLHrU8picaFHeppbb_-593GjxHfeZiVmYdPZiIPYuNw2znqBuySuPArPfb2NMvXtZHEgfl3sXAdy5xpqSpphxFKStXwylo0EGeC91cVQgn3_lmSBcp13JvwArnu5ULltGmjPJogRbE1PrBsBbEJJioumVSZuuMH5lo7am-wE37Q5GXgou1a9iJWBiBtgk5ysmW4HTvbZ7pZHL5VcnWVy4V0OJL3J4WXl-m47L6bgFmHUijvVWxoFDu4Z7aUfx551OEhefr04F5NuJaHzTWUpgNzQ_VgWho04K96MK--wH_dEyIxtbfUHJSZyk1-Ef_dDCgFK6Rlnl2H5HM4G05gEKWcSjXGGk4tN0g6YvHsrUrAgsZiQeVQ-ggCHHRcmYX1OeXYbv1vEPml8i5JPUHAak5VvOQLYoG2ydb5kVv3WdM0oWKGHzTFPLFmjTaRxSC2b378BGbR7hCxbY9NdaLFnSn45KDkv1_a-saR9gDCBa2ZCPbkFmWRKLtGORFoiN-mLYAPTugidqZx40Ue4hav-jX178udYpVgSmun_rMHoN81t0Sb4xqMovs2i47-WLyzTwaGBK2CgLeHohGBvB9aWsFOV7F_YrZlcn7ptKo7RdNSrfBkiw7F6Sf8oIOz.426h9VZWDSVYDUIL9a1wDg"
+  token={token}
 >Call only audio 2</C2CWidget>
 
 <C2CWidget
   destination="/private/demo-4"
   supportsVideo={false}
   supportsAudio={true}
-  token="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20iLCJ0eXAiOiJTQVQifQ..QYHghlPEOE4HjtJb.1WKLEg09c05-g3RujrS0io5h6AJ4mfpKMWtykpMIERJlMuomtOLHrU8picaFHeppbb_-593GjxHfeZiVmYdPZiIPYuNw2znqBuySuPArPfb2NMvXtZHEgfl3sXAdy5xpqSpphxFKStXwylo0EGeC91cVQgn3_lmSBcp13JvwArnu5ULltGmjPJogRbE1PrBsBbEJJioumVSZuuMH5lo7am-wE37Q5GXgou1a9iJWBiBtgk5ysmW4HTvbZ7pZHL5VcnWVy4V0OJL3J4WXl-m47L6bgFmHUijvVWxoFDu4Z7aUfx551OEhefr04F5NuJaHzTWUpgNzQ_VgWho04K96MK--wH_dEyIxtbfUHJSZyk1-Ef_dDCgFK6Rlnl2H5HM4G05gEKWcSjXGGk4tN0g6YvHsrUrAgsZiQeVQ-ggCHHRcmYX1OeXYbv1vEPml8i5JPUHAak5VvOQLYoG2ydb5kVv3WdM0oWKGHzTFPLFmjTaRxSC2b378BGbR7hCxbY9NdaLFnSn45KDkv1_a-saR9gDCBa2ZCPbkFmWRKLtGORFoiN-mLYAPTugidqZx40Ue4hav-jX178udYpVgSmun_rMHoN81t0Sb4xqMovs2i47-WLyzTwaGBK2CgLeHohGBvB9aWsFOV7F_YrZlcn7ptKo7RdNSrfBkiw7F6Sf8oIOz.426h9VZWDSVYDUIL9a1wDg"
+  token={token}
 >Call only audio 3</C2CWidget>
-
-import CommitHash from "@site/docs/_generated/commit_hash.mdx";
-import CdnCommitHash from "@site/docs/_generated/cdn_commit_hash.mdx";
-
-:::info
-
-These demos above are using c2c widget from (the development version)
-
-<CommitHash /> 
-
-The CDN is serving c2c widget from the production version 
-
-<CdnCommitHash /> 
-
-The CDN version might be behind the latest commit, but will be more stable (production release).
-
-:::

@@ -13,7 +13,7 @@ export default function C2CWidget({
   destination: string;
   supportsVideo: boolean;
   supportsAudio: boolean;
-  token: string;
+  token?: string;
   children: React.ReactNode;
 }) {
   const isBrowser = useIsBrowser();

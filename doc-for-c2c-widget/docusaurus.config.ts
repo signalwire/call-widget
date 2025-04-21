@@ -1,7 +1,8 @@
+import "dotenv/config";
+
 import { themes as prismThemes } from "prism-react-renderer";
 import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
-
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 
@@ -35,6 +36,10 @@ const config: Config = {
   i18n: {
     defaultLocale: "en",
     locales: ["en"],
+  },
+
+  customFields: {
+    callWidgetToken: process.env.CALL_WIDGET_TOKEN,
   },
 
   markdown: {
@@ -73,12 +78,12 @@ const config: Config = {
   // TODO: this part isn't automated yet.
   // For now, build the embed-widget, and copy
   // the built js to `/static` here,
-  scripts: [
-    {
-      src: `${simpleConfig.baseUrl}/c2c-widget.js`,
-      type: "text/javascript",
-    },
-  ],
+  // scripts: [
+  //   {
+  //     src: `${simpleConfig.baseUrl}/c2c-widget.js`,
+  //     type: "text/javascript",
+  //   },
+  // ],
 
   themeConfig: {
     image: "img/social-card.jpg",
