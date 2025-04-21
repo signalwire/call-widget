@@ -27,26 +27,6 @@ export class Call {
     this.token = token;
   }
 
-  private async getWidgetToken(embedsToken: string) {
-    const response = await fetch(
-      "https://embeds.signalwire.com/api/fabric/embeds/tokens",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token: embedsToken }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to authenticate embeds token");
-    }
-
-    const data = await response.json();
-    return data.token;
-  }
-
   getLocalVideoTrack() {
     return this.currentCall?.localVideoTrack;
   }
@@ -59,14 +39,8 @@ export class Call {
     if (!this.token) {
       throw new Error("Token is not set");
     }
-
-    let clientToken = this.token;
-    if (this.token.startsWith("c2c_")) {
-      clientToken = await this.getWidgetToken(this.token);
-    }
-
     const client = await SignalWire({
-      token: clientToken,
+      token: this.token,
     });
 
     // @ts-ignore
