@@ -123,6 +123,12 @@ export class Call {
     onChatChange: (chatHistory: ChatEntry[]) => void,
     onLocalVideo: (localVideo: HTMLVideoElement) => void
   ) {
+    // Remove all SAT keys from session storage before dial
+    // github.com/signalwire/call-widget/issues/8
+    ["ci-SAT", "pt-SAT", "as-SAT"].forEach((key) =>
+      sessionStorage.removeItem(key)
+    );
+
     const client = await this.setupClient();
     this.chat = new Chat();
 

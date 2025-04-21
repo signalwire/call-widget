@@ -1,7 +1,12 @@
 import html from "../lib/html";
+import closeIcon from "../icons/close.svg?raw";
 
 export default html`
   <div class="user-form-container" name="userFormContainer">
+    <button type="button" class="close-button" name="closeButton">
+      ${closeIcon}
+    </button>
+
     <form class="user-form" name="userForm">
       <input type="text" name="userName" placeholder="Your Name" />
       <input
