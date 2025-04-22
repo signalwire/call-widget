@@ -115,7 +115,10 @@ export class Call {
   }
 
   addUserVariables(variables: UserVariables) {
-    this.userVariables = variables;
+    this.userVariables = {
+      ...this.userVariables,
+      ...variables,
+    };
   }
 
   async dial(
@@ -136,6 +139,11 @@ export class Call {
       throw new Error("Call details are not set");
     }
 
+    const finalUserVariables = {
+      callOriginHref: window.location.href,
+      ...this.userVariables,
+    };
+
     // Add user variables to the room session
     const roomSession = await client.dial({
       to: this.callDetails.destination,
@@ -143,14 +151,16 @@ export class Call {
       audio: this.callDetails.supportsAudio,
       video: this.callDetails.supportsVideo,
       negotiateVideo: this.callDetails.supportsVideo,
-      userVariables: {
-        callOriginHref: window.location.href,
-        userName: this.userVariables?.userName ?? "",
-        userEmail: this.userVariables?.userEmail ?? "",
-        userPhone: this.userVariables?.userPhone ?? "",
-      },
+      userVariables: finalUserVariables,
     });
     this.currentCall = roomSession;
+
+    console.info(
+      "Call started",
+      this.currentCall,
+      "with user variables",
+      finalUserVariables
+    );
 
     roomSession.on("call.joined", () => {
       // @ts-ignore
