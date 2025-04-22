@@ -9,6 +9,7 @@ declare global {
           token?: string;
           buttonId?: string;
           callDetails?: string;
+          userVariables?: string;
         },
         HTMLElement
       >;

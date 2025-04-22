@@ -27,10 +27,44 @@ export default class C2CWidget extends HTMLElement {
   modalContainer: HTMLElement | null = null;
   previousOverflowStyle: string = "";
   token: string | null = null;
+  userVariables: UserVariables | null = null;
+
+  static get observedAttributes() {
+    return ["token", "buttonId", "callDetails", "userVariables"];
+  }
+
   constructor() {
     super();
     this.setupDOM();
     style.apply(this.shadow);
+  }
+
+  attributeChangedCallback(name: string, _oldValue: string, newValue: string) {
+    switch (name) {
+      case "token":
+        this.token = newValue;
+        break;
+      case "callDetails":
+        try {
+          this.callDetails = JSON.parse(newValue) as CallDetails;
+        } catch (e) {
+          console.error("Invalid JSON in callDetails attribute");
+          this.callDetails = null;
+        }
+        break;
+      case "userVariables":
+        try {
+          const newUserVariables = JSON.parse(newValue) as UserVariables;
+          this.userVariables = newUserVariables;
+          if (this.call) {
+            this.call.addUserVariables(newUserVariables);
+          }
+        } catch (e) {
+          console.error("Invalid JSON in userVariables attribute");
+          this.userVariables = null;
+        }
+        break;
+    }
   }
 
   connectedCallback() {
@@ -81,8 +115,21 @@ export default class C2CWidget extends HTMLElement {
       this.callDetails = null;
     }
 
+    try {
+      const userVariables = this.getAttribute("userVariables");
+      if (userVariables) {
+        this.userVariables = JSON.parse(userVariables) as UserVariables;
+      }
+    } catch (e) {
+      console.error("Invalid JSON in userVariables attribute");
+      this.userVariables = null;
+    }
+
     if (this.callDetails && this.token) {
       this.call = new Call(this.callDetails, this.token);
+      if (this.userVariables) {
+        this.call.addUserVariables(this.userVariables);
+      }
     }
   }
 
