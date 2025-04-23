@@ -18,8 +18,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "pushToCDN": "npm run build && cd ../embed-script && scp dist/widget.js swrooms:/root/cdn/c2c-widget.js",
+    "build:external": "vite build --config vite.config.external.ts",
+    "build:full": "vite build --config vite.config.fullbundle.ts",
+    "build": "tsc && npm run build:external && npm run build:full",
     "preview": "vite preview",
     "serve": "vite preview --host",
     "push": "npm run build && npm run pushToCDN && npm run pushToCDN:dev",
