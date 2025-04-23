@@ -8,6 +8,7 @@ import { ChatEntry } from "./Chat.ts";
 import createChatUI from "./ui/chat.ui.ts";
 import { style } from "./Style.ts";
 import errorModal from "./ui/errorModal.ui.ts";
+import surveyModal from "./ui/surveyModal.ui.ts";
 import { FabricRoomSession } from "@signalwire/js";
 import { createUserForm } from "./ui/userForm.ui";
 
@@ -20,6 +21,7 @@ export interface CallDetails {
 export default class C2CWidget extends HTMLElement {
   callOngoing: boolean = false;
   callLoading: boolean = false;
+  callStarted: boolean = false;
   shadow = this.attachShadow({ mode: "open" });
   callDetails: CallDetails | null = null;
   call: Call | null = null;
@@ -133,7 +135,30 @@ export default class C2CWidget extends HTMLElement {
     }
   }
 
-  private closeModal() {
+  private closeModal(showSurvey: boolean = true) {
+    if (this.modalContainer) {
+      if (showSurvey && this.callStarted) {
+        const surveyAttr = this.getAttribute("survey");
+        if (surveyAttr) {
+          try {
+            const surveyParams = JSON.parse(surveyAttr);
+            const surveyModalUI = surveyModal(surveyParams, () => {
+              this.finalizeClose();
+            });
+            if (surveyModalUI) {
+              this.modalContainer.appendChild(surveyModalUI);
+              return;
+            }
+          } catch (e) {
+            console.error("Invalid JSON in survey attribute");
+          }
+        }
+      }
+      this.finalizeClose();
+    }
+  }
+
+  private finalizeClose() {
     if (this.modalContainer) {
       const modal = this.modalContainer.querySelector(".modal");
       this.modalContainer.classList.add("closing");
@@ -145,6 +170,7 @@ export default class C2CWidget extends HTMLElement {
         this.modalContainer = null;
         document.body.style.overflow = this.previousOverflowStyle;
         this.callOngoing = false;
+        this.callStarted = false;
         this.call?.reset();
       }, 800);
     }
@@ -220,7 +246,7 @@ export default class C2CWidget extends HTMLElement {
         const errorModalUI = errorModal(
           "Error",
           "Error creating the call. Please refresh the page and try again.",
-          () => this.closeModal()
+          () => this.closeModal(false)
         );
         this.modalContainer?.appendChild(errorModalUI);
         return;
@@ -246,25 +272,24 @@ export default class C2CWidget extends HTMLElement {
       });
 
       callInstance?.on("room.left", () => {
-        this.closeModal();
+        this.closeModal(true);
       });
 
-      // widget is destroyed when the call is ended
-      // github.com/signalwire/call-widget/issues/7
       callInstance?.on("destroy", () => {
-        this.closeModal();
+        this.closeModal(true);
       });
 
       controlsPanel.appendChild(control);
 
       try {
         await this.call?.start();
+        this.callStarted = true;
       } catch (e) {
         console.error("Error starting call", e);
         const errorModalUI = errorModal(
           "Error",
           "Error starting the call. This is possibly due to network issues. Please refresh the page and try again.",
-          () => this.closeModal()
+          () => this.closeModal(false)
         );
         this.modalContainer?.appendChild(errorModalUI);
         return;
@@ -280,7 +305,7 @@ export default class C2CWidget extends HTMLElement {
           startCall(variables);
         },
         onClose: () => {
-          this.closeModal();
+          this.closeModal(false);
         },
       });
       videoArea.appendChild(form.userFormContainer);
@@ -305,7 +330,7 @@ export default class C2CWidget extends HTMLElement {
   }
 
   disconnectedCallback() {
-    this.closeModal();
+    this.closeModal(false);
   }
 }
 
