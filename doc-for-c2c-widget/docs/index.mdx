@@ -3,49 +3,11 @@ title: Introduction
 sidebar_position: 1
 ---
 
-# Introduction to the Call Widget
+import Usage from "./_usage.mdx";
 
-The Call Widget is a Click-to-Call style JavaScript widget which uses the SignalWire SDK and the SignalWire C2C service 
-to allow you to embed calls in your website. 
-The calls can be routed to a phone number, a SIP address, custom AI agents, custom SWML scripts, and nearly infinite combinations of the above.
+<Usage/>
 
-Usage of the Call Widget:
-
-```html
-<!-- wherever in the html, your button -->
-<button id="callButton">Call</button>
-
-<!-- end of body -->
-<c2c-widget
-  buttonId="callButton"
-  callDetails='{"destination":"/private/demo-1","supportsVideo":true,"supportsAudio":true}'
-  token="<token>"
-></c2c-widget>
-
-<script src="https://cdn.jsdelivr.net/npm/@niravcodes/call-widget@1.0.0/dist/c2c-widget.umd.min.js" defer></script>
-```
-
-![screenshot of the widget](./screenshot.png)
-
-## CDN URL
-
-The CDN URL is https://cdn.jsdelivr.net/npm/@niravcodes/call-widget@1.0.0/dist/c2c-widget.umd.min.js. This is a temporary URL, and will be put in `cdn.signalwire.com` later (maybe).
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/@niravcodes/call-widget@1.0.0/dist/c2c-widget.umd.min.js" defer></script>
-```
-
-But if you don't want to use the CDN, you can put the widget.js file wherever you want, and then include it like this:
-
-```html
-<!-- near end of body -->
-<script src="/path/to/widget.js" defer></script>
-```
-
-
-## Go to [Usage](usage/index.mdx)
-
-## Go to [Developer notes](developer/index.mdx)
+## Demo
 
 import C2CWidget from "@site/src/components/C2CWidget";
 
