@@ -8,12 +8,9 @@ npm install @niravcodes/call-widget
 
 then:
 
-```tsx
+```tsx title="C2CWidgetInternal.tsx"
 import { useRef, useEffect } from "react";
 import BrowserOnly from "@docusaurus/BrowserOnly";
-
-//this makes the c2c-widget tag available in the react component
-import "@niravcodes/call-widget";
 
 export default function C2CWidgetInternal({
   buttonId,
@@ -29,6 +26,12 @@ export default function C2CWidgetInternal({
   token: string;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // In SSR settings, we import the widget dynamically in client side
+    // Otherwise, this import should be at the top of the file
+    import("@niravcodes/call-widget");
+  }, []);
 
   // react doesn't like other scripts controlling the DOM,
   // we create an empty div and inject things via js
@@ -46,7 +49,7 @@ export default function C2CWidgetInternal({
           destination,
           supportsVideo,
           supportsAudio,
-        })
+        }),
       );
       widget.setAttribute("token", token);
       rootRef.current.appendChild(widget);
@@ -64,7 +67,8 @@ export default function C2CWidgetInternal({
 
 Of course, you need to have a different component which creates a button with the `buttonId` attribute. Eg:
 
-```tsx
+```tsx title="C2CWidget.tsx"
+import React from "react";
 import BrowserOnly from "@docusaurus/BrowserOnly";
 import C2CWidgetInternal from "./C2CWidgetInternal";
 import useIsBrowser from "@docusaurus/useIsBrowser";
@@ -84,9 +88,7 @@ export default function C2CWidget({
   children: React.ReactNode;
 }) {
   const isBrowser = useIsBrowser();
-  const [randomId, setRandomId] = useState(
-    Math.random().toString(36).substring(2, 15)
-  );
+  const [randomId, setRandomId] = useState(Math.random().toString(36).substring(2, 15));
   if (!isBrowser) {
     return null;
   }
@@ -94,15 +96,13 @@ export default function C2CWidget({
     <BrowserOnly>
       {() => (
         <>
-          <button
+          <div
             id={`callButton-${randomId}`}
-            className="button button--primary button--lg"
-            style={{
-              margin: "10px 0px",
-            }}
+            className="demo-button-disabled"
+            style={{ flex: 1, transition: "opacity 0.4s ease-in-out" }}
           >
             {children}
-          </button>
+          </div>
           <C2CWidgetInternal
             buttonId={`callButton-${randomId}`}
             destination={destination}
@@ -115,5 +115,4 @@ export default function C2CWidget({
     </BrowserOnly>
   );
 }
-
 ```

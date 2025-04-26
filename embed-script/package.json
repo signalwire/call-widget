@@ -1,11 +1,15 @@
 {
   "name": "@niravcodes/call-widget",
   "private": false,
-  "version": "2.4.1",
+  "version": "2.4.2",
   "type": "module",
   "main": "./dist/c2c-widget.umd.js",
   "module": "./dist/c2c-widget.es.js",
   "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/niravcodes/call-widget.git"
+  },
   "files": [
     "dist"
   ],
@@ -24,7 +28,8 @@
     "preview": "vite preview",
     "serve": "vite preview --host",
     "push": "npm run build && npm run pushToCDN && npm run pushToCDN:dev",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "prepublish": "node ../verify-docs.js"
   },
   "devDependencies": {
     "sass": "^1.86.0",
