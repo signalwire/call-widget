@@ -1,7 +1,7 @@
 {
   "name": "@niravcodes/call-widget",
   "private": false,
-  "version": "2.5.1",
+  "version": "2.5.3",
   "type": "module",
   "main": "./dist/c2c-widget.umd.js",
   "module": "./dist/c2c-widget.es.js",

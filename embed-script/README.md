@@ -10,7 +10,7 @@ C2C service to allow you to embed calls in your website.
 Import the widget from the CDN:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@niravcodes/call-widget@latest/dist/c2c-widget-full.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@niravcodes/call-widget/dist/c2c-widget-full.umd.min.js"></script>
 ```
 
 or install the widget using npm:
@@ -43,7 +43,7 @@ npm install @niravcodes/call-widget
   userVariables='{"user_type":"guest"}'
 ></c2c-widget>
 
-<script src="https://cdn.jsdelivr.net/npm/@niravcodes/call-widget@latest/dist/c2c-widget-full.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@niravcodes/call-widget/dist/c2c-widget-full.umd.min.js"></script>
 ```
 
 ## Parameters
