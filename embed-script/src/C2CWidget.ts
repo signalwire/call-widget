@@ -185,6 +185,17 @@ export default class C2CWidget extends HTMLElement {
       return;
     }
 
+    const beforeCallEvent = new CustomEvent("beforecall", {
+      cancelable: true,
+      bubbles: true,
+    });
+
+    const eventResult = this.dispatchEvent(beforeCallEvent);
+    if (!eventResult) {
+      console.log("Call cancelled by beforecall event handler");
+      return;
+    }
+
     this.callOngoing = true;
     this.callLoading = true;
 
