@@ -131,3 +131,16 @@ userPhone - the phone number of the user (if they input it in the form)
 ```
 
 Strict JSON format is required for this attribute.
+
+## Events
+
+### `beforecall`
+
+This event is triggered when the call is about to start.
+
+```javascript
+const widget = document.querySelector("c2c-widget");
+widget.addEventListener("beforecall", () => {
+  console.log("beforecall");
+});
+```
