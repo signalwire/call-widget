@@ -54,6 +54,28 @@
       <h2>The Price Tag 💰</h2>
       <p style="font-size: 24px">$29.99</p>
       <p style="font-size: 16px">That's like, 3 fancy coffees!</p>
+
+      <div style="margin: 20px 0">
+        <input
+          type="email"
+          id="userEmail"
+          placeholder="Your Email"
+          style="padding: 8px; margin: 5px; width: 200px"
+        />
+        <input
+          type="text"
+          id="userName"
+          placeholder="Your Name"
+          style="padding: 8px; margin: 5px; width: 200px"
+        />
+        <input
+          type="text"
+          id="petName"
+          placeholder="Your Pet's Name"
+          style="padding: 8px; margin: 5px; width: 200px"
+        />
+      </div>
+
       <button
         style="
           padding: 15px 30px;
@@ -101,12 +123,38 @@
       Call
     </button>
 
+    <script>
+      const callButton = document.getElementById("callButton");
+      callButton.addEventListener("click", () => {
+        const email = document.getElementById("userEmail").value;
+        const name = document.getElementById("userName").value;
+        const petName = document.getElementById("petName").value;
+
+        const widget = document.getElementById("c2cWidget");
+
+        const userVariables = {
+          email,
+          name,
+          petName,
+        };
+        widget.removeAttribute("userVariables");
+        widget.setAttribute("userVariables", JSON.stringify(userVariables));
+      });
+    </script>
+
     <c2c-widget
       buttonId="callButton"
       callDetails='{"destination":"/private/demo-1","supportsVideo":true,"supportsAudio":true}'
       token="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20iLCJ0eXAiOiJTQVQifQ..QYHghlPEOE4HjtJb.1WKLEg09c05-g3RujrS0io5h6AJ4mfpKMWtykpMIERJlMuomtOLHrU8picaFHeppbb_-593GjxHfeZiVmYdPZiIPYuNw2znqBuySuPArPfb2NMvXtZHEgfl3sXAdy5xpqSpphxFKStXwylo0EGeC91cVQgn3_lmSBcp13JvwArnu5ULltGmjPJogRbE1PrBsBbEJJioumVSZuuMH5lo7am-wE37Q5GXgou1a9iJWBiBtgk5ysmW4HTvbZ7pZHL5VcnWVy4V0OJL3J4WXl-m47L6bgFmHUijvVWxoFDu4Z7aUfx551OEhefr04F5NuJaHzTWUpgNzQ_VgWho04K96MK--wH_dEyIxtbfUHJSZyk1-Ef_dDCgFK6Rlnl2H5HM4G05gEKWcSjXGGk4tN0g6YvHsrUrAgsZiQeVQ-ggCHHRcmYX1OeXYbv1vEPml8i5JPUHAak5VvOQLYoG2ydb5kVv3WdM0oWKGHzTFPLFmjTaRxSC2b378BGbR7hCxbY9NdaLFnSn45KDkv1_a-saR9gDCBa2ZCPbkFmWRKLtGORFoiN-mLYAPTugidqZx40Ue4hav-jX178udYpVgSmun_rMHoN81t0Sb4xqMovs2i47-WLyzTwaGBK2CgLeHohGBvB9aWsFOV7F_YrZlcn7ptKo7RdNSrfBkiw7F6Sf8oIOz.426h9VZWDSVYDUIL9a1wDg"
       survey='{"title":"Please take this survey", "description":"We would love to hear your thoughts. Would you like to take a survey?","href":"https://www.google.com"}'
     ></c2c-widget>
+
+    <script>
+      const widget2 = document.querySelector("c2c-widget");
+      widget2.addEventListener("beforecall", () => {
+        console.log("beforecall");
+      });
+    </script>
 
     <script type="module" src="/src/index.ts"></script>
     <!-- end code required to initialize c2c widget -->

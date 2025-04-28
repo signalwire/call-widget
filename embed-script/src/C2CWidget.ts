@@ -32,7 +32,7 @@ export default class C2CWidget extends HTMLElement {
   userVariables: UserVariables | null = null;
 
   static get observedAttributes() {
-    return ["token", "buttonId", "callDetails", "userVariables"];
+    return ["token", "buttonid", "calldetails", "uservariables"];
   }
 
   constructor() {
@@ -46,7 +46,7 @@ export default class C2CWidget extends HTMLElement {
       case "token":
         this.token = newValue;
         break;
-      case "callDetails":
+      case "calldetails":
         try {
           this.callDetails = JSON.parse(newValue) as CallDetails;
         } catch (e) {
@@ -54,7 +54,7 @@ export default class C2CWidget extends HTMLElement {
           this.callDetails = null;
         }
         break;
-      case "userVariables":
+      case "uservariables":
         try {
           const newUserVariables = JSON.parse(newValue) as UserVariables;
           this.userVariables = newUserVariables;
@@ -182,6 +182,17 @@ export default class C2CWidget extends HTMLElement {
       return;
     } else if (this.callDetails === null || this.call === null) {
       console.warn("No call or Call details provided");
+      return;
+    }
+
+    const beforeCallEvent = new CustomEvent("beforecall", {
+      cancelable: true,
+      bubbles: true,
+    });
+
+    const eventResult = this.dispatchEvent(beforeCallEvent);
+    if (!eventResult) {
+      console.log("Call cancelled by beforecall event handler");
       return;
     }
 
