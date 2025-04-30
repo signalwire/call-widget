@@ -130,7 +130,7 @@
         const name = document.getElementById("userName").value;
         const petName = document.getElementById("petName").value;
 
-        const widget = document.getElementById("c2cWidget");
+        const widget = document.querySelector("c2c-widget");
 
         const userVariables = {
           email,
@@ -153,6 +153,12 @@
       const widget2 = document.querySelector("c2c-widget");
       widget2.addEventListener("beforecall", () => {
         console.log("beforecall");
+      });
+      widget2.addEventListener("call.joined", ({ detail }) => {
+        console.log("call.joined", detail);
+      });
+      widget2.addEventListener("call.left", ({ detail }) => {
+        console.log("call.left", detail);
       });
     </script>
 
