@@ -17,14 +17,16 @@ export interface UserVariables {
 export class Call {
   private client: SignalWireClient | null = null;
   private callDetails: CallDetails | null = null;
+  private widget: HTMLElement;
   chat: Chat | null = null;
   currentCall: FabricRoomSession | null = null;
   token: string | null = null;
   private userVariables: UserVariables | null = null;
 
-  constructor(callDetails: CallDetails, token: string) {
+  constructor(callDetails: CallDetails, token: string, widget: HTMLElement) {
     this.callDetails = callDetails;
     this.token = token;
+    this.widget = widget;
   }
 
   private async getWidgetToken(embedsToken: string) {
@@ -163,6 +165,14 @@ export class Call {
     );
 
     roomSession.on("call.joined", () => {
+      const callStartedEvent = new CustomEvent("call.joined", {
+        detail: {
+          call: this.currentCall,
+          client: this.client,
+        },
+        bubbles: true,
+      });
+      this.widget.dispatchEvent(callStartedEvent);
       // @ts-ignore
       window.call = roomSession;
       if (roomSession?.localStream) {

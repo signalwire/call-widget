@@ -128,7 +128,7 @@ export default class C2CWidget extends HTMLElement {
     }
 
     if (this.callDetails && this.token) {
-      this.call = new Call(this.callDetails, this.token);
+      this.call = new Call(this.callDetails, this.token, this);
       if (this.userVariables) {
         this.call.addUserVariables(this.userVariables);
       }
@@ -287,6 +287,14 @@ export default class C2CWidget extends HTMLElement {
       });
 
       callInstance?.on("destroy", () => {
+        const callEndedEvent = new CustomEvent("call.left", {
+          detail: {
+            call: this.call?.currentCall,
+          },
+          bubbles: true,
+        });
+        this.dispatchEvent(callEndedEvent);
+
         this.closeModal(true);
       });
 
