@@ -130,11 +130,13 @@ export default class C2CWidget extends HTMLElement {
       this.userVariables = null;
     }
 
-    if (this.callDetails && this.token) {
-      this.call = new Call(this.callDetails, this.token, this);
-      if (this.userVariables) {
-        this.call.addUserVariables(this.userVariables);
-      }
+    this.call = new Call({
+      callDetails: this.callDetails,
+      token: this.token,
+      widget: this,
+    });
+    if (this.userVariables) {
+      this.call.addUserVariables(this.userVariables);
     }
   }
 

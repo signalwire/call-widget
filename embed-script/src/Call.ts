@@ -23,9 +23,17 @@ export class Call {
   token: string | null = null;
   private userVariables: UserVariables | null = null;
 
-  constructor(callDetails: CallDetails, token: string, widget: HTMLElement) {
-    this.callDetails = callDetails;
-    this.token = token;
+  constructor({
+    callDetails,
+    token,
+    widget,
+  }: {
+    callDetails: CallDetails | null;
+    token: string | null;
+    widget: HTMLElement;
+  }) {
+    this.callDetails = callDetails ?? null;
+    this.token = token ?? null;
     this.widget = widget;
   }
 
