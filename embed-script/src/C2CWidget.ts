@@ -45,6 +45,9 @@ export default class C2CWidget extends HTMLElement {
     switch (name) {
       case "token":
         this.token = newValue;
+        if (this.call) {
+          this.call.token = newValue;
+        }
         break;
       case "calldetails":
         try {
