@@ -1,0 +1,107 @@
+:host {
+  display: block;
+  height: 100%;
+  background: linear-gradient(135deg, #1a5f7a, #86134a);
+}
+
+.transcript-container {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.transcript {
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+}
+
+.message {
+  margin-bottom: 5px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  max-width: 80%;
+  color: white;
+  position: relative;
+  min-width: 60%;
+  min-height: 15px;
+  line-height: 1.3;
+}
+
+.message > .tail {
+  position: absolute;
+  bottom: 2px;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  display: none;
+  transform: scale(0.6);
+}
+
+.message > .tail svg {
+  fill: #2b95d6;
+}
+
+.message-received > .tail {
+  transform: scaleX(-1) scale(0.5);
+  left: 0;
+}
+
+.message-received > .tail svg {
+  fill: #e91e63;
+}
+
+.message-received {
+  background: #e91e63;
+  align-self: flex-start;
+}
+
+.message-sent {
+  background: #2b95d6;
+  align-self: flex-end;
+}
+
+.message-received + .message-sent,
+.message-sent + .message-received {
+  margin-top: 15px;
+}
+
+.message-sent:has(+ .message-received),
+.message-sent:last-child {
+  border-bottom-right-radius: 2px;
+}
+
+.message-sent:has(+ .message-received) .tail,
+.message-sent:last-child .tail {
+  display: block;
+}
+
+.message-received:has(+ .message-sent),
+.message-received:last-child {
+  border-bottom-left-radius: 2px;
+}
+
+.message-received:has(+ .message-sent) .tail,
+.message-received:last-child .tail {
+  display: block;
+}
+
+@keyframes heartbeat {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.01);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+}
+
+.message.in-progress {
+  animation: heartbeat 1.5s ease-in-out infinite;
+}

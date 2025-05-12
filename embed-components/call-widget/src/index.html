@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
+    <title>Stencil Component Starter</title>
+
+    <script type="module" src="/build/call-widget.esm.js"></script>
+    <script nomodule src="/build/call-widget.js"></script>
+  </head>
+  <body>
+    <!-- 
+    <button id="start-call-btn">Start Call</button>
+
+    <call-icon></call-icon> -->
+
+    <!-- With modal -->
+    <!-- <call-modal trigger="start-call-btn" open="false">
+      <call-context token="" destination="1234567890" audio="true" video="true">
+        <call-video></call-video>
+      </call-context>
+    </call-modal> -->
+
+    <button id="start-call-btn-transcript">Start Call with transcript</button>
+
+    <call-modal trigger="start-call-btn-transcript" open="false">
+      <call-context token="c2c_3eaa2a89d96107a630fff087bc255e27" destination="/private/aprilkisses" audio="true" video="false">
+        <call-video></call-video>
+        <call-transcript-viewer></call-transcript-viewer>
+      </call-context>
+    </call-modal>
+
+    <!-- Without modal -->
+    <!-- <call-context token="your-token" destination="1234567890" audio="true">
+      <call-audio></call-audio>
+    </call-context> -->
+
+    <!-- Modal testing-->
+    <!-- <button id="text-modal">Open only modal</button> -->
+    <!-- <call-modal trigger="text-modal"> <div style="width: 200px; height: 300px; background: blue">Hello modal</div> </call-modal> -->
+  </body>
+</html>
