@@ -79,3 +79,11 @@ So for now, it is a reasonable place to hook into the `SignalWireClient` chat ev
 The `Chat` class manages the chat state. The Chat UI is rendered by `chat.ui.ts`
 
 To render chat UI, I'm simply transforming all chat history into DOM with a pure function.
+
+## Updates may 9, 2025
+
+new information:
+
+1. `ai.begin_speaking` - when AI starts speaking
+2. `ai.transparent_barge` - stop what AI was saying, delete the last AI message
+3. `ai.speech_detect` can occur without preceding `ai.partial_result`

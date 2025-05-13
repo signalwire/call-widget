@@ -1,0 +1,37 @@
+# Developer notes
+
+We need to add the following features:
+
+1. subscribe to events from calls and client. 
+2. modify client and call parameters if dev needs to (eg: dev mode ...).
+3. more flexibility in how the widget is triggered (not just a call button id).
+4. a mode where it doesn't have a modal, just an element that exists within the page.
+5. incoming call handling (notification, accept/reject, trigger a call component with that call invite).
+
+Current API for the call widget is lacking in a number of ways:
+
+1. user details collection at start, and survey prompt at the end are hardcoded and inflexible
+2. no proper way to hook into the lifecycle events of the client and the call.
+
+and many more things that stem from not having a flexible API.
+
+
+## New API proposal
+
+### Modal use
+
+```html
+ <call-modal trigger="button-id" open="boolean">
+    <call-context token="string" destination="string" audio="boolean" video="boolean" ... other params>
+        <call-video/>
+        <call-transcript-viewer/>
+    </call-window>
+ </call-modal>
+```
+
+1. the `<call-modal>` is optional. It just shows it's children in a modal context.
+2. the `<call-context>` is the main component that contains the call logic. It sets up the client and provides
+methods to dial, hangup etc.
+3. the `<call-context>` also emits events relating to the call state.
+4. children of `<call-context>` inherit the client and the call object.
+

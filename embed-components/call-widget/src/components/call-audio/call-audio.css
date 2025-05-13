@@ -1,0 +1,57 @@
+.audio-call-container {
+  padding: 20px;
+  border-radius: 8px;
+  background: #f8f9fa;
+  min-width: 300px;
+}
+
+.call-status {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.2em;
+  color: #333;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.active-call-controls {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.start-call {
+  background: #4caf50;
+  color: white;
+}
+
+.end-call {
+  background: #f44336;
+  color: white;
+}
+
+.mute {
+  background: #2196f3;
+  color: white;
+}
+
+.mute.muted {
+  background: #9e9e9e;
+}
+
+button:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
