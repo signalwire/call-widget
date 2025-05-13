@@ -6,161 +6,17 @@
     <title>🎉 World's Most Honest Product Page</title>
   </head>
   <body>
-    <header
-      style="
-        background: #ff6b6b;
-        color: white;
-        padding: 20px;
-        text-align: center;
-      "
-    >
-      <h1>The Thing You Probably Don't Need</h1>
-      <p>But hey, we made it anyway! 🤷‍♂️</p>
-    </header>
-
-    <section style="padding: 40px; font-size: 18px">
-      <h2>Totally Real Features</h2>
-      <p>
-        ✨ Works 60% of the time, every time<br />
-        🚀 So easy to use, your cat could do it (but don't let them)<br />
-        💪 Strong enough to handle anything* <br />
-        <span style="font-size: 12px">*except actual heavy lifting</span>
-      </p>
-
-      <div
-        style="
-          background: #f0f0f0;
-          padding: 20px;
-          border-radius: 10px;
-          margin: 20px 0;
-        "
-      >
-        <h3>Why Choose Us?</h3>
-        <p>
-          Because we wrote this website, and we think we're pretty cool. Also,
-          our competitors' websites don't have as many emojis. 🏆
-        </p>
-      </div>
-
-      <div style="background: #e8f5e9; padding: 20px; border-radius: 10px">
-        <h3>Customer Testimonials</h3>
-        <p>"This changed my life!" - Probably Someone</p>
-        <p>"What even is this?" - My Mom</p>
-        <p>"10/10 would buy again" - Our CEO's Dog</p>
-      </div>
-    </section>
-
-    <section style="padding: 20px; background: #f8f9fa; text-align: center">
-      <h2>The Price Tag 💰</h2>
-      <p style="font-size: 24px">$29.99</p>
-      <p style="font-size: 16px">That's like, 3 fancy coffees!</p>
-
-      <div style="margin: 20px 0">
-        <input
-          type="email"
-          id="userEmail"
-          placeholder="Your Email"
-          style="padding: 8px; margin: 5px; width: 200px"
-        />
-        <input
-          type="text"
-          id="userName"
-          placeholder="Your Name"
-          style="padding: 8px; margin: 5px; width: 200px"
-        />
-        <input
-          type="text"
-          id="petName"
-          placeholder="Your Pet's Name"
-          style="padding: 8px; margin: 5px; width: 200px"
-        />
-      </div>
-
-      <button
-        style="
-          padding: 15px 30px;
-          background: #4caf50;
-          color: white;
-          border: none;
-          border-radius: 25px;
-          cursor: pointer;
-          font-size: 18px;
-          transition: transform 0.2s;
-        "
-        onmouseover="this.style.transform='scale(1.1)'"
-        onmouseout="this.style.transform='scale(1.0)'"
-      >
-        Take My Money! 💸
-      </button>
-    </section>
-
-    <footer
-      style="
-        background: #343a40;
-        color: white;
-        padding: 20px;
-        margin-top: 20px;
-        text-align: center;
-      "
-    >
-      <p>© 2025 The Thing™ - All rights reserved and stuff 🤓</p>
-      <p style="font-size: 12px">
-        No products were harmed in the making of this website
-      </p>
-    </footer>
-
     <!-- The code required to initialize the c2c widget. The button can be styled as you like and placed wherever you like.  -->
-    <button
-      id="callButton"
-      style="
-        position: fixed;
-        height: 70px;
-        width: 70px;
-        bottom: 50px;
-        right: 50px;
-      "
-    >
-      Call
-    </button>
+    <button id="callButton">Call using v3 call widget</button>
 
-    <script>
-      const callButton = document.getElementById("callButton");
-      callButton.addEventListener("click", () => {
-        const email = document.getElementById("userEmail").value;
-        const name = document.getElementById("userName").value;
-        const petName = document.getElementById("petName").value;
-
-        const widget = document.querySelector("c2c-widget");
-
-        const userVariables = {
-          email,
-          name,
-          petName,
-        };
-        widget.removeAttribute("userVariables");
-        widget.setAttribute("userVariables", JSON.stringify(userVariables));
-      });
-    </script>
-
-    <c2c-widget
-      buttonId="callButton"
-      callDetails='{"destination":"/private/demo-1","supportsVideo":true,"supportsAudio":true}'
-      token="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20iLCJ0eXAiOiJTQVQifQ..QYHghlPEOE4HjtJb.1WKLEg09c05-g3RujrS0io5h6AJ4mfpKMWtykpMIERJlMuomtOLHrU8picaFHeppbb_-593GjxHfeZiVmYdPZiIPYuNw2znqBuySuPArPfb2NMvXtZHEgfl3sXAdy5xpqSpphxFKStXwylo0EGeC91cVQgn3_lmSBcp13JvwArnu5ULltGmjPJogRbE1PrBsBbEJJioumVSZuuMH5lo7am-wE37Q5GXgou1a9iJWBiBtgk5ysmW4HTvbZ7pZHL5VcnWVy4V0OJL3J4WXl-m47L6bgFmHUijvVWxoFDu4Z7aUfx551OEhefr04F5NuJaHzTWUpgNzQ_VgWho04K96MK--wH_dEyIxtbfUHJSZyk1-Ef_dDCgFK6Rlnl2H5HM4G05gEKWcSjXGGk4tN0g6YvHsrUrAgsZiQeVQ-ggCHHRcmYX1OeXYbv1vEPml8i5JPUHAak5VvOQLYoG2ydb5kVv3WdM0oWKGHzTFPLFmjTaRxSC2b378BGbR7hCxbY9NdaLFnSn45KDkv1_a-saR9gDCBa2ZCPbkFmWRKLtGORFoiN-mLYAPTugidqZx40Ue4hav-jX178udYpVgSmun_rMHoN81t0Sb4xqMovs2i47-WLyzTwaGBK2CgLeHohGBvB9aWsFOV7F_YrZlcn7ptKo7RdNSrfBkiw7F6Sf8oIOz.426h9VZWDSVYDUIL9a1wDg"
-      survey='{"title":"Please take this survey", "description":"We would love to hear your thoughts. Would you like to take a survey?","href":"https://www.google.com"}'
-    ></c2c-widget>
-
-    <script>
-      const widget2 = document.querySelector("c2c-widget");
-      widget2.addEventListener("beforecall", () => {
-        console.log("beforecall");
-      });
-      widget2.addEventListener("call.joined", ({ detail }) => {
-        console.log("call.joined", detail);
-      });
-      widget2.addEventListener("call.left", ({ detail }) => {
-        console.log("call.left", detail);
-      });
-    </script>
+    <call-widget
+      button-id="callButton"
+      token="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwiY2giOiJwdWMuc3dpcmUuaW8iLCJ0eXAiOiJTQVQifQ..2JLw8hMLhNV3rwwb.omYOtawl-0EVN1qI_97kK1NH0VTFZ8MCgmIRNXNRi65A5gJ0VKz__6oE0wwi0FyUYi39IlFj9KyHBA1dQWyaR7ZWTDfS0SSVKMXs-bnnHsSrBGnQfHx4SYAhacaLeRsCwupx7fMjDf0XIIhDpRCJoNqDswAvce2z0BuMI0DkdrTb5k9YKVrPxruvziaHcBMLeXzUsX1hMaQ0mwxC_I_ZhXvNDtPC4npulm-Tf0UMyY2ywvLLo2g2fjIGQHHr2uDQ9dYOu5MlZu9r0Mq4Ab1D88W-YQwsCFXOasTQhTq_PW8yFHL-nVkGQXOYU9apSaU_t7lXq8HfWOh7L2w9dWNILat_3ocdE11bYiUnuZtO8E5tCZHqjl6xaRdM1suYLwRpc_8Fc0NVmCWvxVp79ZDuw8-IGk57jlINMLhBv8IY-67d8iTSSdc87gmjzapx-VTE34weUSxIV0DIqDe9vI1ZTDHcpvPS-eNQyntWF4lMNvxpeAtlsghY0GQvEV2MDo5S6vAHQb8CIhQWz7sI.ZGI8VYg7sYgsnLtZWjxt8Q"
+      support-video="true"
+      support-audio="true"
+      destination="/public/test"
+      logForDebug="true"
+    ></call-widget>
 
     <script type="module" src="/src/index.ts"></script>
     <!-- end code required to initialize c2c widget -->
