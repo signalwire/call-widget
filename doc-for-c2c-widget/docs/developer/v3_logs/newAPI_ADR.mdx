@@ -1,0 +1,31 @@
+# New API ADR
+
+I am changing the API for the v3. Logging decisions and reasons here.
+
+1. `<c2c-widget>` is now `<call-widget>`. This allows me to retain compatibility behavior of the old API, and make the 
+    new API more flexible
+
+2. instead of tracking change for attributes, (codecs, call details etc) we simply pull them at dial.
+
+3. in v3, client gets initialized as soon as the widget is connected to the DOM.
+    This is different from v2, where client was initialized before dial. 
+    This is to get incoming calls.
+
+
+## Client params vs Call params
+
+Certain params are passed during client init, and other params during dial. 
+
+### Client params
+
+- token
+- debug options 
+
+### dial time params
+
+- destination
+- supportsAudio
+- supportsVideo
+- userVariables
+- audioCodecs
+

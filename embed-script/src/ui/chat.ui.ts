@@ -1,6 +1,7 @@
 import { ChatEntry } from "../Chat";
 import html from "../lib/html";
 import tail from "../icons/chat-tail.svg?raw";
+import nanomorph from "nanomorph";
 
 export default function createChatUI(
   chatHistory: ChatEntry[],
@@ -28,9 +29,9 @@ export default function createChatUI(
     </div>
   `();
 
-  if (currentRoot.querySelector(".chat") !== null)
-    simple_diff(chat, currentRoot.querySelector(".chat")!);
-  else {
+  if (currentRoot.querySelector(".chat") !== null) {
+    nanomorph(currentRoot.querySelector(".chat")!, chat);
+  } else {
     currentRoot.appendChild(chatContainer);
   }
 
@@ -39,7 +40,6 @@ export default function createChatUI(
       top: currentRoot.scrollHeight,
       behavior: "smooth",
     });
-    // currentRoot.scrollTop = currentRoot.scrollHeight;
   } else {
     currentRoot.scrollTop = previousScrollTop;
   }
