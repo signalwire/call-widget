@@ -1,9 +1,6 @@
 # call-context
 
-
-
 <!-- Auto Generated Below -->
-
 
 ## Properties
 
@@ -19,7 +16,6 @@
 | `userVariables`            | `user-variables`       |             | `string`                                                        | `'{}'`      |
 | `video`                    | `video`                |             | `boolean`                                                       | `false`     |
 
-
 ## Events
 
 | Event                | Description | Type                                    |
@@ -29,20 +25,28 @@
 | `clientIncomingCall` |             | `CustomEvent<IncomingCallNotification>` |
 | `clientReady`        |             | `CustomEvent<any>`                      |
 
-
 ## Methods
 
 ### `dial() => Promise<any>`
-
-
 
 #### Returns
 
 Type: `Promise<any>`
 
+## Dependencies
 
+### Depends on
 
+- [call-information-dialog](../call-information-dialog)
 
-----------------------------------------------
+### Graph
 
-*Built with [StencilJS](https://stenciljs.com/)*
+```mermaid
+graph TD;
+  call-context --> call-information-dialog
+  style call-context fill:#f9f,stroke:#333,stroke-width:4px
+```
+
+---
+
+_Built with [StencilJS](https://stenciljs.com/)_

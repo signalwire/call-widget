@@ -1,12 +1,12 @@
 export interface ChatEntry {
-  type: "ai" | "user";
+  type: 'ai' | 'user';
   text: string;
-  state: "partial" | "complete";
+  state: 'partial' | 'complete';
 }
 
 export class ChatState {
   entries: ChatEntry[] = [];
-  lastSpoken: "ai" | "user" | null = null;
+  lastSpoken: 'ai' | 'user' | null = null;
 }
 
 // Chat class takes all the chat related events
@@ -28,7 +28,7 @@ export class Chat {
     const history = [...this.state.entries];
 
     if (this.aiPartialResult && this.userPartialResult) {
-      if (this.state.lastSpoken === "user") {
+      if (this.state.lastSpoken === 'user') {
         history.push(this.aiPartialResult);
         history.push(this.userPartialResult);
       } else {
@@ -44,51 +44,43 @@ export class Chat {
     return history;
   }
 
-  handleEvent(
-    event:
-      | "ai.response_utterance"
-      | "ai.completion"
-      | "ai.partial_result"
-      | "ai.speech_detect",
-    text: string,
-    barged: boolean
-  ) {
+  handleEvent(event: 'ai.response_utterance' | 'ai.completion' | 'ai.partial_result' | 'ai.speech_detect', text: string, barged: boolean) {
     switch (event) {
-      case "ai.response_utterance":
+      case 'ai.response_utterance':
         if (!this.aiPartialResult) {
-          this.aiPartialResult = { type: "ai", text, state: "partial" };
+          this.aiPartialResult = { type: 'ai', text, state: 'partial' };
         } else {
-          this.aiPartialResult.text += " " + text;
+          this.aiPartialResult.text += ' ' + text;
         }
-        this.state.lastSpoken = "ai";
+        this.state.lastSpoken = 'ai';
         break;
 
-      case "ai.completion":
+      case 'ai.completion':
         if (this.aiPartialResult) {
           this.state.entries.push({
             ...this.aiPartialResult,
-            state: "complete",
+            state: 'complete',
           });
           this.aiPartialResult = null;
         }
-        this.state.lastSpoken = barged ? "user" : "ai";
+        this.state.lastSpoken = barged ? 'user' : 'ai';
         break;
 
-      case "ai.partial_result":
-        this.userPartialResult = { type: "user", text, state: "partial" };
-        this.state.lastSpoken = "user";
+      case 'ai.partial_result':
+        this.userPartialResult = { type: 'user', text, state: 'partial' };
+        this.state.lastSpoken = 'user';
         break;
 
-      case "ai.speech_detect":
+      case 'ai.speech_detect':
         if (this.userPartialResult) {
           this.state.entries.push({
             ...this.userPartialResult,
-            state: "complete",
+            state: 'complete',
             text,
           });
           this.userPartialResult = null;
         }
-        this.state.lastSpoken = "user";
+        this.state.lastSpoken = 'user';
         break;
     }
 

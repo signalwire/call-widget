@@ -6,7 +6,7 @@ import { Component, h, Prop, Event, EventEmitter } from '@stencil/core';
   shadow: true,
 })
 export class CallInformationDialog {
-  @Prop() title!: string;
+  @Prop() messageTitle!: string;
   @Prop() message!: string;
   @Event() dialogClosed: EventEmitter<void>;
 
@@ -18,7 +18,7 @@ export class CallInformationDialog {
     return (
       <div class="dialog-overlay">
         <div class="dialog-content">
-          <h2>{this.title}</h2>
+          <h2>{this.messageTitle}</h2>
           <p>{this.message}</p>
           <button class="close-button" onClick={this.handleClose}>
             Close
