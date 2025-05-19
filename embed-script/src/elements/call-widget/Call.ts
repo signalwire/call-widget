@@ -188,7 +188,7 @@ export class Call {
   }
 
   async dial(
-    container: HTMLElement,
+    container: HTMLElement | undefined,
     onChatChange: (chatHistory: ChatEntry[]) => void,
     onLocalVideo: (localVideo: HTMLVideoElement) => void
   ) {
@@ -221,7 +221,7 @@ export class Call {
     // Add user variables to the room session
     const roomSession = await this.client.dial({
       to: destination,
-      rootElement: container,
+      rootElement: container ?? undefined,
       audio: supportsAudio ?? undefined,
       video: supportsVideo ?? undefined,
       negotiateVideo: supportsVideo ?? undefined,
@@ -268,13 +268,6 @@ export class Call {
         (localVideo as HTMLVideoElement).srcObject = roomSession.localStream;
         onLocalVideo(localVideo as HTMLVideoElement);
       }
-    });
-
-    roomSession.on("call.updated", () => {
-      // we want to track mute states
-      // what does the server know about the client's mute states?
-      // we ofc also have a local state
-      console.log("call.updated", roomSession);
     });
 
     roomSession.on("call.left", () => {

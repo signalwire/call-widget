@@ -73,6 +73,62 @@
   max-height: 90vh;
   overflow: hidden;
   animation: springIn 0.8s cubic-bezier(0.22, 1.2, 0.36, 1) forwards;
+  // display: grid;
+  // grid-template-columns: 1fr 300px;
+
+  &.video-mode {
+    grid-template-columns: 1fr 0;
+
+    .local-video-content {
+      right: 10px !important;
+    }
+
+    .video-panel {
+      width: 100%;
+    }
+    .video-controls {
+      background: black;
+      width: 100%;
+    }
+
+    .chat-panel {
+      width: 0;
+      display: none;
+      width: calc(100%);
+    }
+  }
+
+  &.audio-transcript-mode {
+    // grid-template-columns: 1fr;
+    // max-width: 800px;
+    // background: #f5f5f5;
+    grid-template-columns: 1fr;
+
+    .video-panel {
+      // display: none;
+      // width: 100%;
+      // padding-bottom: 0;
+      // width: calc(100%);
+      width: 100%;
+      padding-bottom: 0;
+    }
+
+    .video-area,
+    .local-video-content {
+      display: none;
+    }
+
+    .video-controls {
+      width: 100%;
+      position: static;
+    }
+
+    .chat-panel {
+      width: 100%;
+      position: static;
+      height: 500px;
+    }
+  }
 
   @media (min-width: 2000px) and (max-height: 700px) {
     max-width: 900px;
@@ -102,6 +158,12 @@
   @media (min-width: 801px) {
     padding-bottom: 50px;
   }
+
+  // .audio-transcript-mode & {
+  //   width: 100%;
+  //   min-height: auto;
+  //   padding-bottom: 0;
+  // }
 }
 
 /* note: this bg-image placeholder to be hardcoded into the widget is for image at https://developer.signalwire.com/img/call-widget/sw_background.webp */

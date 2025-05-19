@@ -1,6 +1,4 @@
 import videoTranscriptModal from "../../ui/modal.ui.ts";
-import transcriptModal from "../../ui/transcriptModal.ui.ts";
-import videoModal from "../../ui/videoModal.ui.ts";
 import { Call, UserVariables } from "./Call.ts";
 
 import devices from "../../Devices.ts";
@@ -121,36 +119,32 @@ export default class CallWidget extends HTMLElement {
     document.body.style.overflow = "hidden";
 
     const windowMode = this.config.getWindowMode();
+    console.log("windowMode", windowMode);
 
-    let modalContainer = null;
-    let videoPanel = null;
-    let videoArea = null;
-    let localVideoArea = null;
-    let controlsPanel = null;
-    let chatPanel = null;
+    let {
+      modalContainer,
+      videoPanel,
+      videoArea,
+      localVideoArea,
+      controlsPanel,
+      chatPanel,
+    } = videoTranscriptModal();
+
+    const modal = modalContainer.querySelector(".modal");
 
     if (windowMode === "video") {
-      const items = videoTranscriptModal();
-      modalContainer = items.modalContainer;
-      videoPanel = items.videoPanel;
-      videoArea = items.videoArea;
-      localVideoArea = items.localVideoArea;
-      controlsPanel = items.controlsPanel;
-      chatPanel = items.chatPanel;
+      modal?.classList.add("video-mode");
+      chatPanel.style.display = "none";
     } else if (windowMode === "video+transcript" || windowMode === null) {
-      const items = videoTranscriptModal();
-      modalContainer = items.modalContainer;
-      videoPanel = items.videoPanel;
-      videoArea = items.videoArea;
-      localVideoArea = items.localVideoArea;
-      controlsPanel = items.controlsPanel;
-      chatPanel = items.chatPanel;
+      // videoPanel.style.display = "none";
+      // localVideoArea.style.display = "none";
     } else if (windowMode === "audio+transcript") {
+      modal?.classList.add("audio-transcript-mode");
     }
 
     this.modalContainer = modalContainer;
-    this.containerElement?.appendChild(modalContainer);
-    this.loadingManager = new LoadingManager(videoPanel);
+    this.containerElement?.appendChild(modalContainer!);
+    this.loadingManager = new LoadingManager(videoPanel!);
 
     this.loadingManager?.setLoading(true);
 
@@ -175,12 +169,16 @@ export default class CallWidget extends HTMLElement {
     try {
       callInstance =
         (await this.callManager?.dial(
-          videoArea,
+          videoArea ?? undefined,
           function (chatHistory: ChatEntry[]) {
-            createChatUI(chatHistory, chatPanel);
+            if (chatPanel) {
+              createChatUI(chatHistory, chatPanel);
+            }
           },
           function (localVideo: HTMLElement) {
-            localVideoArea.appendChild(localVideo);
+            if (localVideoArea) {
+              localVideoArea.appendChild(localVideo);
+            }
           }
         )) ?? null;
     } catch (e) {
@@ -231,7 +229,9 @@ export default class CallWidget extends HTMLElement {
       }
     });
 
-    controlsPanel.appendChild(control);
+    if (controlsPanel) {
+      controlsPanel.appendChild(control);
+    }
 
     try {
       await this.callManager?.start();
