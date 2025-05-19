@@ -1,9 +1,15 @@
-# Introduction to the Call Widget
+# SignalWire Call Widget
 
 The Call Widget is a Click-to-Call style JavaScript widget which uses the SignalWire SDK and the SignalWire
 C2C service to allow you to embed calls in your website.
 
 ![screenshot of the widget](./screenshot.png)
+
+> **🌟 New V3 Beta Available!**  
+> We've released a new version (V3) of the Call Widget with a completely revamped API, better UI, and support for incoming calls.
+> [Skip to V3 Documentation](#signalwire-call-widget-v3)
+
+## V2 Documentation
 
 ## Installation
 
@@ -144,3 +150,246 @@ widget.addEventListener("beforecall", () => {
   console.log("beforecall");
 });
 ```
+
+# SignalWire Call Widget V3 (Beta)
+
+A completely revamped version of the Call Widget with a modern API, enhanced UI, and support for incoming calls. V3 offers a more streamlined integration experience and additional features not available in V2.
+
+Key improvements over V2:
+
+- Simpler, more intuitive HTML attribute-based configuration
+- Built-in support for incoming calls
+- Enhanced UI with multiple window modes
+- Better debugging options
+- More flexible audio codec configuration
+
+## Installation
+
+### NPM
+
+```bash
+npm install @niravcodes/call-widget@next
+```
+
+### CDN (jsDelivr)
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@niravcodes/call-widget@next/dist/call-widget.min.js"></script>
+```
+
+## Quick Start
+
+```html
+<button id="myCallButton">Start Call</button>
+
+<call-widget
+  button-id="myCallButton"
+  token="your_signalwire_token"
+  destination="/private/demo"
+  support-audio="true"
+  support-video="true"
+></call-widget>
+```
+
+## Attributes Reference
+
+| Attribute        | Required | Default            | Description                                        |
+| ---------------- | -------- | ------------------ | -------------------------------------------------- |
+| token            | Yes      | -                  | SignalWire authentication token                    |
+| destination      | Yes      | -                  | Call destination path                              |
+| button-id        | Yes      | -                  | ID of the button that triggers the call            |
+| support-audio    | No       | false              | Enable audio support                               |
+| support-video    | No       | false              | Enable video support                               |
+| window-mode      | No       | "video+transcript" | UI mode for the call window                        |
+| log-level        | No       | "error"            | Logging verbosity level                            |
+| host             | No       | -                  | SignalWire server host                             |
+| receive-calls    | No       | false              | Enable incoming call reception                     |
+| auto-answer      | No       | false              | Automatically answer incoming calls without prompt |
+| audio-codec      | No       | -                  | Comma-separated list of preferred audio codecs     |
+| user-variables   | No       | -                  | Custom variables passed as JSON string             |
+| debug-ws-traffic | No       | false              | Enable WebSocket traffic debugging                 |
+
+## Detailed Attribute Description
+
+### Required Attributes
+
+#### `token`
+
+Your SignalWire authentication token. This is required for establishing connections.
+
+Example:
+
+```html
+<call-widget token="your_signalwire_token"></call-widget>
+```
+
+#### `destination`
+
+The destination path for the call. Usually in the format "/private/room-name".
+
+Example:
+
+```html
+<call-widget destination="/private/demo-room"></call-widget>
+```
+
+### Optional Attributes
+
+#### `window-mode`
+
+Controls the layout and features of the call window. Available options:
+
+- `video+transcript`: Video call with transcript
+- `video`: Video-only interface
+- `audio+transcript`: Audio call with transcript
+
+Example:
+
+```html
+<call-widget window-mode="video+transcript"></call-widget>
+```
+
+#### `log-level`
+
+Sets the logging verbosity. Available options:
+
+- `debug`: Most verbose, includes all logs
+- `info`: General information and important events
+- `warn`: Warnings and non-critical issues
+- `error`: Only error messages (default)
+
+Example:
+
+```html
+<call-widget log-level="debug"></call-widget>
+```
+
+#### `user-variables`
+
+Custom variables passed as a JSON string. All values must be strings.
+
+Example:
+
+```html
+<call-widget
+  user-variables='{"customerName": "John", "accountId": "123"}'
+></call-widget>
+```
+
+#### `audio-codec`
+
+Comma-separated list of preferred audio codecs.
+
+Example:
+
+```html
+<call-widget audio-codec="opus,PCMU"></call-widget>
+```
+
+## Usage Examples
+
+### Basic Audio-Only Call Widget
+
+```html
+<button id="audioCall">Start Audio Call</button>
+
+<call-widget
+  button-id="audioCall"
+  token="your_token"
+  destination="/private/audio-room"
+  support-audio="true"
+  support-video="false"
+  window-mode="audio+transcript"
+></call-widget>
+```
+
+### Video Call with Transcription
+
+```html
+<button id="videoCall">Start Video Call</button>
+
+<call-widget
+  button-id="videoCall"
+  token="your_token"
+  destination="/private/video-room"
+  support-audio="true"
+  support-video="true"
+  window-mode="video+transcript"
+  log-level="info"
+></call-widget>
+```
+
+### Call Center Agent Setup
+
+```html
+<button id="agentConsole">Open Agent Console</button>
+
+<call-widget
+  button-id="agentConsole"
+  token="your_token"
+  destination="/private/agent-room"
+  support-audio="true"
+  support-video="true"
+  receive-calls="true"
+  auto-answer="false"
+  window-mode="video+transcript"
+  user-variables='{"agentId": "agent123", "department": "support"}'
+></call-widget>
+```
+
+## Notes and best practices
+
+1. **Token Security**: Never hardcode your SignalWire token in the HTML. Instead, fetch it dynamically from your server.
+   However, you're free to use click2call tokens (`c2c_...`) statically in HTML.
+
+2. **Button Placement**: The trigger button can be styled and positioned anywhere in your layout. Just ensure the `button-id` matches.
+
+3. **window-mode vs support-audio and support-video**:
+
+- `window-mode` controls the layout UI of the widget. This is purely cosmetic.
+- `support-audio` and `support-video` controls the features of the widget. This decides if webcam and/or microphone is used.
+
+## Handling Incoming Calls
+
+V3 introduces robust support for incoming calls, making it suitable for call center and customer service applications.
+
+### Setting Up Incoming Calls
+
+To enable incoming calls, set the `receive-calls` attribute to "true". You can also configure automatic answer behavior using `auto-answer`.
+
+```html
+<call-widget
+  button-id="agentConsole"
+  token="your_token"
+  destination="/private/agent-room"
+  receive-calls="true"
+  auto-answer="false"
+  window-mode="video+transcript"
+></call-widget>
+```
+
+### Incoming Call Behavior
+
+When `receive-calls` is enabled:
+
+1. The widget listens for incoming calls to the specified destination
+2. When a call arrives:
+   - If `auto-answer="true"`: The call is automatically answered
+   - If `auto-answer="false"`: A notification appears allowing the user to accept or decline
+3. The call window opens in the specified `window-mode` once the call is accepted
+
+### Best Practices for Incoming Calls
+
+1. **User Experience**:
+   - Use `auto-answer="false"` for agent interfaces where call screening is needed
+   - Use `auto-answer="true"` for automated services or IVR systems
+2. **Window Mode**: For agent interfaces, `video+transcript` mode provides the most comprehensive call handling experience
+3. **Audio/Video Support**: Configure `support-audio` and `support-video` based on your use case:
+   ```html
+   <call-widget
+     receive-calls="true"
+     support-audio="true"
+     support-video="true"
+     window-mode="video+transcript"
+   ></call-widget>
+   ```
