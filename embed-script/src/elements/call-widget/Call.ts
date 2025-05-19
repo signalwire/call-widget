@@ -40,6 +40,15 @@ export class Call {
     } else {
       throw new Error("Config is not set");
     }
+
+    const handleUnload = () => {
+      if (this.currentCall) {
+        this.currentCall.hangup();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("unload", handleUnload);
   }
 
   private async getWidgetToken(embedsToken: string) {
