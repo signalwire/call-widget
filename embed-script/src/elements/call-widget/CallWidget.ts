@@ -287,7 +287,7 @@ export default class CallWidget extends HTMLElement {
       videoArea,
       localVideoArea,
       controlsPanel,
-      chatPanel,
+      chatPanel: _,
     } = videoTranscriptModal();
 
     this.modalContainer = modalContainer;
