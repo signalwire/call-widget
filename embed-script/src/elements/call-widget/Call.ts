@@ -3,10 +3,11 @@ import {
   SignalWire,
   SignalWireClient,
 } from "@signalwire/js";
-import { CallDetails } from "./C2CWidget";
 import { Chat, ChatEntry } from "./Chat";
-import html from "./lib/html";
-import devices from "./Devices";
+import html from "../../lib/html";
+import devices from "../../Devices";
+import { CallWidgetConfig } from "./CallWidgetConfig";
+import { CallParams } from "@signalwire/js/dist/js/src/fabric/interfaces";
 
 export interface UserVariables {
   userName: string;
@@ -16,25 +17,38 @@ export interface UserVariables {
 
 export class Call {
   private client: SignalWireClient | null = null;
-  private callDetails: CallDetails | null = null;
+  private clientInitPromise: Promise<SignalWireClient> | null = null;
+  config: CallWidgetConfig | null = null;
+
+  // to dispatch events
   private widget: HTMLElement;
+
   chat: Chat | null = null;
   currentCall: FabricRoomSession | null = null;
-  token: string | null = null;
-  private userVariables: UserVariables | null = null;
 
   constructor({
-    callDetails,
-    token,
+    config,
     widget,
   }: {
-    callDetails: CallDetails | null;
-    token: string | null;
+    config: CallWidgetConfig | null;
     widget: HTMLElement;
   }) {
-    this.callDetails = callDetails ?? null;
-    this.token = token ?? null;
     this.widget = widget;
+    if (config) {
+      this.config = config;
+      this.clientInitPromise = this.setupClient(config);
+    } else {
+      throw new Error("Config is not set");
+    }
+
+    const handleUnload = () => {
+      if (this.currentCall) {
+        this.currentCall.hangup();
+      }
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("unload", handleUnload);
   }
 
   private async getWidgetToken(embedsToken: string) {
@@ -65,18 +79,31 @@ export class Call {
     return this.currentCall?.localAudioTrack;
   }
 
-  async setupClient() {
-    if (!this.token) {
+  private async setupClient(config: CallWidgetConfig) {
+    const token = config.getToken();
+    if (!token) {
       throw new Error("Token is not set");
     }
 
-    let clientToken = this.token;
-    if (this.token.startsWith("c2c_")) {
-      clientToken = await this.getWidgetToken(this.token);
+    let clientToken = token;
+    if (token.startsWith("c2c_")) {
+      clientToken = await this.getWidgetToken(token);
     }
+
+    const logLevel = config.getDebugMode();
+    const logWsTraffic = config.getDebugWsTraffic();
+
+    // Remove all SAT keys from session storage before dial
+    // github.com/signalwire/call-widget/issues/8
+    ["ci-SAT", "pt-SAT", "as-SAT"].forEach((key) =>
+      sessionStorage.removeItem(key)
+    );
 
     const client = await SignalWire({
       token: clientToken,
+      host: config.getHost() ?? undefined,
+      logLevel: logLevel ?? undefined,
+      debug: logWsTraffic ? { logWsTraffic } : undefined,
     });
 
     // @ts-ignore
@@ -101,6 +128,14 @@ export class Call {
     });
 
     // @ts-ignore
+    client.on("ai.transparent_barge", (params) => {
+      // AI transparent barge (remove last AI speech)
+      console.log("ai.transparent_barge", params);
+      const cleanText = params.combined_text;
+      this.chat?.handleEvent("ai.transparent_barge", cleanText, true);
+    });
+
+    // @ts-ignore
     client.on("ai.completion", (params) => {
       // AI completion (final response)
       this.chat?.handleEvent(
@@ -120,48 +155,88 @@ export class Call {
       );
     });
 
+    // @ts-ignore
+    client.on("calling.user_event", (params) => {
+      console.log("calling.user_event", params);
+      const userEvent = new CustomEvent("calling.user_event", {
+        detail: params,
+        bubbles: true,
+      });
+      this.widget.dispatchEvent(userEvent);
+    });
+
+    if (config.getReceiveCalls()) {
+      client.online({
+        incomingCallHandlers: {
+          websocket: (callInvite) => {
+            console.log("incoming call", callInvite);
+            const incomingCallEvent = new CustomEvent("call.incoming", {
+              detail: {
+                callInvite,
+                caller: {
+                  name: callInvite.invite.details?.caller_id_name,
+                  number: callInvite.invite.details?.caller_id_number,
+                },
+                accept: async (params: CallParams) => {
+                  const roomSession = await callInvite.invite.accept(params);
+                  this.currentCall = roomSession;
+                  return roomSession;
+                },
+                reject: () => callInvite.invite.reject(),
+              },
+              bubbles: true,
+            });
+            this.widget.dispatchEvent(incomingCallEvent);
+          },
+        },
+      });
+    }
+
     this.client = client;
     return client;
   }
 
-  addUserVariables(variables: UserVariables) {
-    this.userVariables = {
-      ...this.userVariables,
-      ...variables,
-    };
-  }
-
   async dial(
-    container: HTMLElement,
+    container: HTMLElement | undefined,
     onChatChange: (chatHistory: ChatEntry[]) => void,
     onLocalVideo: (localVideo: HTMLVideoElement) => void
   ) {
-    // Remove all SAT keys from session storage before dial
-    // github.com/signalwire/call-widget/issues/8
-    ["ci-SAT", "pt-SAT", "as-SAT"].forEach((key) =>
-      sessionStorage.removeItem(key)
-    );
+    if (!this.client && this.clientInitPromise) {
+      await this.clientInitPromise;
+    }
 
-    const client = await this.setupClient();
+    console.log(this.client);
+
+    if (!this.client) {
+      throw new Error("Client is not initialized");
+    }
+
     this.chat = new Chat();
 
-    if (!this.callDetails) {
-      throw new Error("Call details are not set");
+    const userVariables = this.config?.getUserVariables();
+    const destination = this.config?.getDestination();
+    const supportsAudio = this.config?.getSupportAudio();
+    const supportsVideo = this.config?.getSupportVideo();
+
+    if (!destination) {
+      throw new Error("Destination is not set");
     }
 
     const finalUserVariables = {
       callOriginHref: window.location.href,
-      ...this.userVariables,
+      ...userVariables,
     };
 
     // Add user variables to the room session
-    const roomSession = await client.dial({
-      to: this.callDetails.destination,
-      rootElement: container,
-      audio: this.callDetails.supportsAudio,
-      video: this.callDetails.supportsVideo,
-      negotiateVideo: this.callDetails.supportsVideo,
+    const roomSession = await this.client.dial({
+      to: destination,
+      rootElement: container ?? undefined,
+      audio: supportsAudio ?? undefined,
+      video: supportsVideo ?? undefined,
+      negotiateVideo: supportsVideo ?? undefined,
       userVariables: finalUserVariables,
+      // @ts-expect-error
+      audioCodecs: this.config?.getAudioCodec(),
     });
     this.currentCall = roomSession;
 
@@ -204,6 +279,16 @@ export class Call {
       }
     });
 
+    roomSession.on("call.left", () => {
+      const callEndedEvent = new CustomEvent("call.left", {
+        detail: {
+          call: this.currentCall,
+        },
+        bubbles: true,
+      });
+      this.widget.dispatchEvent(callEndedEvent);
+    });
+
     if (this.chat) {
       this.chat.onUpdate = () => {
         onChatChange(this.chat?.getHistory() ?? []);
@@ -227,6 +312,30 @@ export class Call {
     await this.currentCall?.hangup();
   }
 
+  async destroy() {
+    if (this.currentCall) {
+      await this.currentCall.hangup();
+    }
+
+    if (this.client) {
+      // @ts-ignore
+      this.client.off("ai.partial_result");
+      // @ts-ignore
+      this.client.off("ai.speech_detect");
+      // @ts-ignore
+      this.client.off("ai.completion");
+      // @ts-ignore
+      this.client.off("ai.response_utterance");
+      // @ts-ignore
+
+      this.client.disconnect();
+      this.client = null;
+    }
+
+    this.currentCall = null;
+    this.chat = null;
+  }
+
   reset() {
     if (this.client) {
       // @ts-ignore
@@ -237,11 +346,9 @@ export class Call {
       this.client.off("ai.completion");
       // @ts-ignore
       this.client.off("ai.response_utterance");
-
-      this.client.disconnect();
     }
+    this.currentCall?.hangup();
     this.currentCall = null;
-    this.client = null;
-    this.chat = null;
+    this.chat = new Chat();
   }
 }

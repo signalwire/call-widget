@@ -1,6 +1,7 @@
 import { ChatEntry } from "../Chat";
 import html from "../lib/html";
 import tail from "../icons/chat-tail.svg?raw";
+import nanomorph from "nanomorph";
 
 export default function createChatUI(
   chatHistory: ChatEntry[],
@@ -28,9 +29,9 @@ export default function createChatUI(
     </div>
   `();
 
-  if (currentRoot.querySelector(".chat") !== null)
-    simple_diff(chat, currentRoot.querySelector(".chat")!);
-  else {
+  if (currentRoot.querySelector(".chat") !== null) {
+    nanomorph(currentRoot.querySelector(".chat")!, chat);
+  } else {
     currentRoot.appendChild(chatContainer);
   }
 
@@ -39,7 +40,6 @@ export default function createChatUI(
       top: currentRoot.scrollHeight,
       behavior: "smooth",
     });
-    // currentRoot.scrollTop = currentRoot.scrollHeight;
   } else {
     currentRoot.scrollTop = previousScrollTop;
   }
@@ -49,6 +49,7 @@ export default function createChatUI(
 // Assumptions: i. history doesn't change; ii. messages are only added iii. No grand-children.
 // If any might fail, just use a simple dom-diffing library like nanomorph:
 // please don't push this function beyond what it's currently doing.
+// @ts-ignore
 function simple_diff(newdom: HTMLElement, target: HTMLElement) {
   const newChildren = newdom.children;
   const currentChildren = target.children;
