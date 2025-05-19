@@ -174,7 +174,7 @@ npm install @niravcodes/call-widget
 ### CDN (jsDelivr)
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@niravcodes/call-widget@next/dist/call-widget-full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@niravcodes/call-widget/dist/call-widget-full.min.js"></script>
 ```
 
 ## Quick Start
