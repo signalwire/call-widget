@@ -332,6 +332,7 @@ export default class CallWidget extends HTMLElement {
       const callStartedEvent = new CustomEvent("call.joined", {
         detail: {
           call: callInstance,
+          fromNotification: true,
         },
         bubbles: true,
       });
