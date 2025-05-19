@@ -7,15 +7,31 @@
   </head>
   <body>
     <!-- The code required to initialize the c2c widget. The button can be styled as you like and placed wherever you like.  -->
+    <!-- <button id="callButton">Call using v3 call widget</button>
+
+    <call-widget
+      button-id="callButton"
+      token="c2c_3eaa2a89d96107a630fff087bc255e27"
+      support-video="true"
+      support-audio="true"
+      destination="/private/aprilkisses"
+      log-level="info"
+      host="app.signalwire.com"
+    ></call-widget> -->
+
+    <!-- The code required to initialize the c2c widget. The button can be styled as you like and placed wherever you like.  -->
     <button id="callButton">Call using v3 call widget</button>
 
     <call-widget
       button-id="callButton"
-      token="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwiY2giOiJwdWMuc3dpcmUuaW8iLCJ0eXAiOiJTQVQifQ..2JLw8hMLhNV3rwwb.omYOtawl-0EVN1qI_97kK1NH0VTFZ8MCgmIRNXNRi65A5gJ0VKz__6oE0wwi0FyUYi39IlFj9KyHBA1dQWyaR7ZWTDfS0SSVKMXs-bnnHsSrBGnQfHx4SYAhacaLeRsCwupx7fMjDf0XIIhDpRCJoNqDswAvce2z0BuMI0DkdrTb5k9YKVrPxruvziaHcBMLeXzUsX1hMaQ0mwxC_I_ZhXvNDtPC4npulm-Tf0UMyY2ywvLLo2g2fjIGQHHr2uDQ9dYOu5MlZu9r0Mq4Ab1D88W-YQwsCFXOasTQhTq_PW8yFHL-nVkGQXOYU9apSaU_t7lXq8HfWOh7L2w9dWNILat_3ocdE11bYiUnuZtO8E5tCZHqjl6xaRdM1suYLwRpc_8Fc0NVmCWvxVp79ZDuw8-IGk57jlINMLhBv8IY-67d8iTSSdc87gmjzapx-VTE34weUSxIV0DIqDe9vI1ZTDHcpvPS-eNQyntWF4lMNvxpeAtlsghY0GQvEV2MDo5S6vAHQb8CIhQWz7sI.ZGI8VYg7sYgsnLtZWjxt8Q"
+      token="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwidHlwIjoiU0FUIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20ifQ..RxcVpYBp_I01huer.IepizuuNoUzByrsB4r00sTH8BFotMlNJZ1FAFgLpwSCbwRfQzzsGyUCh6e0XdcnbnQUqiVyt4n7bjQ0WOJM4owxMWDdi4DcmFwEgQYAAz7fy7tXhOi0roOxtlQF_m6jf4EUZmxQBKVRF2uW1FP5xcN78U7slY5Fk_GP9h6aK3OAchytTCDaWezbghpTt6fcvM3p0GYqMWo0B8Qafp5OoQLlgxsDUH_ifBt1pi1nC8vUFedlCRavbdDw_UTCcDIuSbat69IFY-E1xUGqvbuBVh28G2oq8vciKgHioYKhaQA4X3edshoamcODD7gG0vLWOYRShZbUTt6KD9IgedkLUdwYuVhizifsbSXm2IWZAVfkBODdCCoIzsiJCKXmpPVb9O9h2d-HSF1O4MzGEpqy4OFV9FWiyLgXspMmCdvE2QRpgGJmBX22tRVMvfTQcg3I6DmOVWiCcnK5FI0N9A7ie2sQ.U_WyqLMCtHCMr89YVO1m-A"
       support-video="true"
       support-audio="true"
-      destination="/public/test"
-      logForDebug="true"
+      destination="/private/aprilkisses"
+      log-level="info"
+      debug-ws-traffic="true"
+      receive-calls="true"
+      window="video"
     ></call-widget>
 
     <script type="module" src="/src/index.ts"></script>

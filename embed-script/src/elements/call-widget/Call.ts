@@ -2,11 +2,12 @@ import {
   FabricRoomSession,
   SignalWire,
   SignalWireClient,
-  SignalWireClientParams,
 } from "@signalwire/js";
 import { Chat, ChatEntry } from "./Chat";
 import html from "../../lib/html";
 import devices from "../../Devices";
+import { CallWidgetConfig } from "./CallWidgetConfig";
+import { CallParams } from "@signalwire/js/dist/js/src/fabric/interfaces";
 
 export interface UserVariables {
   userName: string;
@@ -17,6 +18,7 @@ export interface UserVariables {
 export class Call {
   private client: SignalWireClient | null = null;
   private clientInitPromise: Promise<SignalWireClient> | null = null;
+  config: CallWidgetConfig | null = null;
 
   // to dispatch events
   private widget: HTMLElement;
@@ -25,15 +27,18 @@ export class Call {
   currentCall: FabricRoomSession | null = null;
 
   constructor({
-    token,
+    config,
     widget,
   }: {
-    token: string | null;
+    config: CallWidgetConfig | null;
     widget: HTMLElement;
   }) {
     this.widget = widget;
-    if (token) {
-      this.clientInitPromise = this.setupClient(token);
+    if (config) {
+      this.config = config;
+      this.clientInitPromise = this.setupClient(config);
+    } else {
+      throw new Error("Config is not set");
     }
   }
 
@@ -65,11 +70,8 @@ export class Call {
     return this.currentCall?.localAudioTrack;
   }
 
-  private async setupClient(
-    token: string | null,
-    logWsTraffic?: boolean,
-    logLevel?: SignalWireClientParams["logLevel"]
-  ) {
+  private async setupClient(config: CallWidgetConfig) {
+    const token = config.getToken();
     if (!token) {
       throw new Error("Token is not set");
     }
@@ -79,6 +81,9 @@ export class Call {
       clientToken = await this.getWidgetToken(token);
     }
 
+    const logLevel = config.getDebugMode();
+    const logWsTraffic = config.getDebugWsTraffic();
+
     // Remove all SAT keys from session storage before dial
     // github.com/signalwire/call-widget/issues/8
     ["ci-SAT", "pt-SAT", "as-SAT"].forEach((key) =>
@@ -87,12 +92,8 @@ export class Call {
 
     const client = await SignalWire({
       token: clientToken,
-      incomingCallHandlers: {
-        websocket: (callInvite) => {
-          console.log("incoming call", callInvite);
-        },
-      },
-      logLevel: logLevel,
+      host: config.getHost() ?? undefined,
+      logLevel: logLevel ?? undefined,
       debug: logWsTraffic ? { logWsTraffic } : undefined,
     });
 
@@ -145,6 +146,43 @@ export class Call {
       );
     });
 
+    // @ts-ignore
+    client.on("calling.user_event", (params) => {
+      console.log("calling.user_event", params);
+      const userEvent = new CustomEvent("calling.user_event", {
+        detail: params,
+        bubbles: true,
+      });
+      this.widget.dispatchEvent(userEvent);
+    });
+
+    if (config.getReceiveCalls()) {
+      client.online({
+        incomingCallHandlers: {
+          websocket: (callInvite) => {
+            console.log("incoming call", callInvite);
+            const incomingCallEvent = new CustomEvent("call.incoming", {
+              detail: {
+                callInvite,
+                caller: {
+                  name: callInvite.invite.details?.caller_id_name,
+                  number: callInvite.invite.details?.caller_id_number,
+                },
+                accept: async (params: CallParams) => {
+                  const roomSession = await callInvite.invite.accept(params);
+                  this.currentCall = roomSession;
+                  return roomSession;
+                },
+                reject: () => callInvite.invite.reject(),
+              },
+              bubbles: true,
+            });
+            this.widget.dispatchEvent(incomingCallEvent);
+          },
+        },
+      });
+    }
+
     this.client = client;
     return client;
   }
@@ -152,11 +190,7 @@ export class Call {
   async dial(
     container: HTMLElement,
     onChatChange: (chatHistory: ChatEntry[]) => void,
-    onLocalVideo: (localVideo: HTMLVideoElement) => void,
-    userVariables: { [key: string]: string },
-    destination: string,
-    supportsAudio: boolean,
-    supportsVideo: boolean
+    onLocalVideo: (localVideo: HTMLVideoElement) => void
   ) {
     if (!this.client && this.clientInitPromise) {
       await this.clientInitPromise;
@@ -170,6 +204,15 @@ export class Call {
 
     this.chat = new Chat();
 
+    const userVariables = this.config?.getUserVariables();
+    const destination = this.config?.getDestination();
+    const supportsAudio = this.config?.getSupportAudio();
+    const supportsVideo = this.config?.getSupportVideo();
+
+    if (!destination) {
+      throw new Error("Destination is not set");
+    }
+
     const finalUserVariables = {
       callOriginHref: window.location.href,
       ...userVariables,
@@ -179,10 +222,12 @@ export class Call {
     const roomSession = await this.client.dial({
       to: destination,
       rootElement: container,
-      audio: supportsAudio,
-      video: supportsVideo,
-      negotiateVideo: supportsVideo,
+      audio: supportsAudio ?? undefined,
+      video: supportsVideo ?? undefined,
+      negotiateVideo: supportsVideo ?? undefined,
       userVariables: finalUserVariables,
+      // @ts-expect-error
+      audioCodecs: this.config?.getAudioCodec(),
     });
     this.currentCall = roomSession;
 

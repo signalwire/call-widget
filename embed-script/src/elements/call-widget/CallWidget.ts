@@ -1,4 +1,6 @@
-import modal from "../../ui/modal.ui.ts";
+import videoTranscriptModal from "../../ui/modal.ui.ts";
+import transcriptModal from "../../ui/transcriptModal.ui.ts";
+import videoModal from "../../ui/videoModal.ui.ts";
 import { Call, UserVariables } from "./Call.ts";
 
 import devices from "../../Devices.ts";
@@ -11,6 +13,8 @@ import { ButtonObserver } from "./ButtonObserver.ts";
 import { CallWidgetConfig } from "./CallWidgetConfig.ts";
 import { LoadingManager } from "./LoadingManager.ts";
 import { CallInfoModal } from "../call-info-modal/CallInfoModal.ts";
+import { IncomingCallModal } from "../incoming-call-modal/IncomingCallModal.ts";
+import html from "../../lib/html.ts";
 
 export default class CallWidget extends HTMLElement {
   callOngoing: boolean = false;
@@ -51,7 +55,7 @@ export default class CallWidget extends HTMLElement {
       (async () => {
         await this.callManager?.destroy();
         this.callManager = new Call({
-          token: newValue,
+          config: this.config,
           widget: this,
         });
       })();
@@ -59,7 +63,9 @@ export default class CallWidget extends HTMLElement {
   }
 
   connectedCallback() {
-    // it's fine to just use attributechangedcallback because it fires anyway
+    this.addEventListener("call.incoming", async (event: any) => {
+      await this.setupCallFromNotification(event.detail);
+    });
   }
 
   private closeModal() {
@@ -114,14 +120,33 @@ export default class CallWidget extends HTMLElement {
     this.previousOverflowStyle = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    const {
-      modalContainer,
-      videoPanel,
-      videoArea,
-      localVideoArea,
-      controlsPanel,
-      chatPanel,
-    } = modal();
+    const windowMode = this.config.getWindowMode();
+
+    let modalContainer = null;
+    let videoPanel = null;
+    let videoArea = null;
+    let localVideoArea = null;
+    let controlsPanel = null;
+    let chatPanel = null;
+
+    if (windowMode === "video") {
+      const items = videoTranscriptModal();
+      modalContainer = items.modalContainer;
+      videoPanel = items.videoPanel;
+      videoArea = items.videoArea;
+      localVideoArea = items.localVideoArea;
+      controlsPanel = items.controlsPanel;
+      chatPanel = items.chatPanel;
+    } else if (windowMode === "video+transcript" || windowMode === null) {
+      const items = videoTranscriptModal();
+      modalContainer = items.modalContainer;
+      videoPanel = items.videoPanel;
+      videoArea = items.videoArea;
+      localVideoArea = items.localVideoArea;
+      controlsPanel = items.controlsPanel;
+      chatPanel = items.chatPanel;
+    } else if (windowMode === "audio+transcript") {
+    }
 
     this.modalContainer = modalContainer;
     this.containerElement?.appendChild(modalContainer);
@@ -156,11 +181,7 @@ export default class CallWidget extends HTMLElement {
           },
           function (localVideo: HTMLElement) {
             localVideoArea.appendChild(localVideo);
-          },
-          this.config.getUserVariables() ?? {},
-          this.config.getDestination(),
-          this.config.getSupportAudio() ?? false,
-          supportsVideo ?? false
+          }
         )) ?? null;
     } catch (e) {
       console.error("Error setting up call", e);
@@ -224,6 +245,159 @@ export default class CallWidget extends HTMLElement {
       this.closeModal();
       return;
     }
+
+    this.loadingManager?.setLoading(false);
+  }
+
+  async setupCallFromNotification(eventDetails: any) {
+    if (this.callOngoing) {
+      try {
+        await this.callManager?.destroy();
+      } catch (e) {
+        console.error("Error destroying call", e);
+      }
+      return;
+    }
+
+    let callReceivePromptAnswer: "accept" | "decline" | null = null;
+
+    if (this.config.getAutoAnswer()) {
+      callReceivePromptAnswer = "accept";
+      // callInstance = await eventDetails.accept({ rootElement: videoArea });
+    } else {
+      const incomingCallModal = new IncomingCallModal();
+      this.containerElement?.appendChild(incomingCallModal);
+
+      callReceivePromptAnswer = await incomingCallModal.show(
+        eventDetails.caller.name,
+        eventDetails.caller.number
+      );
+      incomingCallModal.remove();
+    }
+
+    this.callOngoing = true;
+    this.loadingManager?.setLoading(true);
+
+    this.previousOverflowStyle = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const {
+      modalContainer,
+      videoPanel,
+      videoArea,
+      localVideoArea,
+      controlsPanel,
+      chatPanel,
+    } = videoTranscriptModal();
+
+    this.modalContainer = modalContainer;
+    this.containerElement?.appendChild(modalContainer);
+    this.loadingManager = new LoadingManager(videoPanel);
+
+    this.loadingManager?.setLoading(true);
+
+    const supportsVideo = this.config.getSupportVideo();
+
+    const permissionResult = await devices.getPermissions(
+      supportsVideo ?? false
+    );
+    if (!permissionResult.success) {
+      console.error("Error getting permissions");
+      await this.showError(
+        "Error Accessing Devices",
+        permissionResult.message ||
+          "Error getting device permissions. Please grant this page access and try again."
+      );
+      this.closeModal();
+      return;
+    }
+
+    let callInstance: FabricRoomSession | null = null;
+
+    if (callReceivePromptAnswer === "accept") {
+      callInstance = await eventDetails.accept({ rootElement: videoArea });
+    } else {
+      await eventDetails.reject();
+    }
+
+    callInstance?.on("call.joined", () => {
+      console.log("Call joined from Notification");
+    });
+    callInstance?.on("room.joined", () => {
+      console.log("Room joined from Notification");
+    });
+
+    callInstance?.on("room.joined", () => {
+      console.log("Call Joined from Notification");
+      const callStartedEvent = new CustomEvent("call.joined", {
+        detail: {
+          call: callInstance,
+        },
+        bubbles: true,
+      });
+      this.dispatchEvent(callStartedEvent);
+      // @ts-ignore
+      window.call = callInstance;
+      if (callInstance?.localStream) {
+        devices.updateVideoAspectRatio();
+        const { localVideo } = html`<video
+          autoplay
+          playsinline
+          muted
+          name="localVideo"
+        ></video>`();
+
+        (localVideo as HTMLVideoElement).onloadedmetadata = () => {
+          devices.onAspectRatioChange(
+            (localVideo as HTMLVideoElement).videoWidth /
+              (localVideo as HTMLVideoElement).videoHeight
+          );
+        };
+
+        (localVideo as HTMLVideoElement).srcObject = callInstance.localStream;
+        localVideoArea.appendChild(localVideo);
+      }
+    });
+
+    if (callInstance) {
+      await devices.setup(callInstance);
+    }
+
+    devices.onAspectRatioChange = (aspectRatio: number | null) => {
+      if (aspectRatio && localVideoArea) {
+        localVideoArea.style.aspectRatio = `${aspectRatio}`;
+      }
+    };
+
+    const control = await createControls(async () => {
+      try {
+        await callInstance?.hangup();
+      } catch (e) {
+        console.error("Error hanging up call. Force terminating call.", e);
+      }
+      this.closeModal();
+    });
+
+    callInstance?.on("destroy", async () => {
+      if (this.activeInfoModal) {
+        // Wait for the info modal to be dismissed before closing
+        const observer = new MutationObserver(() => {
+          if (!this.activeInfoModal) {
+            observer.disconnect();
+            this.closeModal();
+          }
+        });
+
+        observer.observe(this.modalContainer!, {
+          childList: true,
+          subtree: true,
+        });
+      } else {
+        this.closeModal();
+      }
+    });
+
+    controlsPanel.appendChild(control);
 
     this.loadingManager?.setLoading(false);
   }
