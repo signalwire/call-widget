@@ -3,7 +3,7 @@
 install the package:
 
 ```bash
-npm install @niravcodes/call-widget
+npm install @signalwire/call-widget
 ```
 
 then:
@@ -30,7 +30,7 @@ export default function C2CWidgetInternal({
   useEffect(() => {
     // In SSR settings, we import the widget dynamically in client side
     // Otherwise, this import should be at the top of the file
-    import("@niravcodes/call-widget");
+    import("@signalwire/call-widget");
   }, []);
 
   // react doesn't like other scripts controlling the DOM,

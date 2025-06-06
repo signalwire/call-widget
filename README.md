@@ -16,13 +16,13 @@ C2C service to allow you to embed calls in your website.
 Import the widget from the CDN:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@niravcodes/call-widget/dist/c2c-widget-full.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@signalwire/call-widget/dist/c2c-widget-full.umd.min.js"></script>
 ```
 
 or install the widget using npm:
 
 ```bash
-npm install @niravcodes/call-widget
+npm install @signalwire/call-widget
 ```
 
 ## Usage
@@ -49,7 +49,7 @@ npm install @niravcodes/call-widget
   userVariables='{"user_type":"guest"}'
 ></c2c-widget>
 
-<script src="https://cdn.jsdelivr.net/npm/@niravcodes/call-widget/dist/c2c-widget-full.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@signalwire/call-widget/dist/c2c-widget-full.umd.min.js"></script>
 ```
 
 ## Parameters
@@ -168,13 +168,13 @@ Key improvements over V2:
 ### NPM
 
 ```bash
-npm install @niravcodes/call-widget
+npm install @signalwire/call-widget
 ```
 
 ### CDN (jsDelivr)
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@niravcodes/call-widget/dist/call-widget-full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@signalwire/call-widget/dist/call-widget-full.min.js"></script>
 ```
 
 ## Quick Start
