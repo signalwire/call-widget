@@ -1,7 +1,12 @@
 import modal from "./modal.html.ts";
 import html from "../lib/html.ts";
 
-export default function modalUI() {
+interface ModalUIParams {
+  backgroundImage: string;
+  backgroundThumbnail: string;
+}
+
+export default function modalUI(params?: ModalUIParams) {
   const {
     modalContainer,
     videoPanel,
@@ -18,7 +23,7 @@ export default function modalUI() {
 
   const imageMaker = html`<img
     name="image"
-    src="https://developer.signalwire.com/img/call-widget/sw_background.webp"
+    src="${params?.backgroundImage}"
   />`;
 
   const { image } = imageMaker();
@@ -29,6 +34,9 @@ export default function modalUI() {
       (image as HTMLImageElement).src
     })`;
   };
+
+  // Set the initial thumbnail background
+  videoPanelBackground.style.backgroundImage = `url(${params?.backgroundThumbnail})`;
 
   if ("decode" in image) {
     (image as HTMLImageElement)

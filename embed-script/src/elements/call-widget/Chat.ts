@@ -4,6 +4,67 @@ export interface ChatEntry {
   state: "partial" | "complete";
 }
 
+const mock: ChatEntry[] = [
+  {
+    type: "user",
+    text: "Hello, I **need** help with my internet connection",
+    state: "complete",
+  },
+  {
+    type: "ai",
+    text: "I'd be happy to help **you** with your [internet connection](https://www.google.com). What seems to be the issue?",
+    state: "complete",
+  },
+  {
+    type: "user",
+    text: "My wifi keeps dropping every few minutes",
+    state: "complete",
+  },
+  {
+    type: "ai",
+    text: "I understand that's frustrating. Let's troubleshoot this together. Have you tried restarting your router?",
+    state: "complete",
+  },
+  { type: "user", text: "Yes, I've tried that already", state: "complete" },
+  {
+    type: "ai",
+    text: "Let's check a few other things. Are other devices experiencing the same issue?",
+    state: "complete",
+  },
+  {
+    type: "user",
+    text: "My wifi keeps dropping every few minutes",
+    state: "complete",
+  },
+  {
+    type: "ai",
+    text: "I understand that's frustrating. Let's troubleshoot this together. Have you tried restarting your router?",
+    state: "complete",
+  },
+  { type: "user", text: "Yes, I've tried that already", state: "complete" },
+  {
+    type: "ai",
+    text: "Let's check a few other things. Are other devices experiencing the same issue?",
+    state: "complete",
+  },
+  {
+    type: "user",
+    text: "My wifi keeps dropping every few minutes",
+    state: "complete",
+  },
+  {
+    type: "ai",
+    text: "I understand that's frustrating. Let's troubleshoot this together. Have you tried restarting your router?",
+    state: "complete",
+  },
+  { type: "user", text: "Yes, I've tried that already", state: "complete" },
+  {
+    type: "ai",
+    text: "Let's check a few other things. Are other devices experiencing the same issue?",
+    state: "complete",
+  },
+];
+
 export class ChatState {
   entries: ChatEntry[] = [];
   lastSpoken: "ai" | "user" | null = null;

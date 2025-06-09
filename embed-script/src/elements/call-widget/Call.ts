@@ -212,6 +212,10 @@ export class Call {
     }
 
     this.chat = new Chat();
+    this.chat.onUpdate = () => {
+      onChatChange(this.chat?.getHistory() ?? []);
+    };
+    this.chat.onUpdate();
 
     const userVariables = this.config?.getUserVariables();
     const destination = this.config?.getDestination();
@@ -288,12 +292,6 @@ export class Call {
       });
       this.widget.dispatchEvent(callEndedEvent);
     });
-
-    if (this.chat) {
-      this.chat.onUpdate = () => {
-        onChatChange(this.chat?.getHistory() ?? []);
-      };
-    }
 
     return roomSession;
   }

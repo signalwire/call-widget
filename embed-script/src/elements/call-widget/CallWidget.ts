@@ -128,7 +128,10 @@ export default class CallWidget extends HTMLElement {
       localVideoArea,
       controlsPanel,
       chatPanel,
-    } = videoTranscriptModal();
+    } = videoTranscriptModal({
+      backgroundImage: this.config.getBackgroundImage(),
+      backgroundThumbnail: this.config.getBackgroundThumbnail(),
+    });
 
     const modal = modalContainer.querySelector(".modal");
 
@@ -201,14 +204,20 @@ export default class CallWidget extends HTMLElement {
       }
     };
 
-    const control = await createControls(async () => {
-      try {
-        await this.callManager?.hangup();
-      } catch (e) {
-        console.error("Error hanging up call. Force terminating call.", e);
+    const control = await createControls(
+      async () => {
+        try {
+          await this.callManager?.hangup();
+        } catch (e) {
+          console.error("Error hanging up call. Force terminating call.", e);
+        }
+        this.closeModal();
+      },
+      {
+        supportsVideo: this.config.getSupportVideo() ?? false,
+        supportsAudio: this.config.getSupportAudio() ?? false,
       }
-      this.closeModal();
-    });
+    );
 
     callInstance?.on("destroy", async () => {
       if (this.activeInfoModal) {
@@ -281,14 +290,19 @@ export default class CallWidget extends HTMLElement {
     this.previousOverflowStyle = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    const {
+    let {
       modalContainer,
       videoPanel,
       videoArea,
       localVideoArea,
       controlsPanel,
       chatPanel: _,
-    } = videoTranscriptModal();
+    } = videoTranscriptModal({
+      backgroundImage: this.config.getBackgroundImage(),
+      backgroundThumbnail: this.config.getBackgroundThumbnail(),
+    });
+
+    const modal = modalContainer.querySelector(".modal");
 
     this.modalContainer = modalContainer;
     this.containerElement?.appendChild(modalContainer);
@@ -370,14 +384,20 @@ export default class CallWidget extends HTMLElement {
       }
     };
 
-    const control = await createControls(async () => {
-      try {
-        await callInstance?.hangup();
-      } catch (e) {
-        console.error("Error hanging up call. Force terminating call.", e);
+    const control = await createControls(
+      async () => {
+        try {
+          await callInstance?.hangup();
+        } catch (e) {
+          console.error("Error hanging up call. Force terminating call.", e);
+        }
+        this.closeModal();
+      },
+      {
+        supportsVideo: this.config.getSupportVideo() ?? false,
+        supportsAudio: this.config.getSupportAudio() ?? false,
       }
-      this.closeModal();
-    });
+    );
 
     callInstance?.on("destroy", async () => {
       if (this.activeInfoModal) {

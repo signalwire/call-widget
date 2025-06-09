@@ -11,6 +11,11 @@ type Window = "video+transcript" | "video" | "audio+transcript";
 export class CallWidgetConfig {
   private widget: HTMLElement;
 
+  private static readonly DEFAULT_BACKGROUND_IMAGE =
+    "https://developer.signalwire.com/img/call-widget/sw_background.webp";
+  private static readonly DEFAULT_BACKGROUND_THUMBNAIL =
+    "data:image/webp;base64,UklGRv4BAABXRUJQVlA4IPIBAAAQDgCdASpkADgAPm0wlEgkIqIlpvVbQLANiWUIcAF/N0SNSoFwLlO5RP2YPzaIbnj2FRb+bYMVMO2hQaOhoOYVcYas+y/tUm1/zmSSq5AUjQJ+cqL2Z4Z7qXLgXDAOWYT82r5bm+2mFDM38Q0ruBiEoVE+LSAJdoHQAP7gQtoYHET/VcymFbJngGPQnLANH4pBKeNTCNh83JD/q72P9SVEf91Mx4GHZGI07V8EIhDuJRWajJcwkrY9epV7HluQk5qhMElwzHER6a3Zc/OaBy35/gKiNW/4Wd0oEovwE2r9jyX1HImaWtlcTNyPPjyqvi7m5rKNN82p/S01kcM9spuizE4Pba01gNXE5vPW68xKBA/5rLkd/4UosKilKe9PXgPgEgNiTV8tlHZ33yDJQSojodoGsBvOsVgYm06hOx2FqbPFSVY/2mjEsBcCuGQAy1+sBIt2FygUENMwQ4jSOFHEQZ7C9Sc/t1gIlR2bZtNtp1BWIQW/Iu6DDMwjSSTX4qjCwnN6/sqzlv0ZFBAKVIX4uy9DbwSWFKGKqDlsrbAmVFaioKHX3IX/Xm49jyIK7/0PIre8rpPO7DBAX5JbGQCYg8mbG2uf5xTT1gAWy0N4hyjd8bt6FFnL6eUOrt6Hjzy5gP+/8lb0glwD14Mjd9AAAAA=";
+
   constructor(widget: HTMLElement) {
     this.widget = widget;
   }
@@ -142,6 +147,31 @@ export class CallWidgetConfig {
       },
       required: false,
     },
+    backgroundImage: {
+      name: "background-image",
+      parser: (value: string): string => {
+        if (!value.trim()) {
+          throw new Error("Background image URL cannot be empty");
+        }
+        try {
+          new URL(value);
+        } catch {
+          throw new Error("Invalid background image URL format");
+        }
+        return value;
+      },
+      required: false,
+    },
+    backgroundThumbnail: {
+      name: "background-thumbnail",
+      parser: (value: string): string => {
+        if (!value.trim()) {
+          throw new Error("Background thumbnail cannot be empty");
+        }
+        return value;
+      },
+      required: false,
+    },
     receiveCalls: {
       name: "receive-calls",
       parser: (value: string): boolean => {
@@ -244,5 +274,21 @@ export class CallWidgetConfig {
 
   getToken(): string {
     return this.getAttribute(CallWidgetConfig.attributeDefinitions.token);
+  }
+
+  getBackgroundImage(): string {
+    return (
+      this.getAttribute(
+        CallWidgetConfig.attributeDefinitions.backgroundImage
+      ) ?? CallWidgetConfig.DEFAULT_BACKGROUND_IMAGE
+    );
+  }
+
+  getBackgroundThumbnail(): string {
+    return (
+      this.getAttribute(
+        CallWidgetConfig.attributeDefinitions.backgroundThumbnail
+      ) ?? CallWidgetConfig.DEFAULT_BACKGROUND_THUMBNAIL
+    );
   }
 }

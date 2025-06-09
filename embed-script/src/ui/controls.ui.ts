@@ -2,7 +2,10 @@ import controls from "./controls.html.ts";
 import devices from "../Devices.ts";
 import checkIcon from "../icons/check.svg?raw";
 
-export default async function createControls(onHangup?: () => void) {
+export default async function createControls(
+  onHangup?: () => void,
+  config?: { supportsVideo?: boolean; supportsAudio?: boolean }
+) {
   devices.onChange = updateUI;
 
   const {
@@ -18,6 +21,27 @@ export default async function createControls(onHangup?: () => void) {
     micDevicesMenu,
     speakerDevicesMenu,
   } = controls();
+
+  // Check if we're in audio transcript mode
+  const isAudioTranscriptMode =
+    controlsContainer.closest(".audio-transcript-mode") !== null;
+
+  // Hide video controls if video is not supported
+  if (!config?.supportsVideo) {
+    videoButton.style.display = "none";
+    videoDevicesButton.style.display = "none";
+    videoDevicesMenu.style.display = "none";
+  }
+
+  // Hide audio controls if audio is not supported
+  if (!config?.supportsAudio) {
+    micButton.style.display = "none";
+    micDevicesButton.style.display = "none";
+    micDevicesMenu.style.display = "none";
+    speakerButton.style.display = "none";
+    speakerDevicesButton.style.display = "none";
+    speakerDevicesMenu.style.display = "none";
+  }
 
   function updateUI() {
     const {
@@ -42,38 +66,51 @@ export default async function createControls(onHangup?: () => void) {
     }
 
     // Update mute icons
-    setIconVisibility(videoButton, isVideoMuted);
-    setIconVisibility(micButton, isAudioMuted);
-    setIconVisibility(speakerButton, isSpeakerMuted);
+    if (config?.supportsVideo) {
+      setIconVisibility(videoButton, isVideoMuted);
+    }
+    if (config?.supportsAudio) {
+      setIconVisibility(micButton, isAudioMuted);
+      setIconVisibility(speakerButton, isSpeakerMuted);
+    }
 
     // Update device buttons visibility and state
-    videoDevicesButton.style.display = videoinput.length > 0 ? "block" : "none";
-    (videoDevicesButton as HTMLButtonElement).disabled = isVideoMuted;
-    videoButton.classList.toggle("standalone", videoinput.length === 0);
+    if (!isAudioTranscriptMode && config?.supportsVideo) {
+      videoDevicesButton.style.display =
+        videoinput.length > 0 ? "block" : "none";
+      (videoDevicesButton as HTMLButtonElement).disabled = isVideoMuted;
+      videoButton.classList.toggle("standalone", videoinput.length === 0);
+    }
 
-    micDevicesButton.style.display = audioinput.length > 0 ? "block" : "none";
-    (micDevicesButton as HTMLButtonElement).disabled = isAudioMuted;
-    micButton.classList.toggle("standalone", audioinput.length === 0);
+    if (config?.supportsAudio) {
+      micDevicesButton.style.display = audioinput.length > 0 ? "block" : "none";
+      (micDevicesButton as HTMLButtonElement).disabled = isAudioMuted;
+      micButton.classList.toggle("standalone", audioinput.length === 0);
 
-    speakerDevicesButton.style.display =
-      audiooutput.length > 0 ? "block" : "none";
-    (speakerDevicesButton as HTMLButtonElement).disabled = isSpeakerMuted;
-    speakerButton.classList.toggle("standalone", audiooutput.length === 0);
+      speakerDevicesButton.style.display =
+        audiooutput.length > 0 ? "block" : "none";
+      (speakerDevicesButton as HTMLButtonElement).disabled = isSpeakerMuted;
+      speakerButton.classList.toggle("standalone", audiooutput.length === 0);
+    }
 
     // Update device menus
-    updateDeviceMenu(videoDevicesMenu, videoinput, selectedCamera, "camera");
-    updateDeviceMenu(
-      micDevicesMenu,
-      audioinput,
-      selectedMicrophone,
-      "microphone"
-    );
-    updateDeviceMenu(
-      speakerDevicesMenu,
-      audiooutput,
-      selectedSpeaker,
-      "speaker"
-    );
+    if (!isAudioTranscriptMode && config?.supportsVideo) {
+      updateDeviceMenu(videoDevicesMenu, videoinput, selectedCamera, "camera");
+    }
+    if (config?.supportsAudio) {
+      updateDeviceMenu(
+        micDevicesMenu,
+        audioinput,
+        selectedMicrophone,
+        "microphone"
+      );
+      updateDeviceMenu(
+        speakerDevicesMenu,
+        audiooutput,
+        selectedSpeaker,
+        "speaker"
+      );
+    }
   }
 
   function updateDeviceMenu(
