@@ -293,6 +293,16 @@ export class Call {
       this.widget.dispatchEvent(callEndedEvent);
     });
 
+    roomSession.on("destroy", () => {
+      const callEndedEvent = new CustomEvent("destroy", {
+        detail: {
+          call: this.currentCall,
+        },
+        bubbles: true,
+      });
+      this.widget.dispatchEvent(callEndedEvent);
+    });
+
     return roomSession;
   }
 

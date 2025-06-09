@@ -302,8 +302,6 @@ export default class CallWidget extends HTMLElement {
       backgroundThumbnail: this.config.getBackgroundThumbnail(),
     });
 
-    const modal = modalContainer.querySelector(".modal");
-
     this.modalContainer = modalContainer;
     this.containerElement?.appendChild(modalContainer);
     this.loadingManager = new LoadingManager(videoPanel);
