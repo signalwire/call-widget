@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🎉 World's Most Honest Product Page</title>
+  </head>
+  <body>
+    <button id="callButton">Call musicalmaniac</button>
+    <div id="music"></div>
+
+    <script src="https://cdn.signalwire.com/@signalwire/js@dev"></script>
+
+    <script>
+      async function main() {
+        // todo: ask for device permissions
+
+        console.log(document.getElementById("music"));
+        const client = await SignalWire.SignalWire({
+          token:
+            "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwidHlwIjoiU0FUIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20ifQ..RxcVpYBp_I01huer.IepizuuNoUzByrsB4r00sTH8BFotMlNJZ1FAFgLpwSCbwRfQzzsGyUCh6e0XdcnbnQUqiVyt4n7bjQ0WOJM4owxMWDdi4DcmFwEgQYAAz7fy7tXhOi0roOxtlQF_m6jf4EUZmxQBKVRF2uW1FP5xcN78U7slY5Fk_GP9h6aK3OAchytTCDaWezbghpTt6fcvM3p0GYqMWo0B8Qafp5OoQLlgxsDUH_ifBt1pi1nC8vUFedlCRavbdDw_UTCcDIuSbat69IFY-E1xUGqvbuBVh28G2oq8vciKgHioYKhaQA4X3edshoamcODD7gG0vLWOYRShZbUTt6KD9IgedkLUdwYuVhizifsbSXm2IWZAVfkBODdCCoIzsiJCKXmpPVb9O9h2d-HSF1O4MzGEpqy4OFV9FWiyLgXspMmCdvE2QRpgGJmBX22tRVMvfTQcg3I6DmOVWiCcnK5FI0N9A7ie2sQ.U_WyqLMCtHCMr89YVO1m-A",
+        });
+
+        const callButton = document.getElementById("callButton");
+        callButton.addEventListener("click", async () => {
+          const call = await client.dial({
+            to: "/private/musicalmaniac",
+            rootElement: document.getElementById("music"),
+            audio: true,
+            video: true,
+            negotiateVideo: true,
+          });
+          call.start();
+        });
+      }
+      main();
+    </script>
+  </body>
+</html>

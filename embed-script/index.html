@@ -3,164 +3,96 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🎉 World's Most Honest Product Page</title>
+    <title>SignalWire C2C Widget</title>
   </head>
   <body>
-    <header
-      style="
-        background: #ff6b6b;
-        color: white;
-        padding: 20px;
-        text-align: center;
-      "
-    >
-      <h1>The Thing You Probably Don't Need</h1>
-      <p>But hey, we made it anyway! 🤷‍♂️</p>
-    </header>
+    <!-- The code required to initialize the c2c widget. The button can be styled as you like and placed wherever you like.  -->
+    <button id="callButton1">Call Sigmond (chat only)</button>
 
-    <section style="padding: 40px; font-size: 18px">
-      <h2>Totally Real Features</h2>
-      <p>
-        ✨ Works 60% of the time, every time<br />
-        🚀 So easy to use, your cat could do it (but don't let them)<br />
-        💪 Strong enough to handle anything* <br />
-        <span style="font-size: 12px">*except actual heavy lifting</span>
-      </p>
-
-      <div
-        style="
-          background: #f0f0f0;
-          padding: 20px;
-          border-radius: 10px;
-          margin: 20px 0;
-        "
-      >
-        <h3>Why Choose Us?</h3>
-        <p>
-          Because we wrote this website, and we think we're pretty cool. Also,
-          our competitors' websites don't have as many emojis. 🏆
-        </p>
-      </div>
-
-      <div style="background: #e8f5e9; padding: 20px; border-radius: 10px">
-        <h3>Customer Testimonials</h3>
-        <p>"This changed my life!" - Probably Someone</p>
-        <p>"What even is this?" - My Mom</p>
-        <p>"10/10 would buy again" - Our CEO's Dog</p>
-      </div>
-    </section>
-
-    <section style="padding: 20px; background: #f8f9fa; text-align: center">
-      <h2>The Price Tag 💰</h2>
-      <p style="font-size: 24px">$29.99</p>
-      <p style="font-size: 16px">That's like, 3 fancy coffees!</p>
-
-      <div style="margin: 20px 0">
-        <input
-          type="email"
-          id="userEmail"
-          placeholder="Your Email"
-          style="padding: 8px; margin: 5px; width: 200px"
-        />
-        <input
-          type="text"
-          id="userName"
-          placeholder="Your Name"
-          style="padding: 8px; margin: 5px; width: 200px"
-        />
-        <input
-          type="text"
-          id="petName"
-          placeholder="Your Pet's Name"
-          style="padding: 8px; margin: 5px; width: 200px"
-        />
-      </div>
-
-      <button
-        style="
-          padding: 15px 30px;
-          background: #4caf50;
-          color: white;
-          border: none;
-          border-radius: 25px;
-          cursor: pointer;
-          font-size: 18px;
-          transition: transform 0.2s;
-        "
-        onmouseover="this.style.transform='scale(1.1)'"
-        onmouseout="this.style.transform='scale(1.0)'"
-      >
-        Take My Money! 💸
-      </button>
-    </section>
-
-    <footer
-      style="
-        background: #343a40;
-        color: white;
-        padding: 20px;
-        margin-top: 20px;
-        text-align: center;
-      "
-    >
-      <p>© 2025 The Thing™ - All rights reserved and stuff 🤓</p>
-      <p style="font-size: 12px">
-        No products were harmed in the making of this website
-      </p>
-    </footer>
+    <call-widget
+      button-id="callButton1"
+      token="c2c_3eaa2a89d96107a630fff087bc255e27"
+      support-video="false"
+      support-audio="true"
+      destination="/private/aprilkisses"
+      log-level="info"
+      window-mode="video+transcript"
+    ></call-widget>
 
     <!-- The code required to initialize the c2c widget. The button can be styled as you like and placed wherever you like.  -->
-    <button
-      id="callButton"
-      style="
-        position: fixed;
-        height: 70px;
-        width: 70px;
-        bottom: 50px;
-        right: 50px;
-      "
-    >
-      Call
+    <button id="callButton">Call using v3 call widget</button>
+
+    <call-widget
+      button-id="callButton"
+      token="c2c_3eaa2a89d96107a630fff087bc255e27"
+      support-video="true"
+      support-audio="true"
+      destination="/private/aprilkisses"
+      log-level="info"
+      receive-calls="true"
+      window-mode="audio+transcript"
+    ></call-widget>
+
+    <button id="callButto3n">
+      Call using v3 call widget (no video no audio)
     </button>
+    <call-widget
+      button-id="callButto3n"
+      token="c2c_3eaa2a89d96107a630fff087bc255e27"
+      support-video="false"
+      support-audio="false"
+      destination="/private/aprilkisses"
+      log-level="info"
+      receive-calls="true"
+      window-mode="video+transcript"
+      background-image="https://lexicall1.netlify.app/library.webp"
+      background-thumbnail="data:image/webp;base64,UklGRoIEAABXRUJQVlA4IHYEAABQFQCdASoyACEAPmkojUWkIqEYBqhABoShegAfRUhVI0DkCMAP7Lvy/5H1h7e/nvNMz3mb/X19z9A8EfEd6C9quOY0HxLsl/dJkm3QjLX+m8ILVEiXfCZ8A9Rz+vf8X0wf+DyifP//d9wb+Q/17/o9ez9u/Yz/WscUQOLGcOOV//mWXxcsve3bQqtY/1U/ZP0Eoe7ac4biUuQx87Dl9FU5YrMO8xV38PLqwQnR6B4OOHfLQAD3qWP+elAKZPalH/997bXD0TWtchNvW3yBux+6ZB082FtPWEpGwZFrGBZ0W23+Rwt5U+HHwC13OwHWklxiLDJaXKJDI8aw4YLnKlG4tJtlINc8zkhORcr/INHuMFtww/b0P00CN5vOyqtCxl44A2Ov5vPa/WFEILmpuTGTyP7u2ktoDrrDXWYAKY1bvnFR3hObvP5+BSaLlBKFT7lkWgcs8XGfAKkfLAkxvggEizkZJOWbtCxEF29QmoFXNRf16m64lREFaP9okc+okQlZ/GVTBzMm+haaFPmNW/r2wzcqs5ZJgt9Fxziq4GYgRPwy3rGC695hM3Vn2pp0YYYB79+zvCmX8EDcTo9+d9GiBp8kbFC+/eG5AqfESGpoXKo7utczCY3slmHLtOpUvq6idX4M9oUybHxugpWhxdEnkY9O25sndnI2DD+tYftbFejNgTHu/5ujmcU2Z6KaW66tqZ1d4Ojm1Ee2BdgwT4RqyOanIPCwIr9sgORtYV0xifNV/avKu96FQ4uXD9eq3/3JlVBNdB6zR35PHZLFrwJtF5WFQMcOBx8f8n/1rD/yfbbkPFaLttzSwtw6CsP37iMmESi7fCYQKsRYfm4p2LkyeMDAT/i9rsp49rNRvJGGqt4RXOjF9oP4lUAfLGLTj3xdE9HgqXVLAVFBOD6PqnlA7jZxX8aS2eWOnho6oVVP0nnoHAnn/3NFcX468jxTnukvAeooddWMczch/a4lOvt273GiuLrWq6z9s8kXqvNJPpz8LXxMHcq4cw2fOAS72CCZMRfkBvdiTF1AE0nYr0MjLS6b948pO6/age2Zdts1kMR6FFB2CiStR6rlhcBLtnfsDBtRaAO4vhCFlZOuZCJCGHYTSQtnwnmYR5RqZPGgRFI9lC11C5JopFelXKr90f9i3tHniVoayKZBKgybiHGYNeZl1rbmhfEflc8icqfzDXZ8OF17epNJ/1ynsQnGVJwNHSZyOQfG4tLotv1WMLj+Km+ybK6rzMYiZlGOigvnJKnr1T8Jr9GoLx337atqShRxRC6BcuhPxsZZZ1+2rTx/xKe4rpYFlBtrn8avFXBueGUnUffD2qiqKsBdjKsGCcgBkhH2w2u/cobXXiA2x/J7f07MfRMWa+erVeDOHwzE4IVQYHPI16nHBKYK4nuQ5ESyKynajz/b/Xo+T24hXfHzez+lKlchpLSLf/gqVGU88hB9xitLyXccD/QATBkgkuR5YDt+4+HaH9P7Fn9P8/B/txChpNcwP7CbeF2fG451lj4BwQAAAA=="
+    ></call-widget>
 
-    <script>
-      const callButton = document.getElementById("callButton");
-      callButton.addEventListener("click", () => {
-        const email = document.getElementById("userEmail").value;
-        const name = document.getElementById("userName").value;
-        const petName = document.getElementById("petName").value;
-
-        const widget = document.querySelector("c2c-widget");
-
-        const userVariables = {
-          email,
-          name,
-          petName,
-        };
-        widget.removeAttribute("userVariables");
-        widget.setAttribute("userVariables", JSON.stringify(userVariables));
-      });
-    </script>
-
-    <c2c-widget
-      buttonId="callButton"
-      callDetails='{"destination":"/private/demo-1","supportsVideo":true,"supportsAudio":true}'
+    <button id="callButton22">sigmond</button>
+    <call-widget
+      button-id="callButton22"
       token="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20iLCJ0eXAiOiJTQVQifQ..QYHghlPEOE4HjtJb.1WKLEg09c05-g3RujrS0io5h6AJ4mfpKMWtykpMIERJlMuomtOLHrU8picaFHeppbb_-593GjxHfeZiVmYdPZiIPYuNw2znqBuySuPArPfb2NMvXtZHEgfl3sXAdy5xpqSpphxFKStXwylo0EGeC91cVQgn3_lmSBcp13JvwArnu5ULltGmjPJogRbE1PrBsBbEJJioumVSZuuMH5lo7am-wE37Q5GXgou1a9iJWBiBtgk5ysmW4HTvbZ7pZHL5VcnWVy4V0OJL3J4WXl-m47L6bgFmHUijvVWxoFDu4Z7aUfx551OEhefr04F5NuJaHzTWUpgNzQ_VgWho04K96MK--wH_dEyIxtbfUHJSZyk1-Ef_dDCgFK6Rlnl2H5HM4G05gEKWcSjXGGk4tN0g6YvHsrUrAgsZiQeVQ-ggCHHRcmYX1OeXYbv1vEPml8i5JPUHAak5VvOQLYoG2ydb5kVv3WdM0oWKGHzTFPLFmjTaRxSC2b378BGbR7hCxbY9NdaLFnSn45KDkv1_a-saR9gDCBa2ZCPbkFmWRKLtGORFoiN-mLYAPTugidqZx40Ue4hav-jX178udYpVgSmun_rMHoN81t0Sb4xqMovs2i47-WLyzTwaGBK2CgLeHohGBvB9aWsFOV7F_YrZlcn7ptKo7RdNSrfBkiw7F6Sf8oIOz.426h9VZWDSVYDUIL9a1wDg"
-      survey='{"title":"Please take this survey", "description":"We would love to hear your thoughts. Would you like to take a survey?","href":"https://www.google.com"}'
-    ></c2c-widget>
+      support-video="true"
+      support-audio="true"
+      destination="/private/demo-1"
+      log-level="info"
+      receive-calls="true"
+      window-mode="video+transcript"
+      background-image="https://lexicall1.netlify.app/library.webp"
+      background-thumbnail="data:image/webp;base64,UklGRoIEAABXRUJQVlA4IHYEAABQFQCdASoyACEAPmkojUWkIqEYBqhABoShegAfRUhVI0DkCMAP7Lvy/5H1h7e/nvNMz3mb/X19z9A8EfEd6C9quOY0HxLsl/dJkm3QjLX+m8ILVEiXfCZ8A9Rz+vf8X0wf+DyifP//d9wb+Q/17/o9ez9u/Yz/WscUQOLGcOOV//mWXxcsve3bQqtY/1U/ZP0Eoe7ac4biUuQx87Dl9FU5YrMO8xV38PLqwQnR6B4OOHfLQAD3qWP+elAKZPalH/997bXD0TWtchNvW3yBux+6ZB082FtPWEpGwZFrGBZ0W23+Rwt5U+HHwC13OwHWklxiLDJaXKJDI8aw4YLnKlG4tJtlINc8zkhORcr/INHuMFtww/b0P00CN5vOyqtCxl44A2Ov5vPa/WFEILmpuTGTyP7u2ktoDrrDXWYAKY1bvnFR3hObvP5+BSaLlBKFT7lkWgcs8XGfAKkfLAkxvggEizkZJOWbtCxEF29QmoFXNRf16m64lREFaP9okc+okQlZ/GVTBzMm+haaFPmNW/r2wzcqs5ZJgt9Fxziq4GYgRPwy3rGC695hM3Vn2pp0YYYB79+zvCmX8EDcTo9+d9GiBp8kbFC+/eG5AqfESGpoXKo7utczCY3slmHLtOpUvq6idX4M9oUybHxugpWhxdEnkY9O25sndnI2DD+tYftbFejNgTHu/5ujmcU2Z6KaW66tqZ1d4Ojm1Ee2BdgwT4RqyOanIPCwIr9sgORtYV0xifNV/avKu96FQ4uXD9eq3/3JlVBNdB6zR35PHZLFrwJtF5WFQMcOBx8f8n/1rD/yfbbkPFaLttzSwtw6CsP37iMmESi7fCYQKsRYfm4p2LkyeMDAT/i9rsp49rNRvJGGqt4RXOjF9oP4lUAfLGLTj3xdE9HgqXVLAVFBOD6PqnlA7jZxX8aS2eWOnho6oVVP0nnoHAnn/3NFcX468jxTnukvAeooddWMczch/a4lOvt273GiuLrWq6z9s8kXqvNJPpz8LXxMHcq4cw2fOAS72CCZMRfkBvdiTF1AE0nYr0MjLS6b948pO6/age2Zdts1kMR6FFB2CiStR6rlhcBLtnfsDBtRaAO4vhCFlZOuZCJCGHYTSQtnwnmYR5RqZPGgRFI9lC11C5JopFelXKr90f9i3tHniVoayKZBKgybiHGYNeZl1rbmhfEflc8icqfzDXZ8OF17epNJ/1ynsQnGVJwNHSZyOQfG4tLotv1WMLj+Km+ybK6rzMYiZlGOigvnJKnr1T8Jr9GoLx337atqShRxRC6BcuhPxsZZZ1+2rTx/xKe4rpYFlBtrn8avFXBueGUnUffD2qiqKsBdjKsGCcgBkhH2w2u/cobXXiA2x/J7f07MfRMWa+erVeDOHwzE4IVQYHPI16nHBKYK4nuQ5ESyKynajz/b/Xo+T24hXfHzez+lKlchpLSLf/gqVGU88hB9xitLyXccD/QATBkgkuR5YDt+4+HaH9P7Fn9P8/B/txChpNcwP7CbeF2fG451lj4BwQAAAA=="
+    ></call-widget>
 
-    <script>
-      const widget2 = document.querySelector("c2c-widget");
-      widget2.addEventListener("beforecall", () => {
-        console.log("beforecall");
-      });
-      widget2.addEventListener("call.joined", ({ detail }) => {
-        console.log("call.joined", detail);
-      });
-      widget2.addEventListener("call.left", ({ detail }) => {
-        console.log("call.left", detail);
-      });
-    </script>
+    <button id="callButton222">sigmond, transcript only</button>
+    <call-widget
+      button-id="callButton222"
+      token="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20iLCJ0eXAiOiJTQVQifQ..QYHghlPEOE4HjtJb.1WKLEg09c05-g3RujrS0io5h6AJ4mfpKMWtykpMIERJlMuomtOLHrU8picaFHeppbb_-593GjxHfeZiVmYdPZiIPYuNw2znqBuySuPArPfb2NMvXtZHEgfl3sXAdy5xpqSpphxFKStXwylo0EGeC91cVQgn3_lmSBcp13JvwArnu5ULltGmjPJogRbE1PrBsBbEJJioumVSZuuMH5lo7am-wE37Q5GXgou1a9iJWBiBtgk5ysmW4HTvbZ7pZHL5VcnWVy4V0OJL3J4WXl-m47L6bgFmHUijvVWxoFDu4Z7aUfx551OEhefr04F5NuJaHzTWUpgNzQ_VgWho04K96MK--wH_dEyIxtbfUHJSZyk1-Ef_dDCgFK6Rlnl2H5HM4G05gEKWcSjXGGk4tN0g6YvHsrUrAgsZiQeVQ-ggCHHRcmYX1OeXYbv1vEPml8i5JPUHAak5VvOQLYoG2ydb5kVv3WdM0oWKGHzTFPLFmjTaRxSC2b378BGbR7hCxbY9NdaLFnSn45KDkv1_a-saR9gDCBa2ZCPbkFmWRKLtGORFoiN-mLYAPTugidqZx40Ue4hav-jX178udYpVgSmun_rMHoN81t0Sb4xqMovs2i47-WLyzTwaGBK2CgLeHohGBvB9aWsFOV7F_YrZlcn7ptKo7RdNSrfBkiw7F6Sf8oIOz.426h9VZWDSVYDUIL9a1wDg"
+      support-video="false"
+      support-audio="true"
+      destination="/private/demo-1"
+      log-level="info"
+      receive-calls="true"
+      window-mode="audio+transcript"
+      background-image="https://lexicall1.netlify.app/library.webp"
+      background-thumbnail="data:image/webp;base64,UklGRoIEAABXRUJQVlA4IHYEAABQFQCdASoyACEAPmkojUWkIqEYBqhABoShegAfRUhVI0DkCMAP7Lvy/5H1h7e/nvNMz3mb/X19z9A8EfEd6C9quOY0HxLsl/dJkm3QjLX+m8ILVEiXfCZ8A9Rz+vf8X0wf+DyifP//d9wb+Q/17/o9ez9u/Yz/WscUQOLGcOOV//mWXxcsve3bQqtY/1U/ZP0Eoe7ac4biUuQx87Dl9FU5YrMO8xV38PLqwQnR6B4OOHfLQAD3qWP+elAKZPalH/997bXD0TWtchNvW3yBux+6ZB082FtPWEpGwZFrGBZ0W23+Rwt5U+HHwC13OwHWklxiLDJaXKJDI8aw4YLnKlG4tJtlINc8zkhORcr/INHuMFtww/b0P00CN5vOyqtCxl44A2Ov5vPa/WFEILmpuTGTyP7u2ktoDrrDXWYAKY1bvnFR3hObvP5+BSaLlBKFT7lkWgcs8XGfAKkfLAkxvggEizkZJOWbtCxEF29QmoFXNRf16m64lREFaP9okc+okQlZ/GVTBzMm+haaFPmNW/r2wzcqs5ZJgt9Fxziq4GYgRPwy3rGC695hM3Vn2pp0YYYB79+zvCmX8EDcTo9+d9GiBp8kbFC+/eG5AqfESGpoXKo7utczCY3slmHLtOpUvq6idX4M9oUybHxugpWhxdEnkY9O25sndnI2DD+tYftbFejNgTHu/5ujmcU2Z6KaW66tqZ1d4Ojm1Ee2BdgwT4RqyOanIPCwIr9sgORtYV0xifNV/avKu96FQ4uXD9eq3/3JlVBNdB6zR35PHZLFrwJtF5WFQMcOBx8f8n/1rD/yfbbkPFaLttzSwtw6CsP37iMmESi7fCYQKsRYfm4p2LkyeMDAT/i9rsp49rNRvJGGqt4RXOjF9oP4lUAfLGLTj3xdE9HgqXVLAVFBOD6PqnlA7jZxX8aS2eWOnho6oVVP0nnoHAnn/3NFcX468jxTnukvAeooddWMczch/a4lOvt273GiuLrWq6z9s8kXqvNJPpz8LXxMHcq4cw2fOAS72CCZMRfkBvdiTF1AE0nYr0MjLS6b948pO6/age2Zdts1kMR6FFB2CiStR6rlhcBLtnfsDBtRaAO4vhCFlZOuZCJCGHYTSQtnwnmYR5RqZPGgRFI9lC11C5JopFelXKr90f9i3tHniVoayKZBKgybiHGYNeZl1rbmhfEflc8icqfzDXZ8OF17epNJ/1ynsQnGVJwNHSZyOQfG4tLotv1WMLj+Km+ybK6rzMYiZlGOigvnJKnr1T8Jr9GoLx337atqShRxRC6BcuhPxsZZZ1+2rTx/xKe4rpYFlBtrn8avFXBueGUnUffD2qiqKsBdjKsGCcgBkhH2w2u/cobXXiA2x/J7f07MfRMWa+erVeDOHwzE4IVQYHPI16nHBKYK4nuQ5ESyKynajz/b/Xo+T24hXfHzez+lKlchpLSLf/gqVGU88hB9xitLyXccD/QATBkgkuR5YDt+4+HaH9P7Fn9P8/B/txChpNcwP7CbeF2fG451lj4BwQAAAA=="
+    ></call-widget>
+    <!-- auto-answer="true" -->
+    <!-- debug-ws-traffic="true" -->
+
+    <button id="btn-call">LexiCall</button>
+
+    <call-widget
+      button-id="btn-call"
+      token="c2c_e31e5439a353a5a6f37076b58d89d09f"
+      support-video="true"
+      support-audio="true"
+      destination="/public/lexicall-250"
+      log-level="info"
+      receive-calls="false"
+      window-mode="video+transcript"
+      background-image="https://lexicall1.netlify.app/library.webp"
+      background-thumbnail="data:image/webp;base64,UklGRoIEAABXRUJQVlA4IHYEAABQFQCdASoyACEAPmkojUWkIqEYBqhABoShegAfRUhVI0DkCMAP7Lvy/5H1h7e/nvNMz3mb/X19z9A8EfEd6C9quOY0HxLsl/dJkm3QjLX+m8ILVEiXfCZ8A9Rz+vf8X0wf+DyifP//d9wb+Q/17/o9ez9u/Yz/WscUQOLGcOOV//mWXxcsve3bQqtY/1U/ZP0Eoe7ac4biUuQx87Dl9FU5YrMO8xV38PLqwQnR6B4OOHfLQAD3qWP+elAKZPalH/997bXD0TWtchNvW3yBux+6ZB082FtPWEpGwZFrGBZ0W23+Rwt5U+HHwC13OwHWklxiLDJaXKJDI8aw4YLnKlG4tJtlINc8zkhORcr/INHuMFtww/b0P00CN5vOyqtCxl44A2Ov5vPa/WFEILmpuTGTyP7u2ktoDrrDXWYAKY1bvnFR3hObvP5+BSaLlBKFT7lkWgcs8XGfAKkfLAkxvggEizkZJOWbtCxEF29QmoFXNRf16m64lREFaP9okc+okQlZ/GVTBzMm+haaFPmNW/r2wzcqs5ZJgt9Fxziq4GYgRPwy3rGC695hM3Vn2pp0YYYB79+zvCmX8EDcTo9+d9GiBp8kbFC+/eG5AqfESGpoXKo7utczCY3slmHLtOpUvq6idX4M9oUybHxugpWhxdEnkY9O25sndnI2DD+tYftbFejNgTHu/5ujmcU2Z6KaW66tqZ1d4Ojm1Ee2BdgwT4RqyOanIPCwIr9sgORtYV0xifNV/avKu96FQ4uXD9eq3/3JlVBNdB6zR35PHZLFrwJtF5WFQMcOBx8f8n/1rD/yfbbkPFaLttzSwtw6CsP37iMmESi7fCYQKsRYfm4p2LkyeMDAT/i9rsp49rNRvJGGqt4RXOjF9oP4lUAfLGLTj3xdE9HgqXVLAVFBOD6PqnlA7jZxX8aS2eWOnho6oVVP0nnoHAnn/3NFcX468jxTnukvAeooddWMczch/a4lOvt273GiuLrWq6z9s8kXqvNJPpz8LXxMHcq4cw2fOAS72CCZMRfkBvdiTF1AE0nYr0MjLS6b948pO6/age2Zdts1kMR6FFB2CiStR6rlhcBLtnfsDBtRaAO4vhCFlZOuZCJCGHYTSQtnwnmYR5RqZPGgRFI9lC11C5JopFelXKr90f9i3tHniVoayKZBKgybiHGYNeZl1rbmhfEflc8icqfzDXZ8OF17epNJ/1ynsQnGVJwNHSZyOQfG4tLotv1WMLj+Km+ybK6rzMYiZlGOigvnJKnr1T8Jr9GoLx337atqShRxRC6BcuhPxsZZZ1+2rTx/xKe4rpYFlBtrn8avFXBueGUnUffD2qiqKsBdjKsGCcgBkhH2w2u/cobXXiA2x/J7f07MfRMWa+erVeDOHwzE4IVQYHPI16nHBKYK4nuQ5ESyKynajz/b/Xo+T24hXfHzez+lKlchpLSLf/gqVGU88hB9xitLyXccD/QATBkgkuR5YDt+4+HaH9P7Fn9P8/B/txChpNcwP7CbeF2fG451lj4BwQAAAA=="
+    ></call-widget>
 
     <script type="module" src="/src/index.ts"></script>
     <!-- end code required to initialize c2c widget -->

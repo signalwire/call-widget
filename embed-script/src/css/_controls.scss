@@ -135,3 +135,17 @@
     pointer-events: none;
   }
 }
+
+.audio-transcript-mode {
+  .video-button,
+  .video-devices-button {
+    display: none !important;
+  }
+
+  .device-menu {
+    bottom: auto;
+    top: 100%;
+    margin-bottom: 0;
+    margin-top: 8px;
+  }
+}

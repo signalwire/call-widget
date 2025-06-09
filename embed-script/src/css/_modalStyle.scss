@@ -73,6 +73,61 @@
   max-height: 90vh;
   overflow: hidden;
   animation: springIn 0.8s cubic-bezier(0.22, 1.2, 0.36, 1) forwards;
+  // display: grid;
+  // grid-template-columns: 1fr 300px;
+
+  &.video-mode {
+    grid-template-columns: 1fr 0;
+
+    .local-video-content {
+      right: 10px !important;
+    }
+
+    .video-panel {
+      width: 100%;
+    }
+    .video-controls {
+      background: black;
+      width: 100%;
+    }
+
+    .chat-panel {
+      width: 0;
+      display: none;
+      width: calc(100%);
+    }
+  }
+
+  &.audio-transcript-mode {
+    max-width: 600px;
+    grid-template-columns: 1fr;
+
+    .loading {
+      position: fixed !important;
+    }
+
+    .video-panel {
+      width: 100%;
+      padding-bottom: 0;
+    }
+
+    .video-area,
+    .local-video-content {
+      display: none;
+    }
+
+    .video-controls {
+      width: 100%;
+      position: static;
+    }
+
+    .chat-panel {
+      width: 100%;
+      position: static;
+      min-height: 90vh;
+      height: 100%;
+    }
+  }
 
   @media (min-width: 2000px) and (max-height: 700px) {
     max-width: 900px;
@@ -102,25 +157,23 @@
   @media (min-width: 801px) {
     padding-bottom: 50px;
   }
+
+  .audio-transcript-mode & {
+    overflow: visible;
+  }
 }
 
-/* note: this bg-image placeholder to be hardcoded into the widget is for image at https://developer.signalwire.com/img/call-widget/sw_background.webp */
-/* see modal.ui.ts for replacement on full image load */
-/* also, TODO: should be a build process thing, use sth like lqip-modern or just sharp */
 .video-panel-background {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -100;
-
   background-color: #000;
-  background-image: url("data:image/webp;base64,UklGRv4BAABXRUJQVlA4IPIBAAAQDgCdASpkADgAPm0wlEgkIqIlpvVbQLANiWUIcAF/N0SNSoFwLlO5RP2YPzaIbnj2FRb+bYMVMO2hQaOhoOYVcYas+y/tUm1/zmSSq5AUjQJ+cqL2Z4Z7qXLgXDAOWYT82r5bm+2mFDM38Q0ruBiEoVE+LSAJdoHQAP7gQtoYHET/VcymFbJngGPQnLANH4pBKeNTCNh83JD/q72P9SVEf91Mx4GHZGI07V8EIhDuJRWajJcwkrY9epV7HluQk5qhMElwzHER6a3Zc/OaBy35/gKiNW/4Wd0oEovwE2r9jyX1HImaWtlcTNyPPjyqvi7m5rKNN82p/S01kcM9spuizE4Pba01gNXE5vPW68xKBA/5rLkd/4UosKilKe9PXgPgEgNiTV8tlHZ33yDJQSojodoGsBvOsVgYm06hOx2FqbPFSVY/2mjEsBcCuGQAy1+sBIt2FygUENMwQ4jSOFHEQZ7C9Sc/t1gIlR2bZtNtp1BWIQW/Iu6DDMwjSSTX4qjCwnN6/sqzlv0ZFBAKVIX4uy9DbwSWFKGKqDlsrbAmVFaioKHX3IX/Xm49jyIK7/0PIre8rpPO7DBAX5JbGQCYg8mbG2uf5xTT1gAWy0N4hyjd8bt6FFnL6eUOrt6Hjzy5gP+/8lb0glwD14Mjd9AAAAA=");
   background-size: cover;
   background-position: center;
 
   transform: scale(1.1);
   filter: blur(10px);
-
   transition: transform 0.2s linear, filter 0.2s linear;
 }
 

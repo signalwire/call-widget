@@ -204,13 +204,6 @@ export class Call {
       }
     });
 
-    roomSession.on("call.updated", () => {
-      // we want to track mute states
-      // what does the server know about the client's mute states?
-      // we ofc also have a local state
-      console.log("call.updated", roomSession);
-    });
-
     if (this.chat) {
       this.chat.onUpdate = () => {
         onChatChange(this.chat?.getHistory() ?? []);

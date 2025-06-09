@@ -1,14 +1,15 @@
 {
-  "name": "@niravcodes/call-widget",
+  "name": "@signalwire/call-widget",
   "private": false,
-  "version": "2.7.0",
+  "public": true,
+  "version": "3.2.0",
   "type": "module",
   "main": "./dist/c2c-widget.umd.js",
   "module": "./dist/c2c-widget.es.js",
   "types": "./dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/niravcodes/call-widget.git"
+    "url": "git+https://github.com/signalwire/call-widget.git"
   },
   "files": [
     "dist"
@@ -32,15 +33,18 @@
     "prepublish": "node ../verify-docs.js"
   },
   "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/showdown": "^2.0.6",
     "sass": "^1.86.0",
     "terser": "^5.39.0",
+    "tslib": "^2.8.1",
     "typescript": "~5.7.2",
-    "vite": "^6.2.6",
-    "@types/react": "^18.0.0",
-    "tslib": "^2.8.1"
+    "vite": "^6.2.6"
   },
   "dependencies": {
-    "@signalwire/js": "dev"
+    "@signalwire/js": "dev",
+    "nanomorph": "^5.4.3",
+    "showdown": "^2.1.0"
   },
   "peerDependencies": {
     "react": ">=16.8.0"

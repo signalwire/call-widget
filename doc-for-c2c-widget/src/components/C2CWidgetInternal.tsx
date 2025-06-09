@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import BrowserOnly from "@docusaurus/BrowserOnly";
-// import "@niravcodes/call-widget";
+// import "@signalwire/call-widget";
 
 export default function C2CWidgetInternal({
   buttonId,
@@ -18,7 +18,7 @@ export default function C2CWidgetInternal({
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    import("@niravcodes/call-widget");
+    import("@signalwire/call-widget");
   }, []);
 
   // react doesn't like other scripts controlling the DOM,
