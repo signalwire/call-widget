@@ -205,6 +205,23 @@ export class Call {
       await this.clientInitPromise;
     }
 
+    const beforeDialApproved = await new Promise<boolean>((resolve) => {
+      const beforeDialEvent = new CustomEvent("beforeDial", {
+        detail: {
+          approve: () => resolve(true),
+          reject: () => resolve(false),
+        },
+        bubbles: true,
+      });
+
+      this.widget.dispatchEvent(beforeDialEvent);
+    });
+
+    if (!beforeDialApproved) {
+      await this.destroy();
+      throw new Error("Dial cancelled by beforeDial event");
+    }
+
     console.log(this.client);
 
     if (!this.client) {
@@ -239,8 +256,6 @@ export class Call {
       video: supportsVideo ?? undefined,
       negotiateVideo: supportsVideo ?? undefined,
       userVariables: finalUserVariables,
-      // @ts-expect-error
-      audioCodecs: this.config?.getAudioCodec(),
     });
     this.currentCall = roomSession;
 
