@@ -4,166 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SignalWire C2C Widget</title>
-    <style>
-      .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10000;
-      }
-
-      .modal-content {
-        background: white;
-        border-radius: 8px;
-        padding: 24px;
-        width: 90%;
-        max-width: 400px;
-        position: relative;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      }
-
-      .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-      }
-
-      .modal-title {
-        font-size: 18px;
-        font-weight: 600;
-        margin: 0;
-      }
-
-      .close-button {
-        background: none;
-        border: none;
-        font-size: 24px;
-        cursor: pointer;
-        color: #666;
-        padding: 0;
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .close-button:hover {
-        color: #333;
-      }
-
-      .form-group {
-        margin-bottom: 16px;
-      }
-
-      .form-label {
-        display: block;
-        margin-bottom: 6px;
-        font-weight: 500;
-        color: #333;
-      }
-
-      .form-input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 14px;
-        box-sizing: border-box;
-      }
-
-      .form-input:focus {
-        outline: none;
-        border-color: #007bff;
-      }
-
-      .continue-button {
-        width: 100%;
-        padding: 12px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        font-size: 16px;
-        cursor: pointer;
-        margin-top: 10px;
-      }
-
-      .continue-button:hover {
-        background-color: #0056b3;
-      }
-
-      .continue-button:disabled {
-        background-color: #ccc;
-        cursor: not-allowed;
-      }
-
-      .hidden {
-        display: none;
-      }
-
-      @media (max-width: 480px) {
-        .modal-content {
-          width: 95%;
-          padding: 20px;
-        }
-      }
-    </style>
   </head>
   <body>
     <button id="callButton1">Call Sigmond (chat only)</button>
-
-    <div id="formModal" class="modal-overlay hidden">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 class="modal-title">Contact Information</h2>
-          <button class="close-button" id="closeModal">&times;</button>
-        </div>
-        <form id="contactForm">
-          <div class="form-group">
-            <label class="form-label" for="name">Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              class="form-input"
-              required
-              placeholder="Enter your name"
-            />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              class="form-input"
-              required
-              placeholder="Enter your email"
-            />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="number">Phone Number</label>
-            <input
-              type="tel"
-              id="number"
-              name="number"
-              class="form-input"
-              required
-              placeholder="Enter your phone number"
-            />
-          </div>
-          <button type="submit" class="continue-button">Continue</button>
-        </form>
-      </div>
-    </div>
 
     <call-widget
       button-id="callButton1"
@@ -177,70 +20,38 @@
 
     <script type="module" src="/src/index.ts"></script>
 
-    <script>
+    <script type="module">
+      import { showContactForm } from "/src/lib/contactForm.js";
+
       document.addEventListener("DOMContentLoaded", function () {
         const widget = document.querySelector("call-widget");
-        const modal = document.getElementById("formModal");
-        const closeButton = document.getElementById("closeModal");
-        const form = document.getElementById("contactForm");
-        let currentApprove = null;
-        let currentReject = null;
 
         widget.addEventListener("beforeDial", function (event) {
-          currentApprove = event.detail.approve;
-          currentReject = event.detail.reject;
+          const approve = event.detail.approve;
+          const reject = event.detail.reject;
 
-          modal.classList.remove("hidden");
-        });
+          showContactForm({
+            onSubmit: (data) => {
+              console.log("Form submitted:", data);
 
-        closeButton.addEventListener("click", function () {
-          modal.classList.add("hidden");
-          if (currentReject) {
-            currentReject();
-          }
-        });
+              // fetch("https://swrooms.com/form_handler", {
+              fetch("http://localhost:3000/submit", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+              }).catch((error) => {
+                console.error("Form submission error:", error);
+              });
 
-        modal.addEventListener("click", function (event) {
-          if (event.target === modal) {
-            modal.classList.add("hidden");
-            if (currentReject) {
-              currentReject();
-            }
-          }
-        });
-
-        form.addEventListener("submit", async function (event) {
-          event.preventDefault();
-
-          const formData = new FormData(form);
-          const data = {
-            name: formData.get("name"),
-            email: formData.get("email"),
-            number: formData.get("number"),
-          };
-
-          try {
-            fetch("https://swrooms.com/form_handler", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(data),
-            }).catch((error) => {
-              console.error("Form submission error:", error);
-            });
-
-            modal.classList.add("hidden");
-            if (currentApprove) {
-              currentApprove();
-            }
-          } catch (error) {
-            console.error("Error:", error);
-            modal.classList.add("hidden");
-            if (currentApprove) {
-              currentApprove();
-            }
-          }
+              approve();
+            },
+            onCancel: () => {
+              console.log("Form cancelled");
+              reject();
+            },
+          });
         });
       });
     </script>
