@@ -9,13 +9,20 @@ interface ContactFormCallbacks {
   onCancel: () => void;
 }
 
+interface ContactFormOptions {
+  callbacks: ContactFormCallbacks;
+  widget?: HTMLElement;
+}
+
 class ContactFormModal {
   public element: HTMLElement;
   private shadow: ShadowRoot;
   private callbacks: ContactFormCallbacks;
+  private widget?: HTMLElement;
 
-  constructor(callbacks: ContactFormCallbacks) {
-    this.callbacks = callbacks;
+  constructor(options: ContactFormOptions) {
+    this.callbacks = options.callbacks;
+    this.widget = options.widget;
     this.element = document.createElement("div");
     this.shadow = this.element.attachShadow({ mode: "closed" });
     this.render();
@@ -219,14 +226,27 @@ class ContactFormModal {
       number: formData.get("number") as string,
     };
 
+    // Set user variables on the widget if provided
+    if (this.widget) {
+      const userVariables = {
+        userName: data.name,
+        userEmail: data.email,
+        userPhone: data.number,
+      };
+      this.widget.setAttribute("user-variables", JSON.stringify(userVariables));
+    }
+
     this.callbacks.onSubmit(data);
     this.element.remove();
   }
 }
 
-export function showContactForm(callbacks: ContactFormCallbacks): void {
-  const modal = new ContactFormModal(callbacks);
+export function showContactForm(
+  callbacks: ContactFormCallbacks,
+  widget?: HTMLElement
+): void {
+  const modal = new ContactFormModal({ callbacks, widget });
   document.body.appendChild(modal.element);
 }
 
-export type { ContactFormData, ContactFormCallbacks };
+export type { ContactFormData, ContactFormCallbacks, ContactFormOptions };

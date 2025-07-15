@@ -219,7 +219,10 @@ export class Call {
 
     if (!beforeDialApproved) {
       await this.destroy();
-      throw new Error("Dial cancelled by beforeDial event");
+      this.widget.dispatchEvent(
+        new CustomEvent("call.ended", { bubbles: true })
+      );
+      // throw new Error("Dial cancelled by beforeDial event");
     }
 
     console.log(this.client);
