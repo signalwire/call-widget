@@ -181,16 +181,23 @@ class ContactFormModal {
   private attachEventListeners() {
     const closeButton = this.shadow.getElementById("closeModal");
     const form = this.shadow.getElementById("contactForm") as HTMLFormElement;
+    const modalContent = this.shadow.querySelector(".modal-content");
 
     closeButton?.addEventListener("click", () => {
       this.handleCancel();
     });
 
+    // Listen for clicks on the host element (backdrop)
     this.element.addEventListener("click", (event) => {
-      const modalContent = this.shadow.querySelector(".modal-content");
-      if (!modalContent?.contains(event.target as Node)) {
+      // Only close if clicking directly on the backdrop (the host element)
+      if (event.target === this.element) {
         this.handleCancel();
       }
+    });
+
+    // Prevent modal content clicks from bubbling up to the host
+    modalContent?.addEventListener("click", (event) => {
+      event.stopPropagation();
     });
 
     form?.addEventListener("submit", (event) => {
