@@ -35,13 +35,18 @@
               onSubmit: (data) => {
                 console.log("Form submitted:", data);
 
-                // fetch("https://swrooms.com/form_handler", {
-                fetch("http://localhost:6000/submit", {
+                const payload = {
+                  email: data.email,
+                  name: data.name,
+                  phone: data.number,
+                };
+
+                fetch("http://localhost:3000/submit", {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
                   },
-                  body: JSON.stringify(data),
+                  body: JSON.stringify(payload),
                 }).catch((error) => {
                   console.error("Form submission error:", error);
                 });
