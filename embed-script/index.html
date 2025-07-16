@@ -30,6 +30,9 @@
           const approve = event.detail.approve;
           const reject = event.detail.reject;
 
+          // Indicate that we're listening and will handle this event
+          event.detail.hasListeners = true;
+
           showContactForm(
             {
               onSubmit: (data) => {
@@ -41,15 +44,20 @@
                   phone: data.number,
                 };
 
-                fetch("http://localhost:3000/submit", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify(payload),
-                }).catch((error) => {
+                try {
+                  fetch("http://localhost:3000/submit", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                  }).catch((error) => {
+                    console.error("Form submission error:", error);
+                  });
+                } catch (error) {
                   console.error("Form submission error:", error);
-                });
+                  // we don't want this fetch error to block the call
+                }
 
                 approve();
               },

@@ -208,6 +208,7 @@ export class Call {
     const beforeDialApproved = await new Promise<boolean>((resolve) => {
       const beforeDialEvent = new CustomEvent("beforeDial", {
         detail: {
+          hasListeners: false,
           approve: () => resolve(true),
           reject: () => resolve(false),
         },
@@ -215,6 +216,11 @@ export class Call {
       });
 
       this.widget.dispatchEvent(beforeDialEvent);
+
+      // If no one flagged that they're listening, proceed immediately
+      if (!beforeDialEvent.detail.hasListeners) {
+        resolve(true);
+      }
     });
 
     if (!beforeDialApproved) {
