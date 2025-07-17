@@ -194,6 +194,11 @@ export default class CallWidget extends HTMLElement {
       return;
     }
 
+    if (!callInstance) {
+      this.closeModal();
+      return;
+    }
+
     if (callInstance) {
       await devices.setup(callInstance);
     }

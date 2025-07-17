@@ -205,6 +205,29 @@ export class Call {
       await this.clientInitPromise;
     }
 
+    const beforeDialApproved = await new Promise<boolean>((resolve) => {
+      const beforeDialEvent = new CustomEvent("beforeDial", {
+        detail: {
+          hasListeners: false,
+          approve: () => resolve(true),
+          reject: () => resolve(false),
+        },
+        bubbles: true,
+      });
+
+      this.widget.dispatchEvent(beforeDialEvent);
+
+      // If no one flagged that they're listening, proceed immediately
+      if (!beforeDialEvent.detail.hasListeners) {
+        resolve(true);
+      }
+    });
+
+    if (!beforeDialApproved) {
+      await this.destroy();
+      return null;
+    }
+
     console.log(this.client);
 
     if (!this.client) {
@@ -239,8 +262,6 @@ export class Call {
       video: supportsVideo ?? undefined,
       negotiateVideo: supportsVideo ?? undefined,
       userVariables: finalUserVariables,
-      // @ts-expect-error
-      audioCodecs: this.config?.getAudioCodec(),
     });
     this.currentCall = roomSession;
 

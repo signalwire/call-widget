@@ -2,7 +2,7 @@
   "name": "@signalwire/call-widget",
   "private": false,
   "public": true,
-  "version": "3.2.0",
+  "version": "3.6.0",
   "type": "module",
   "main": "./dist/c2c-widget.umd.js",
   "module": "./dist/c2c-widget.es.js",
@@ -42,7 +42,7 @@
     "vite": "^6.2.7"
   },
   "dependencies": {
-    "@signalwire/js": "dev",
+    "@signalwire/js": "3.29.1-dev.202507141344.b916036.0",
     "nanomorph": "^5.4.3",
     "showdown": "^2.1.0"
   },
