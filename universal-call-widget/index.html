@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SignalWire Universal Call Widget</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f5f5f5; padding:20px; }
+    .container { max-width:1200px; margin:0 auto; background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1); padding:30px; }
+    h1 { color:#333; margin-bottom:30px; text-align:center; }
+    .controls { display:flex; gap:20px; margin-bottom:30px; flex-wrap:wrap; align-items:center; }
+    .form-group { flex:1; min-width:250px; }
+    label { display:block; margin-bottom:5px; font-weight:500; color:#555; }
+    select { width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; font-size:14px; }
+    .checkbox-group { display:flex; gap:20px; align-items:center; }
+    .checkbox-group label { display:flex; align-items:center; gap:5px; margin:0; }
+    button { padding:12px 24px; background:#007acc; color:white; border:none; border-radius:6px; cursor:pointer; font-size:16px; font-weight:500; transition:background 0.2s; }
+    button:hover { background:#005a9e; }
+    button:disabled { background:#ccc; cursor:not-allowed; }
+    .status { padding:20px; background:#f8f9fa; border-radius:8px; margin-bottom:20px; display:none; }
+    .status.show { display:block; }
+    .status.success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
+    .status.error { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
+    .status.info { background:#d1ecf1; color:#0c5460; border:1px solid #bee5eb; }
+    #videoContainer { width:100%; min-height:600px; background:#000; border-radius:8px; position:relative; display:none; margin-bottom:20px; }
+    #videoContainer.show { display:block; }
+    #remoteVideo { width:100%; height:600px; background:#000; border-radius:8px; }
+    #localVideo { position:absolute; bottom:20px; right:20px; width:200px; height:150px; background:#333; border-radius:8px; border:2px solid #fff; z-index:10; }
+    .call-controls { display:none; gap:10px; justify-content:center; margin-top:20px; }
+    .call-controls.show { display:flex; }
+    .control-btn { width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; }
+    .control-btn.mute { background:#6c757d; }
+    .control-btn.unmute { background:#28a745; }
+    .control-btn.end { background:#dc3545; }
+    .transcript { max-height:400px; overflow-y:auto; border:1px solid #ddd; border-radius:8px; padding:20px; background:#f8f9fa; }
+    .transcript-entry { margin-bottom:10px; padding:10px; border-radius:4px; background:white; }
+    .transcript-entry.ai { border-left:4px solid #007acc; }
+    .transcript-entry.user { border-left:4px solid #28a745; }
+    .transcript-entry.system { border-left:4px solid #6c757d; font-style:italic; }
+    .timestamp { font-size:12px; color:#666; margin-bottom:5px; }
+    .quick-dial { display:flex; gap:10px; margin-bottom:20px; }
+    .quick-dial button { background:#28a745; }
+    .quick-dial button:hover { background:#218838; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 SignalWire Universal Call Widget</h1>
+    <div class="status" id="status"></div>
+    <div class="quick-dial">
+      <button id="quickDialSigmond" onclick="quickDial('/private/sigmond')">🤖 Call Sigmond AI Agent</button>
+    </div>
+    <div class="controls">
+      <div class="form-group">
+        <label for="resourceSelect">Select Resource:</label>
+        <select id="resourceSelect"><option value="">Loading resources...</option></select>
+      </div>
+      <div class="checkbox-group">
+        <label><input type="checkbox" id="enableAudio" checked>Enable Audio</label>
+        <label><input type="checkbox" id="enableVideo" checked>Enable Video</label>
+      </div>
+      <button id="callButton" onclick="makeCall()" disabled>📞 Start Call</button>
+    </div>
+    <div id="videoContainer">
+      <div id="remoteVideo"></div>
+      <div id="localVideo"></div>
+    </div>
+    <div class="call-controls" id="callControls">
+      <button class="control-btn unmute" id="audioBtn" onclick="toggleAudio()">🎤</button>
+      <button class="control-btn unmute" id="videoBtn" onclick="toggleVideo()">📹</button>
+      <button class="control-btn end" onclick="endCall()">☎️</button>
+    </div>
+    <div class="transcript" id="transcript">
+      <h3>📝 Call Transcript</h3>
+      <div id="transcriptContent"></div>
+    </div>
+  </div>
+  <script src="https://cdn.signalwire.com/@signalwire/js@dev"></script>
+  <script>
+    let signalWireClient = null;
+    let currentCall = null;
+    let localStream = null;
+
+    async function init() {
+      try {
+        showStatus('Initializing...', 'info');
+        await loadResources();
+        await setupAuthentication();
+        showStatus('Ready to make calls!', 'success');
+        document.getElementById('callButton').disabled = false;
+      } catch (error) {
+        console.error('Initialization error:', error);
+        if (error.message.includes('low_balance')) {
+          showStatus('⚠️ SignalWire account has insufficient balance. Please add funds to your account.', 'error');
+        } else {
+          showStatus(`Error: ${error.message}`, 'error');
+        }
+      }
+    }
+
+    async function setupAuthentication() {
+      try {
+        const response = await fetch('/api/create-subscriber-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ displayName: 'Universal Caller' }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          let errorMessage = 'Failed to create token';
+          if (errorData.details?.fullError?.errors) {
+            const errors = errorData.details.fullError.errors;
+            if (errors[0]?.code === 'low_balance') {
+              errorMessage = 'SignalWire account has insufficient balance';
+            } else {
+              errorMessage = errors[0]?.message || errorMessage;
+            }
+          }
+          throw new Error(errorMessage);
+        }
+
+        const data = await response.json();
+        signalWireClient = await SignalWire.SignalWire({ token: data.token, host: 'demo.signalwire.com' });
+        setupEventListeners();
+      } catch (error) {
+        console.error('Authentication error:', error);
+        throw error;
+      }
+    }
+
+    async function loadResources() {
+      try {
+        const response = await fetch('/api/resources');
+        const data = await response.json();
+        const select = document.getElementById('resourceSelect');
+        select.innerHTML = '<option value="">Select a resource...</option>';
+        if (data.success && data.resources) {
+          data.resources.forEach(resource => {
+            const option = document.createElement('option');
+            let address = resource.address || resource.id;
+            if (resource.type === 'swml_script' || resource.type === 'ai_agent') {
+              if (!address.startsWith('/')) address = `/private/${resource.display_name || resource.id}`;
+            }
+            option.value = address;
+            let emoji = '📹';
+            if (resource.type === 'swml_script') emoji = '🤖';
+            if (resource.type === 'ai_agent') emoji = '🧠';
+            if (resource.type === 'subscriber') emoji = '👤';
+            option.textContent = `${emoji} ${resource.display_name || resource.name || resource.id} (${resource.type})`;
+            select.appendChild(option);
+          });
+        }
+      } catch (error) {
+        console.error('Error loading resources:', error);
+      }
+    }
+
+    function setupEventListeners() {
+      if (!signalWireClient) return;
+      signalWireClient.on('ai.partial_result', (params) => addTranscript('ai', `AI (typing): ${params.text}`, 'partial'));
+      signalWireClient.on('ai.speech_detect', (params) => {
+        const cleanText = params.text.replace(/\{confidence=[\d.]+\}/, "");
+        addTranscript('user', `You: ${cleanText}`, 'complete');
+      });
+      signalWireClient.on('ai.completion', (params) => addTranscript('ai', `AI: ${params.text}`, 'complete'));
+      signalWireClient.on('ai.response_utterance', (params) => addTranscript('ai', `AI (speaking): ${params.utterance}`, 'complete'));
+    }
+
+    async function makeCall() {
+      const destination = document.getElementById('resourceSelect').value;
+      if (!destination) { showStatus('Please select a resource to call', 'error'); return; }
+      if (!signalWireClient) { showStatus('Client not initialized', 'error'); return; }
+      try {
+        showStatus('Connecting...', 'info');
+        document.getElementById('videoContainer').classList.add('show');
+        currentCall = await signalWireClient.dial({
+          to: destination,
+          rootElement: document.getElementById('remoteVideo'),
+          audio: document.getElementById('enableAudio').checked,
+          video: document.getElementById('enableVideo').checked,
+          negotiateVideo: document.getElementById('enableVideo').checked,
+        });
+        currentCall.on('call.joined', () => {
+          showStatus('Connected!', 'success');
+          document.getElementById('callControls').classList.add('show');
+          document.getElementById('callButton').disabled = true;
+          addTranscript('system', 'Call connected', 'complete');
+        });
+        currentCall.on('call.ended', () => endCall());
+        currentCall.on('call.failed', (error) => { showStatus(`Call failed: ${error.message}`, 'error'); endCall(); });
+        currentCall.start();
+        if (document.getElementById('enableVideo').checked) setupLocalVideo();
+      } catch (error) {
+        console.error('Call error:', error);
+        showStatus(`Error: ${error.message}`, 'error');
+      }
+    }
+
+    function quickDial(destination) {
+      document.getElementById('resourceSelect').value = destination;
+      makeCall();
+    }
+
+    async function setupLocalVideo() {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        const localVideo = document.getElementById('localVideo');
+        const videoElement = document.createElement('video');
+        videoElement.srcObject = localStream;
+        videoElement.autoplay = true;
+        videoElement.muted = true;
+        videoElement.style.width = '100%';
+        videoElement.style.height = '100%';
+        videoElement.style.objectFit = 'cover';
+        localVideo.innerHTML = '';
+        localVideo.appendChild(videoElement);
+      } catch (error) { console.error('Local video error:', error); }
+    }
+
+    function toggleAudio() {
+      if (!currentCall) return;
+      const audioBtn = document.getElementById('audioBtn');
+      const isMuted = audioBtn.classList.contains('mute');
+      if (isMuted) { currentCall.audioUnmute(); audioBtn.classList.remove('mute'); audioBtn.classList.add('unmute'); }
+      else { currentCall.audioMute(); audioBtn.classList.remove('unmute'); audioBtn.classList.add('mute'); }
+    }
+
+    function toggleVideo() {
+      if (!currentCall) return;
+      const videoBtn = document.getElementById('videoBtn');
+      const isMuted = videoBtn.classList.contains('mute');
+      if (isMuted) { currentCall.videoUnmute(); videoBtn.classList.remove('mute'); videoBtn.classList.add('unmute'); }
+      else { currentCall.videoMute(); videoBtn.classList.remove('unmute'); videoBtn.classList.add('mute'); }
+    }
+
+    function endCall() {
+      if (currentCall) { currentCall.hangup(); currentCall = null; }
+      if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
+      document.getElementById('videoContainer').classList.remove('show');
+      document.getElementById('callControls').classList.remove('show');
+      document.getElementById('callButton').disabled = false;
+      document.getElementById('localVideo').innerHTML = '';
+      showStatus('Call ended', 'info');
+      addTranscript('system', 'Call ended', 'complete');
+    }
+
+    function addTranscript(type, text, status) {
+      const content = document.getElementById('transcriptContent');
+      const entry = document.createElement('div');
+      entry.className = `transcript-entry ${type}`;
+      const timestamp = new Date().toLocaleTimeString();
+      entry.innerHTML = `<div class="timestamp">${timestamp}</div><div>${text}</div>`;
+      content.appendChild(entry);
+      content.scrollTop = content.scrollHeight;
+    }
+
+    function showStatus(message, type) {
+      const status = document.getElementById('status');
+      status.textContent = message;
+      status.className = `status show ${type}`;
+      if (type === 'success' || type === 'info') {
+        setTimeout(() => { status.classList.remove('show'); }, 5000);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

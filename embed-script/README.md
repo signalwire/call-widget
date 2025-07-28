@@ -386,10 +386,33 @@ When `receive-calls` is enabled:
 2. **Window Mode**: For agent interfaces, `video+transcript` mode provides the most comprehensive call handling experience
 3. **Audio/Video Support**: Configure `support-audio` and `support-video` based on your use case:
    ```html
-   <call-widget
-     receive-calls="true"
-     support-audio="true"
-     support-video="true"
-     window-mode="video+transcript"
-   ></call-widget>
+  <call-widget
+    receive-calls="true"
+    support-audio="true"
+    support-video="true"
+    window-mode="video+transcript"
+  ></call-widget>
+  ```
+
+## Running in Cursor
+
+To quickly test the sample server using the [Cursor](https://cursor.sh) IDE:
+
+1. Open a terminal in Cursor and run:
+
+   ```bash
+   cd universal-call-widget
+   npm install
    ```
+
+2. Copy `.env.sample` to `.env` and add your SignalWire credentials.
+
+3. Start the server:
+
+   ```bash
+   npm start
+   ```
+
+4. Visit `http://localhost:3001` in the built‑in browser preview to load the widget.
+
+Run `node verify-docs.js` from the repository root if you modify documentation to ensure all copies remain in sync.
