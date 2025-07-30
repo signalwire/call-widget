@@ -6,17 +6,56 @@
   <title>SignalWire Universal Call Widget</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f5f5f5; padding:20px; }
-    .container { max-width:1200px; margin:0 auto; background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1); padding:30px; }
-    h1 { color:#333; margin-bottom:30px; text-align:center; }
+    body {
+      font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      background:linear-gradient(135deg,#0d0d0d,#1a1a2e);
+      padding:20px;
+      color:#eee;
+    }
+    .container {
+      max-width:1200px;
+      margin:0 auto;
+      background:#111;
+      border-radius:12px;
+      box-shadow:0 0 15px rgba(0,255,255,0.2);
+      padding:30px;
+    }
+    h1 {
+      color:#0ff;
+      margin-bottom:30px;
+      text-align:center;
+      text-shadow:0 0 5px #0ff;
+    }
     .controls { display:flex; gap:20px; margin-bottom:30px; flex-wrap:wrap; align-items:center; }
     .form-group { flex:1; min-width:250px; }
     label { display:block; margin-bottom:5px; font-weight:500; color:#555; }
-    select { width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; font-size:14px; }
+    select {
+      width:100%;
+      padding:10px;
+      border:1px solid #333;
+      border-radius:6px;
+      background:#222;
+      color:#eee;
+      font-size:14px;
+    }
     .checkbox-group { display:flex; gap:20px; align-items:center; }
     .checkbox-group label { display:flex; align-items:center; gap:5px; margin:0; }
-    button { padding:12px 24px; background:#007acc; color:white; border:none; border-radius:6px; cursor:pointer; font-size:16px; font-weight:500; transition:background 0.2s; }
-    button:hover { background:#005a9e; }
+    button {
+      padding:12px 24px;
+      background:#0ff;
+      color:#000;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      font-size:16px;
+      font-weight:500;
+      transition:box-shadow 0.2s,background 0.2s;
+      box-shadow:0 0 10px rgba(0,255,255,0.5);
+    }
+    button:hover {
+      background:#05faff;
+      box-shadow:0 0 15px rgba(0,255,255,0.7);
+    }
     button:disabled { background:#ccc; cursor:not-allowed; }
     .status { padding:20px; background:#f8f9fa; border-radius:8px; margin-bottom:20px; display:none; }
     .status.show { display:block; }
@@ -49,7 +88,7 @@
     <h1>🚀 SignalWire Universal Call Widget</h1>
     <div class="status" id="status"></div>
     <div class="quick-dial">
-      <button id="quickDialSigmond" onclick="quickDial('/private/sigmond')">🤖 Call Sigmond AI Agent</button>
+      <button id="quickDialSigmond" onclick="quickDial('/private/sigmond')" disabled>🤖 Call Sigmond AI Agent</button>
     </div>
     <div class="controls">
       <div class="form-group">
@@ -89,6 +128,7 @@
         await setupAuthentication();
         showStatus('Ready to make calls!', 'success');
         document.getElementById('callButton').disabled = false;
+        document.getElementById('quickDialSigmond').disabled = false;
       } catch (error) {
         console.error('Initialization error:', error);
         if (error.message.includes('low_balance')) {
@@ -138,6 +178,7 @@
         select.innerHTML = '<option value="">Select a resource...</option>';
         if (data.success && data.resources) {
           data.resources.forEach(resource => {
+            if (resource.type === 'subscriber') return; // skip subscribers
             const option = document.createElement('option');
             let address = resource.address || resource.id;
             if (resource.type === 'swml_script' || resource.type === 'ai_agent') {
@@ -174,6 +215,10 @@
       if (!signalWireClient) { showStatus('Client not initialized', 'error'); return; }
       try {
         showStatus('Connecting...', 'info');
+        await navigator.mediaDevices.getUserMedia({
+          audio: document.getElementById('enableAudio').checked,
+          video: document.getElementById('enableVideo').checked
+        });
         document.getElementById('videoContainer').classList.add('show');
         currentCall = await signalWireClient.dial({
           to: destination,
