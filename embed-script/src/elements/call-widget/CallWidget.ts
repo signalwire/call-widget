@@ -13,6 +13,7 @@ import { LoadingManager } from "./LoadingManager.ts";
 import { CallInfoModal } from "../call-info-modal/CallInfoModal.ts";
 import { IncomingCallModal } from "../incoming-call-modal/IncomingCallModal.ts";
 import html from "../../lib/html.ts";
+import { createDialer } from "../../ui/dialer.ui.ts";
 
 export default class CallWidget extends HTMLElement {
   callOngoing: boolean = false;
@@ -49,7 +50,7 @@ export default class CallWidget extends HTMLElement {
         this.setupCall()
       );
     }
-    if (name === "token") {
+    if (name === "token" || name === "destination") {
       (async () => {
         await this.callManager?.destroy();
         this.callManager = new Call({
@@ -92,6 +93,31 @@ export default class CallWidget extends HTMLElement {
     infoModal.remove();
   }
 
+  public newCallVariable(variables: Record<string, string>): void {
+    const currentVariables = this.config.getUserVariables() || {};
+    const mergedVariables = {
+      ...currentVariables,
+      ...variables,
+    };
+
+    this.setAttribute("user-variables", JSON.stringify(mergedVariables));
+  }
+
+  private async showDialer(): Promise<string | null> {
+    return new Promise((resolve) => {
+      const dialer = createDialer({
+        onCall: (phoneNumber: string) => {
+          resolve(phoneNumber);
+        },
+        onClose: () => {
+          resolve(null);
+        },
+      });
+
+      this.containerElement?.appendChild(dialer.dialerContainer);
+    });
+  }
+
   async setupCall() {
     if (this.callOngoing) {
       console.warn("Call is already ongoing; nop");
@@ -99,6 +125,15 @@ export default class CallWidget extends HTMLElement {
     } else if (this.callManager === null) {
       console.warn("CallManager Object is not initialized");
       return;
+    }
+
+    let destination = this.config.getDestination();
+
+    if (!destination) {
+      destination = await this.showDialer();
+      if (!destination) {
+        return;
+      }
     }
 
     const beforeCallEvent = new CustomEvent("beforecall", {
@@ -112,6 +147,10 @@ export default class CallWidget extends HTMLElement {
       return;
     }
 
+    this.setupCallWithDestination(destination);
+  }
+
+  private async setupCallWithDestination(destination: string) {
     this.callOngoing = true;
     this.loadingManager?.setLoading(true);
 
@@ -182,7 +221,8 @@ export default class CallWidget extends HTMLElement {
             if (localVideoArea) {
               localVideoArea.appendChild(localVideo);
             }
-          }
+          },
+          destination
         )) ?? null;
     } catch (e) {
       console.error("Error setting up call", e);

@@ -56,7 +56,7 @@ export class CallWidgetConfig {
         }
         return value;
       },
-      required: true,
+      required: false,
     },
     supportAudio: {
       name: "support-audio",
@@ -256,7 +256,7 @@ export class CallWidgetConfig {
     return this.getAttribute(CallWidgetConfig.attributeDefinitions.audioCodec);
   }
 
-  getDestination(): string {
+  getDestination(): string | null {
     return this.getAttribute(CallWidgetConfig.attributeDefinitions.destination);
   }
 

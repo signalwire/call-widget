@@ -6,28 +6,15 @@
     <title>SignalWire C2C Widget</title>
   </head>
   <body>
-    <button id="callButton1">Call Sigmond (chat only)</button>
+    <button id="callButton1">Call</button>
 
     <call-widget
-      button-id="callButton1"
       token="token"
       support-video="true"
       support-audio="true"
       log-level="info"
       window-mode="video+transcript"
-      user-variables='{"house": "Gryffindor"}'
     ></call-widget>
-
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const widget = document.querySelector("call-widget");
-        widget.newCallVariable({
-          name: "John Doe",
-          email: "john.doe@example.com",
-          phone: "+9779845862777",
-        });
-      });
-    </script>
 
     <script type="module" src="/src/index.ts"></script>
   </body>
