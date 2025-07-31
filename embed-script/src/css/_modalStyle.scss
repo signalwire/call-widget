@@ -12,6 +12,11 @@
   justify-content: center;
   animation: fadeIn 0.3s ease-out forwards;
   z-index: 1000;
+
+  &.contained {
+    position: absolute;
+    z-index: 10;
+  }
 }
 
 @keyframes fadeIn {
@@ -76,6 +81,14 @@
   // display: grid;
   // grid-template-columns: 1fr 300px;
 
+  .modal-container.contained & {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+  }
+
   &.video-mode {
     grid-template-columns: 1fr 0;
 
@@ -102,6 +115,10 @@
     max-width: 600px;
     grid-template-columns: 1fr;
 
+    .modal-container.contained & {
+      max-width: none;
+    }
+
     .loading {
       position: fixed !important;
     }
@@ -126,6 +143,10 @@
       position: static;
       min-height: 90vh;
       height: 100%;
+
+      .modal-container.contained & {
+        min-height: 100%;
+      }
     }
   }
 

@@ -194,6 +194,17 @@ export class CallWidgetConfig {
       },
       required: false,
     },
+    contained: {
+      name: "contained",
+      parser: (value: string): boolean => {
+        const normalized = value.toLowerCase();
+        if (normalized !== "true" && normalized !== "false") {
+          throw new Error('Must be "true" or "false"');
+        }
+        return normalized === "true";
+      },
+      required: false,
+    },
   } as const;
 
   getAttribute<T>(definition: AttributeDefinition<T>): T {
@@ -290,5 +301,9 @@ export class CallWidgetConfig {
         CallWidgetConfig.attributeDefinitions.backgroundThumbnail
       ) ?? CallWidgetConfig.DEFAULT_BACKGROUND_THUMBNAIL
     );
+  }
+
+  getContained(): boolean | null {
+    return this.getAttribute(CallWidgetConfig.attributeDefinitions.contained);
   }
 }

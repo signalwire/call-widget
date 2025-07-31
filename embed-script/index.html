@@ -8,15 +8,28 @@
   <body>
     <button id="callButton1">Call Sigmond (chat only)</button>
 
-    <call-widget
-      button-id="callButton1"
-      token="token"
-      support-video="true"
-      support-audio="true"
-      log-level="info"
-      window-mode="video+transcript"
-      user-variables='{"house": "Gryffindor"}'
-    ></call-widget>
+    <div
+      style="
+        position: fixed;
+        top: 120px;
+        left: 50px;
+        width: 800px;
+        height: 600px;
+        border: 2px solid #ccc;
+        background: #f0f0f0;
+      "
+    >
+      <call-widget
+        button-id="callButton1"
+        token="token"
+        support-video="true"
+        support-audio="true"
+        log-level="info"
+        window-mode="video+transcript"
+        user-variables='{"house": "Gryffindor"}'
+        contained="true"
+      ></call-widget>
+    </div>
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {

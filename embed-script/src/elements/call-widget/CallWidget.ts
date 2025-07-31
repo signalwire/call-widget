@@ -31,7 +31,7 @@ export default class CallWidget extends HTMLElement {
   private activeInfoModal: CallInfoModal | null = null;
 
   static get observedAttributes() {
-    return ["token", "button-id"];
+    return ["token", "button-id", "contained"];
   }
 
   constructor() {
@@ -73,11 +73,21 @@ export default class CallWidget extends HTMLElement {
       this.modalContainer.classList.add("closing");
       modal?.classList.add("closing");
 
+      const isContained = this.config.getContained();
+
       setTimeout(() => {
         devices.reset();
         this.modalContainer?.remove();
         this.modalContainer = null;
-        document.body.style.overflow = this.previousOverflowStyle;
+
+        if (!isContained) {
+          document.body.style.overflow = this.previousOverflowStyle;
+        } else {
+          if (this.containerElement) {
+            this.containerElement.style.position = "";
+          }
+        }
+
         this.callOngoing = false;
         this.callManager?.reset();
       }, 800);
@@ -154,8 +164,16 @@ export default class CallWidget extends HTMLElement {
     this.callOngoing = true;
     this.loadingManager?.setLoading(true);
 
-    this.previousOverflowStyle = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const isContained = this.config.getContained();
+
+    if (!isContained) {
+      this.previousOverflowStyle = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+    } else {
+      if (this.containerElement) {
+        this.containerElement.style.position = "relative";
+      }
+    }
 
     const windowMode = this.config.getWindowMode();
     console.log("windowMode", windowMode);
@@ -173,6 +191,10 @@ export default class CallWidget extends HTMLElement {
     });
 
     const modal = modalContainer.querySelector(".modal");
+
+    if (isContained) {
+      modalContainer.classList.add("contained");
+    }
 
     if (windowMode === "video") {
       modal?.classList.add("video-mode");
@@ -332,8 +354,16 @@ export default class CallWidget extends HTMLElement {
     this.callOngoing = true;
     this.loadingManager?.setLoading(true);
 
-    this.previousOverflowStyle = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const isContained = this.config.getContained();
+
+    if (!isContained) {
+      this.previousOverflowStyle = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+    } else {
+      if (this.containerElement) {
+        this.containerElement.style.position = "relative";
+      }
+    }
 
     let {
       modalContainer,
@@ -346,6 +376,10 @@ export default class CallWidget extends HTMLElement {
       backgroundImage: this.config.getBackgroundImage(),
       backgroundThumbnail: this.config.getBackgroundThumbnail(),
     });
+
+    if (isContained) {
+      modalContainer.classList.add("contained");
+    }
 
     this.modalContainer = modalContainer;
     this.containerElement?.appendChild(modalContainer);
