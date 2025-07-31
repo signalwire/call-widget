@@ -156,9 +156,9 @@ export class Call {
     });
 
     // @ts-ignore
-    client.on("calling.user_event", (params) => {
-      console.log("calling.user_event", params);
-      const userEvent = new CustomEvent("calling.user_event", {
+    client.on("user_event", (params) => {
+      console.log("user_event", params);
+      const userEvent = new CustomEvent("user_event", {
         detail: params,
         bubbles: true,
       });

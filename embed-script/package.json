@@ -2,7 +2,7 @@
   "name": "@signalwire/call-widget",
   "private": false,
   "public": true,
-  "version": "3.8.0",
+  "version": "3.9.0",
   "type": "module",
   "main": "./dist/c2c-widget.umd.js",
   "module": "./dist/c2c-widget.es.js",

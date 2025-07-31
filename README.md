@@ -15,7 +15,7 @@ npm install @signalwire/call-widget
 ### CDN (jsDelivr)
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@signalwire/call-widget@3.7.0/dist/c2c-widget-full.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@signalwire/call-widget/dist/c2c-widget-full.umd.min.js"></script>
 ```
 
 ## Quick Start
@@ -329,12 +329,12 @@ widget.addEventListener("call.incoming", (event) => {
 });
 ```
 
-### `calling.user_event`
+### `user_event`
 
 Triggered when custom user events are received during the call.
 
 ```javascript
-widget.addEventListener("calling.user_event", (event) => {
+widget.addEventListener("user_event", (event) => {
   console.log("User event received:", event.detail);
 });
 ```

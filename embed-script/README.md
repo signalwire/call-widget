@@ -329,12 +329,12 @@ widget.addEventListener("call.incoming", (event) => {
 });
 ```
 
-### `calling.user_event`
+### `user_event`
 
 Triggered when custom user events are received during the call.
 
 ```javascript
-widget.addEventListener("calling.user_event", (event) => {
+widget.addEventListener("user_event", (event) => {
   console.log("User event received:", event.detail);
 });
 ```
