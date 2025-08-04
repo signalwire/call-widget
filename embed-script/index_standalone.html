@@ -25,6 +25,8 @@
       document.addEventListener("DOMContentLoaded", function () {
         const widget = document.querySelector("call-widget");
 
+        return;
+
         widget.addEventListener("beforeDial", function (event) {
           const approve = event.detail.approve;
           const reject = event.detail.reject;

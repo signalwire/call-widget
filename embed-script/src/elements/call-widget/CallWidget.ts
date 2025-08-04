@@ -323,6 +323,13 @@ export default class CallWidget extends HTMLElement {
     }
 
     this.loadingManager?.setLoading(false);
+
+    // Apply saved device preferences now that call is fully started
+    try {
+      await devices.onCallStarted();
+    } catch (error) {
+      console.warn("Failed to apply saved device preferences:", error);
+    }
   }
 
   async setupCallFromNotification(eventDetails: any) {
@@ -418,7 +425,7 @@ export default class CallWidget extends HTMLElement {
       console.log("Room joined from Notification");
     });
 
-    callInstance?.on("room.joined", () => {
+    callInstance?.on("room.joined", async () => {
       console.log("Call Joined from Notification");
       const callStartedEvent = new CustomEvent("call.joined", {
         detail: {
@@ -449,6 +456,9 @@ export default class CallWidget extends HTMLElement {
         (localVideo as HTMLVideoElement).srcObject = callInstance.localStream;
         localVideoArea.appendChild(localVideo);
       }
+
+      // Apply saved device preferences now that call is fully joined
+      await devices.onCallStarted();
     });
 
     if (callInstance) {

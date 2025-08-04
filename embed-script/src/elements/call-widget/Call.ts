@@ -271,7 +271,7 @@ export class Call {
       finalUserVariables
     );
 
-    roomSession.on("call.joined", () => {
+    roomSession.on("call.joined", async () => {
       const callStartedEvent = new CustomEvent("call.joined", {
         detail: {
           call: this.currentCall,
@@ -301,6 +301,9 @@ export class Call {
         (localVideo as HTMLVideoElement).srcObject = roomSession.localStream;
         onLocalVideo(localVideo as HTMLVideoElement);
       }
+
+      // Apply saved device preferences now that call is fully joined
+      await devices.onCallStarted();
     });
 
     roomSession.on("call.left", () => {

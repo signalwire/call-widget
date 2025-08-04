@@ -1,4 +1,5 @@
 import { FabricRoomSession, WebRTC } from "@signalwire/js";
+import { DevicePersistence } from "./DevicePersistence";
 
 class DevicesState {
   devices: MediaDeviceInfo[] = [];
@@ -132,16 +133,24 @@ class Devices {
     const { audioinput, audiooutput, videoinput } = this.state;
 
     if (!this.state.selectedMicrophone && audioinput.length > 0) {
-      this.state.selectedMicrophone = audioinput[0];
-    }
-    if (!this.state.selectedCamera && videoinput.length > 0) {
-      this.state.selectedCamera = videoinput[0];
-    }
-    if (!this.state.selectedSpeaker && audiooutput.length > 0) {
-      this.state.selectedSpeaker = audiooutput[0];
+      this.state.selectedMicrophone =
+        DevicePersistence.findBestMatch("microphone", this.state.devices) ||
+        audioinput[0];
     }
 
-    // Update selected devices, maintaining current selection if still available
+    if (!this.state.selectedCamera && videoinput.length > 0) {
+      this.state.selectedCamera =
+        DevicePersistence.findBestMatch("camera", this.state.devices) ||
+        videoinput[0];
+    }
+
+    if (!this.state.selectedSpeaker && audiooutput.length > 0) {
+      this.state.selectedSpeaker =
+        DevicePersistence.findBestMatch("speaker", this.state.devices) ||
+        audiooutput[0];
+    }
+
+    // Ensure selected devices are still available (device might have been unplugged)
     this.state.selectedMicrophone =
       audioinput.find(
         (d) => d.deviceId === this.state.selectedMicrophone?.deviceId
@@ -186,11 +195,84 @@ class Devices {
     }
   }
 
+  // Apply saved device preferences after call is established
+  async applySavedDevicePreferences(): Promise<void> {
+    if (!this.call) {
+      return;
+    }
+
+    // Apply saved microphone - force apply if we have a saved one
+    const savedMicrophone = DevicePersistence.findBestMatch(
+      "microphone",
+      this.state.devices
+    );
+
+    if (savedMicrophone) {
+      const callMicId = (this.call as any).microphoneId;
+      const needsChange = callMicId !== savedMicrophone.deviceId;
+
+      if (needsChange) {
+        try {
+          await this.call.updateMicrophone({
+            deviceId: savedMicrophone.deviceId,
+          });
+          this.state.selectedMicrophone = savedMicrophone;
+        } catch (error) {
+          console.warn("Failed to apply saved microphone:", error);
+        }
+      }
+    }
+
+    // Apply saved camera - force apply if we have a saved one
+    const savedCamera = DevicePersistence.findBestMatch(
+      "camera",
+      this.state.devices
+    );
+
+    if (savedCamera) {
+      const callCamId = (this.call as any).cameraId;
+      const needsChange = callCamId !== savedCamera.deviceId;
+
+      if (needsChange) {
+        try {
+          await this.call.updateCamera({ deviceId: savedCamera.deviceId });
+          this.state.selectedCamera = savedCamera;
+          this.updateVideoAspectRatio();
+        } catch (error) {
+          console.warn("Failed to apply saved camera:", error);
+        }
+      }
+    }
+
+    // Apply saved speaker - always force apply since we can't check call state
+    const savedSpeaker = DevicePersistence.findBestMatch(
+      "speaker",
+      this.state.devices
+    );
+
+    if (savedSpeaker) {
+      try {
+        await this.call.updateSpeaker({ deviceId: savedSpeaker.deviceId });
+        this.state.selectedSpeaker = savedSpeaker;
+      } catch (error) {
+        console.warn("Failed to apply saved speaker:", error);
+      }
+    }
+
+    // Update UI after applying preferences
+    this.onChange();
+  }
+
   // meant to be overridden
   onLoad() {}
   onChange() {}
   onAspectRatioChange(aspectRatio: number | null) {
     console.log("onAspectRatioChange", aspectRatio);
+  }
+
+  // Call this after the call is started to apply saved device preferences
+  async onCallStarted(): Promise<void> {
+    await this.applySavedDevicePreferences();
   }
 
   async updateCamera(deviceId: string): Promise<boolean> {
@@ -202,6 +284,7 @@ class Devices {
     try {
       await this.call.updateCamera({ deviceId });
       this.state.selectedCamera = device;
+      DevicePersistence.saveDeviceSelection("camera", device);
       this.updateVideoAspectRatio();
       this.onChange();
       return true;
@@ -220,6 +303,7 @@ class Devices {
     try {
       await this.call.updateMicrophone({ deviceId });
       this.state.selectedMicrophone = device;
+      DevicePersistence.saveDeviceSelection("microphone", device);
       this.onChange();
       return true;
     } catch (error) {
@@ -237,6 +321,7 @@ class Devices {
     try {
       await this.call.updateSpeaker({ deviceId });
       this.state.selectedSpeaker = device;
+      DevicePersistence.saveDeviceSelection("speaker", device);
       this.onChange();
       return true;
     } catch (error) {
@@ -380,6 +465,14 @@ class Devices {
     if (!this.call) return null;
     const members = await this.call.getMembers();
     return members?.members.find((m) => m.id === this.call?.memberId);
+  }
+
+  clearDevicePreferences() {
+    DevicePersistence.clearPreferences();
+  }
+
+  getStoredDeviceInfo() {
+    return DevicePersistence.getStoredDeviceInfo();
   }
 
   reset() {
