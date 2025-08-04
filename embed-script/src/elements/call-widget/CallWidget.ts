@@ -13,6 +13,7 @@ import { LoadingManager } from "./LoadingManager.ts";
 import { CallInfoModal } from "../call-info-modal/CallInfoModal.ts";
 import { IncomingCallModal } from "../incoming-call-modal/IncomingCallModal.ts";
 import html from "../../lib/html.ts";
+import { createDialer } from "../../ui/dialer.ui.ts";
 
 export default class CallWidget extends HTMLElement {
   callOngoing: boolean = false;
@@ -30,7 +31,7 @@ export default class CallWidget extends HTMLElement {
   private activeInfoModal: CallInfoModal | null = null;
 
   static get observedAttributes() {
-    return ["token", "button-id"];
+    return ["token", "button-id", "contained"];
   }
 
   constructor() {
@@ -49,7 +50,7 @@ export default class CallWidget extends HTMLElement {
         this.setupCall()
       );
     }
-    if (name === "token") {
+    if (name === "token" || name === "destination") {
       (async () => {
         await this.callManager?.destroy();
         this.callManager = new Call({
@@ -72,11 +73,21 @@ export default class CallWidget extends HTMLElement {
       this.modalContainer.classList.add("closing");
       modal?.classList.add("closing");
 
+      const isContained = this.config.getContained();
+
       setTimeout(() => {
         devices.reset();
         this.modalContainer?.remove();
         this.modalContainer = null;
-        document.body.style.overflow = this.previousOverflowStyle;
+
+        if (!isContained) {
+          document.body.style.overflow = this.previousOverflowStyle;
+        } else {
+          if (this.containerElement) {
+            this.containerElement.style.position = "";
+          }
+        }
+
         this.callOngoing = false;
         this.callManager?.reset();
       }, 800);
@@ -92,6 +103,31 @@ export default class CallWidget extends HTMLElement {
     infoModal.remove();
   }
 
+  public newCallVariable(variables: Record<string, string>): void {
+    const currentVariables = this.config.getUserVariables() || {};
+    const mergedVariables = {
+      ...currentVariables,
+      ...variables,
+    };
+
+    this.setAttribute("user-variables", JSON.stringify(mergedVariables));
+  }
+
+  private async showDialer(): Promise<string | null> {
+    return new Promise((resolve) => {
+      const dialer = createDialer({
+        onCall: (phoneNumber: string) => {
+          resolve(phoneNumber);
+        },
+        onClose: () => {
+          resolve(null);
+        },
+      });
+
+      this.containerElement?.appendChild(dialer.dialerContainer);
+    });
+  }
+
   async setupCall() {
     if (this.callOngoing) {
       console.warn("Call is already ongoing; nop");
@@ -99,6 +135,15 @@ export default class CallWidget extends HTMLElement {
     } else if (this.callManager === null) {
       console.warn("CallManager Object is not initialized");
       return;
+    }
+
+    let destination = this.config.getDestination();
+
+    if (!destination) {
+      destination = await this.showDialer();
+      if (!destination) {
+        return;
+      }
     }
 
     const beforeCallEvent = new CustomEvent("beforecall", {
@@ -112,11 +157,23 @@ export default class CallWidget extends HTMLElement {
       return;
     }
 
+    this.setupCallWithDestination(destination);
+  }
+
+  private async setupCallWithDestination(destination: string) {
     this.callOngoing = true;
     this.loadingManager?.setLoading(true);
 
-    this.previousOverflowStyle = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const isContained = this.config.getContained();
+
+    if (!isContained) {
+      this.previousOverflowStyle = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+    } else {
+      if (this.containerElement) {
+        this.containerElement.style.position = "relative";
+      }
+    }
 
     const windowMode = this.config.getWindowMode();
     console.log("windowMode", windowMode);
@@ -134,6 +191,10 @@ export default class CallWidget extends HTMLElement {
     });
 
     const modal = modalContainer.querySelector(".modal");
+
+    if (isContained) {
+      modalContainer.classList.add("contained");
+    }
 
     if (windowMode === "video") {
       modal?.classList.add("video-mode");
@@ -182,7 +243,8 @@ export default class CallWidget extends HTMLElement {
             if (localVideoArea) {
               localVideoArea.appendChild(localVideo);
             }
-          }
+          },
+          destination
         )) ?? null;
     } catch (e) {
       console.error("Error setting up call", e);
@@ -261,6 +323,13 @@ export default class CallWidget extends HTMLElement {
     }
 
     this.loadingManager?.setLoading(false);
+
+    // Apply saved device preferences now that call is fully started
+    try {
+      await devices.onCallStarted();
+    } catch (error) {
+      console.warn("Failed to apply saved device preferences:", error);
+    }
   }
 
   async setupCallFromNotification(eventDetails: any) {
@@ -292,8 +361,16 @@ export default class CallWidget extends HTMLElement {
     this.callOngoing = true;
     this.loadingManager?.setLoading(true);
 
-    this.previousOverflowStyle = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const isContained = this.config.getContained();
+
+    if (!isContained) {
+      this.previousOverflowStyle = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+    } else {
+      if (this.containerElement) {
+        this.containerElement.style.position = "relative";
+      }
+    }
 
     let {
       modalContainer,
@@ -306,6 +383,10 @@ export default class CallWidget extends HTMLElement {
       backgroundImage: this.config.getBackgroundImage(),
       backgroundThumbnail: this.config.getBackgroundThumbnail(),
     });
+
+    if (isContained) {
+      modalContainer.classList.add("contained");
+    }
 
     this.modalContainer = modalContainer;
     this.containerElement?.appendChild(modalContainer);
@@ -344,7 +425,7 @@ export default class CallWidget extends HTMLElement {
       console.log("Room joined from Notification");
     });
 
-    callInstance?.on("room.joined", () => {
+    callInstance?.on("room.joined", async () => {
       console.log("Call Joined from Notification");
       const callStartedEvent = new CustomEvent("call.joined", {
         detail: {
@@ -375,6 +456,9 @@ export default class CallWidget extends HTMLElement {
         (localVideo as HTMLVideoElement).srcObject = callInstance.localStream;
         localVideoArea.appendChild(localVideo);
       }
+
+      // Apply saved device preferences now that call is fully joined
+      await devices.onCallStarted();
     });
 
     if (callInstance) {

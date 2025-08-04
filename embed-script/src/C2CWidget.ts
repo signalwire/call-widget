@@ -308,6 +308,8 @@ export default class C2CWidget extends HTMLElement {
       try {
         await this.call?.start();
         this.callStarted = true;
+
+        await devices.onCallStarted();
       } catch (e) {
         console.error("Error starting call", e);
         const errorModalUI = errorModal(

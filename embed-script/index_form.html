@@ -18,14 +18,14 @@
       window-mode="video+transcript"
     ></call-widget>
 
-    <script src="https://cdn.jsdelivr.net/npm/@signalwire/call-widget@3.6.0/dist/c2c-widget-full.umd.min.js"></script>
-    <!-- <script src="./dist/c2c-widget-full.umd.js"></script> -->
+    <script type="module" src="/src/index.ts"></script>
 
-    <script>
+    <script type="module">
+      import { showContactForm } from "/src/lib/contactForm.js";
+      return;
+
       document.addEventListener("DOMContentLoaded", function () {
         const widget = document.querySelector("call-widget");
-
-        return;
 
         widget.addEventListener("beforeDial", function (event) {
           const approve = event.detail.approve;
@@ -34,8 +34,7 @@
           // Indicate that we're listening and will handle this event
           event.detail.hasListeners = true;
 
-          // Use the contact form function from the global C2CWidget namespace
-          C2CWidget.showContactForm(
+          showContactForm(
             {
               onSubmit: (data) => {
                 console.log("Form submitted:", data);

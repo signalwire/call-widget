@@ -156,9 +156,9 @@ export class Call {
     });
 
     // @ts-ignore
-    client.on("calling.user_event", (params) => {
-      console.log("calling.user_event", params);
-      const userEvent = new CustomEvent("calling.user_event", {
+    client.on("user_event", (params) => {
+      console.log("user_event", params);
+      const userEvent = new CustomEvent("user_event", {
         detail: params,
         bubbles: true,
       });
@@ -199,7 +199,8 @@ export class Call {
   async dial(
     container: HTMLElement | undefined,
     onChatChange: (chatHistory: ChatEntry[]) => void,
-    onLocalVideo: (localVideo: HTMLVideoElement) => void
+    onLocalVideo: (localVideo: HTMLVideoElement) => void,
+    destination?: string
   ) {
     if (!this.client && this.clientInitPromise) {
       await this.clientInitPromise;
@@ -217,7 +218,6 @@ export class Call {
 
       this.widget.dispatchEvent(beforeDialEvent);
 
-      // If no one flagged that they're listening, proceed immediately
       if (!beforeDialEvent.detail.hasListeners) {
         resolve(true);
       }
@@ -241,11 +241,11 @@ export class Call {
     this.chat.onUpdate();
 
     const userVariables = this.config?.getUserVariables();
-    const destination = this.config?.getDestination();
+    const finalDestination = destination || this.config?.getDestination();
     const supportsAudio = this.config?.getSupportAudio();
     const supportsVideo = this.config?.getSupportVideo();
 
-    if (!destination) {
+    if (!finalDestination) {
       throw new Error("Destination is not set");
     }
 
@@ -254,9 +254,8 @@ export class Call {
       ...userVariables,
     };
 
-    // Add user variables to the room session
-    const roomSession = await this.client.dial({
-      to: destination,
+    const roomSession = await this.client?.dial({
+      to: finalDestination,
       rootElement: container ?? undefined,
       audio: supportsAudio ?? undefined,
       video: supportsVideo ?? undefined,
@@ -272,7 +271,7 @@ export class Call {
       finalUserVariables
     );
 
-    roomSession.on("call.joined", () => {
+    roomSession.on("call.joined", async () => {
       const callStartedEvent = new CustomEvent("call.joined", {
         detail: {
           call: this.currentCall,
@@ -302,6 +301,9 @@ export class Call {
         (localVideo as HTMLVideoElement).srcObject = roomSession.localStream;
         onLocalVideo(localVideo as HTMLVideoElement);
       }
+
+      // Apply saved device preferences now that call is fully joined
+      await devices.onCallStarted();
     });
 
     roomSession.on("call.left", () => {

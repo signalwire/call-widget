@@ -1,167 +1,8 @@
 # SignalWire Call Widget
 
-The Call Widget is a Click-to-Call style JavaScript widget which uses the SignalWire SDK and the SignalWire
-C2C service to allow you to embed calls in your website.
+A modern JavaScript widget that enables click-to-call functionality using the SignalWire SDK. The widget supports both outgoing and incoming calls, with a customizable UI and multiple window modes.
 
 ![screenshot of the widget](./screenshot.png)
-
-> **🌟 New V3 Beta Available!**  
-> We've released a new version (V3) of the Call Widget with a completely revamped API, better UI, and support for incoming calls.
-> [Skip to V3 Documentation](#signalwire-call-widget-v3)
-
-## V2 Documentation
-
-## Installation
-
-Import the widget from the CDN:
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/@signalwire/call-widget/dist/c2c-widget-full.umd.min.js"></script>
-```
-
-or install the widget using npm:
-
-```bash
-npm install @signalwire/call-widget
-```
-
-## Usage
-
-```html
-<style>
-  /* This class will be removed from button when the widget fully loads. */
-  .demo-button-disabled {
-    opacity: 0.7;
-    pointer-events: none;
-  }
-</style>
-
-<!-- Button that triggers the call, wherever in the html -->
-<button id="callButton" class="demo-button-disabled">Call</button>
-
-<!-- end of body -->
-<c2c-widget
-  buttonId="callButton"
-  token="<c2c_token or embeds_token>"
-  callDetails='{"destination":"/private/demo-1","supportsVideo":false,"supportsAudio":true}'
-  collectUserDetails="false"
-  survey='{"title":"Please take this survey", "description":"We would love to hear your thoughts. Would you like to take a survey?","href":"https://www.google.com"}'
-  userVariables='{"user_type":"guest"}'
-></c2c-widget>
-
-<script src="https://cdn.jsdelivr.net/npm/@signalwire/call-widget/dist/c2c-widget-full.umd.min.js"></script>
-```
-
-## Parameters
-
-| Parameter            | Type    | Required | Default   | Description                                                 |
-| -------------------- | ------- | -------- | --------- | ----------------------------------------------------------- |
-| [buttonId]           | string  | Yes      | -         | ID for Button that triggers call                            |
-| [token]              | string  | Yes      | -         | Authentication token (c2c or embeds)                        |
-| [callDetails]        | object  | Yes      | -         | Call configuration JSON                                     |
-| [collectUserDetails] | boolean | No       | true      | Show user details form boolean                              |
-| [survey]             | object  | No       | not shown | Post-call survey config JSON                                |
-| [userVariables]      | object  | No       | {}        | Custom call variables JSON (arbitrary JSON key:value pairs) |
-
-[buttonId]: #buttonid
-[token]: #token
-[callDetails]: #calldetails
-[collectUserDetails]: #collectuserdetails
-[survey]: #survey
-[userVariables]: #uservariables
-
-### `buttonId`
-
-The `buttonId` attribute is used to specify the ID of the HTML button element that will trigger the call.
-
-If the button is not found, the widget will **wait** for the button to be created. (The button doesn't have to exist in the DOM at the time of widget initialization.)
-
-You can use the class `.demo-button-disabled` to disable the button while the widget is loading. The widget will remove that particular
-class once it loads.
-
-```html
-<style>
-  /* This class will be removed from button when the widget loads.
-   */
-  .demo-button-disabled {
-    opacity: 0.7;
-    pointer-events: none;
-  }
-</style>
-```
-
-### `token`
-
-Authentication token for SignalWire services (either the c2c token from the dashboard, or the embed token).
-
-Using C2C token is getting recommended for most cases. You can get the C2C token from the SignalWire Space dashboard.
-You can get the embed token using the [Embeds Token](https://developer.signalwire.com/rest/signalwire-rest/endpoints/fabric/embeds-tokens) API.
-
-You can also use any token received from the Call Fabric authentication, assuming it has the necessary permissions to the address.
-
-### `callDetails`
-
-The `callDetails` object is used to configure the call including destination and media support:
-
-- `destination`: string - Call destination
-- `supportsVideo`: boolean - Enable/disable video
-- `supportsAudio`: boolean - Enable/disable audio
-
-Strict JSON format is required for this attribute.
-
-### `collectUserDetails`
-
-Whether to show a form collecting user details before starting call.
-
-### `survey`
-
-The survey object is used to configure the post-call survey:
-
-- `title`: string - Survey modal title (optional, defaults to "Would you like to take a survey?")
-- `description`: string - Survey description text (optional, defaults to "We would love to hear your thoughts. Would you like to take a survey? It only takes 2 minutes.")
-- `href`: string - URL to survey (required)
-
-Don't set this attribute if you don't want a survey to be shown.
-
-Strict JSON format is required for this attribute.
-
-### `userVariables`
-
-Custom variables to attach to the call session. Can be any JSON key:value pair. The following will be overridden by the widget, however:
-
-```
-callOriginHref - the URL of the page where the widget is hosted
-userName - the name of the user (if they input it in the form)
-userEmail - the email of the user (if they input it in the form)
-userPhone - the phone number of the user (if they input it in the form)
-```
-
-Strict JSON format is required for this attribute.
-
-## Events
-
-### `beforecall`
-
-This event is triggered when the call is about to start.
-
-```javascript
-const widget = document.querySelector("c2c-widget");
-widget.addEventListener("beforecall", () => {
-  console.log("beforecall");
-});
-```
-
-# SignalWire Call Widget V3 (Beta)
-
-A completely revamped version of the Call Widget with a modern API, enhanced UI, and support for incoming calls. V3 offers a more streamlined integration experience and additional features not available in V2.
-
-Key improvements over V2:
-
-- Simpler, more intuitive HTML attribute-based configuration
-- Built-in support for incoming calls
-- Enhanced UI with multiple window modes
-- Better debugging options
-- More flexible audio codec configuration
 
 ## Installation
 
@@ -174,7 +15,7 @@ npm install @signalwire/call-widget
 ### CDN (jsDelivr)
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@signalwire/call-widget/dist/call-widget-full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@signalwire/call-widget/dist/c2c-widget-full.umd.min.js"></script>
 ```
 
 ## Quick Start
@@ -191,23 +32,39 @@ npm install @signalwire/call-widget
 ></call-widget>
 ```
 
+## Dialer Mode
+
+When no `destination` attribute is provided, the widget automatically displays a dialer UI, allowing users to enter phone numbers or SIP addresses:
+
+```html
+<button id="dialerButton">Open Dialer</button>
+
+<call-widget
+  button-id="dialerButton"
+  token="your_signalwire_token"
+  support-audio="true"
+></call-widget>
+```
+
 ## Attributes Reference
 
-| Attribute        | Required | Default            | Description                                        |
-| ---------------- | -------- | ------------------ | -------------------------------------------------- |
-| token            | Yes      | -                  | SignalWire authentication token                    |
-| destination      | Yes      | -                  | Call destination path                              |
-| button-id        | Yes      | -                  | ID of the button that triggers the call            |
-| support-audio    | No       | false              | Enable audio support                               |
-| support-video    | No       | false              | Enable video support                               |
-| window-mode      | No       | "video+transcript" | UI mode for the call window                        |
-| log-level        | No       | "error"            | Logging verbosity level                            |
-| host             | No       | -                  | SignalWire server host                             |
-| receive-calls    | No       | false              | Enable incoming call reception                     |
-| auto-answer      | No       | false              | Automatically answer incoming calls without prompt |
-| audio-codec      | No       | -                  | Comma-separated list of preferred audio codecs     |
-| user-variables   | No       | -                  | Custom variables passed as JSON string             |
-| debug-ws-traffic | No       | false              | Enable WebSocket traffic debugging                 |
+| Attribute            | Required | Default            | Description                                           |
+| -------------------- | -------- | ------------------ | ----------------------------------------------------- |
+| token                | Yes      | -                  | SignalWire authentication token                       |
+| button-id            | Yes      | -                  | ID of the button that triggers the call               |
+| destination          | No       | -                  | Call destination path (if not provided, dialer opens) |
+| support-audio        | No       | false              | Enable audio support                                  |
+| support-video        | No       | false              | Enable video support                                  |
+| window-mode          | No       | "video+transcript" | UI mode for the call window                           |
+| log-level            | No       | "error"            | Logging verbosity level                               |
+| debug-ws-traffic     | No       | false              | Enable WebSocket traffic debugging                    |
+| host                 | No       | -                  | SignalWire server host                                |
+| receive-calls        | No       | false              | Enable incoming call reception                        |
+| auto-answer          | No       | false              | Automatically answer incoming calls without prompt    |
+| audio-codec          | No       | -                  | Comma-separated list of preferred audio codecs        |
+| user-variables       | No       | -                  | Custom variables passed as JSON string                |
+| background-image     | No       | default            | Background image URL for the call interface           |
+| background-thumbnail | No       | default            | Background thumbnail for loading states               |
 
 ## Detailed Attribute Description
 
@@ -215,7 +72,7 @@ npm install @signalwire/call-widget
 
 #### `token`
 
-Your SignalWire authentication token. This is required for establishing connections.
+Your SignalWire authentication token. This is required for establishing connections. You can use C2C tokens, embed tokens, or any Call Fabric authentication token with necessary permissions.
 
 Example:
 
@@ -223,23 +80,38 @@ Example:
 <call-widget token="your_signalwire_token"></call-widget>
 ```
 
-#### `destination`
+#### `button-id`
 
-The destination path for the call. Usually in the format "/private/room-name".
+The ID of the HTML button element that will trigger the call. The widget will wait for the button to be created if it doesn't exist at initialization time.
 
 Example:
 
 ```html
-<call-widget destination="/private/demo-room"></call-widget>
+<button id="callButton">Call Now</button>
+<call-widget button-id="callButton"></call-widget>
 ```
 
 ### Optional Attributes
+
+#### `destination`
+
+The destination path for the call, usually in the format "/private/room-name". If not provided, a dialer UI will automatically appear allowing users to enter phone numbers or SIP addresses.
+
+Example:
+
+```html
+<!-- Fixed destination -->
+<call-widget destination="/private/demo-room"></call-widget>
+
+<!-- No destination - dialer will appear -->
+<call-widget token="your_token" button-id="dialButton"></call-widget>
+```
 
 #### `window-mode`
 
 Controls the layout and features of the call window. Available options:
 
-- `video+transcript`: Video call with transcript
+- `video+transcript`: Video call with transcript (default)
 - `video`: Video-only interface
 - `audio+transcript`: Audio call with transcript
 
@@ -266,7 +138,7 @@ Example:
 
 #### `user-variables`
 
-Custom variables passed as a JSON string. All values must be strings.
+Custom variables passed as a JSON string. All values must be strings. These variables are attached to the call session and can be accessed on the SignalWire side.
 
 Example:
 
@@ -284,6 +156,18 @@ Example:
 
 ```html
 <call-widget audio-codec="opus,PCMU"></call-widget>
+```
+
+#### `background-image`
+
+Custom background image URL for the call interface.
+
+Example:
+
+```html
+<call-widget
+  background-image="https://example.com/background.jpg"
+></call-widget>
 ```
 
 ## Usage Examples
@@ -319,6 +203,21 @@ Example:
 ></call-widget>
 ```
 
+### Dialer Widget (No Fixed Destination)
+
+```html
+<button id="dialerCall">Open Dialer</button>
+
+<call-widget
+  button-id="dialerCall"
+  token="your_token"
+  support-audio="true"
+  support-video="true"
+  window-mode="video+transcript"
+  user-variables='{"source": "website"}'
+></call-widget>
+```
+
 ### Call Center Agent Setup
 
 ```html
@@ -337,21 +236,9 @@ Example:
 ></call-widget>
 ```
 
-## Notes and best practices
-
-1. **Token Security**: Never hardcode your SignalWire token in the HTML. Instead, fetch it dynamically from your server.
-   However, you're free to use click2call tokens (`c2c_...`) statically in HTML.
-
-2. **Button Placement**: The trigger button can be styled and positioned anywhere in your layout. Just ensure the `button-id` matches.
-
-3. **window-mode vs support-audio and support-video**:
-
-- `window-mode` controls the layout UI of the widget. This is purely cosmetic.
-- `support-audio` and `support-video` controls the features of the widget. This decides if webcam and/or microphone is used.
-
 ## Handling Incoming Calls
 
-V3 introduces robust support for incoming calls, making it suitable for call center and customer service applications.
+The widget supports robust incoming call functionality, making it suitable for call center and customer service applications.
 
 ### Setting Up Incoming Calls
 
@@ -378,18 +265,113 @@ When `receive-calls` is enabled:
    - If `auto-answer="false"`: A notification appears allowing the user to accept or decline
 3. The call window opens in the specified `window-mode` once the call is accepted
 
-### Best Practices for Incoming Calls
+## Events
 
-1. **User Experience**:
+### `beforecall`
+
+This event is triggered when the call is about to start.
+
+```javascript
+const widget = document.querySelector("call-widget");
+widget.addEventListener("beforecall", () => {
+  console.log("Call is about to start");
+});
+```
+
+### `beforeDial`
+
+This event is triggered before the call is actually dialed, allowing you to approve or reject the call attempt. This is useful for implementing custom authorization or confirmation dialogs.
+
+```javascript
+const widget = document.querySelector("call-widget");
+widget.addEventListener("beforeDial", (event) => {
+  // Mark that you have a listener (prevents auto-approval)
+  event.detail.hasListeners = true;
+
+  // Example: Show confirmation dialog
+  const shouldProceed = confirm("Are you sure you want to make this call?");
+
+  if (shouldProceed) {
+    event.detail.approve(); // Proceed with the call
+  } else {
+    event.detail.reject(); // Cancel the call
+  }
+});
+```
+
+### `call.joined`
+
+Triggered when the call is successfully joined.
+
+```javascript
+widget.addEventListener("call.joined", (event) => {
+  console.log("Call joined", event.detail);
+});
+```
+
+### `call.left`
+
+Triggered when the call ends.
+
+```javascript
+widget.addEventListener("call.left", (event) => {
+  console.log("Call ended", event.detail);
+});
+```
+
+### `call.incoming`
+
+Triggered when an incoming call is received (only when `receive-calls="true"`).
+
+```javascript
+widget.addEventListener("call.incoming", (event) => {
+  console.log("Incoming call from:", event.detail.caller);
+});
+```
+
+### `user_event`
+
+Triggered when custom user events are received during the call.
+
+```javascript
+widget.addEventListener("user_event", (event) => {
+  console.log("User event received:", event.detail);
+});
+```
+
+## JavaScript API
+
+### Adding User Variables Dynamically
+
+You can add or update user variables programmatically:
+
+```javascript
+const widget = document.querySelector("call-widget");
+widget.newCallVariable({
+  customerID: "12345",
+  priority: "high",
+});
+```
+
+## Notes and Best Practices
+
+1. **Token Security**: Never hardcode your SignalWire token in the HTML. Instead, fetch it dynamically from your server. However, you're free to use click-to-call tokens (`c2c_...`) statically in HTML.
+
+2. **Button Placement**: The trigger button can be styled and positioned anywhere in your layout. Just ensure the `button-id` matches.
+
+3. **Window Mode vs Media Support**:
+
+   - `window-mode` controls the layout UI of the widget (purely cosmetic)
+   - `support-audio` and `support-video` control the actual media features (webcam/microphone usage)
+
+4. **Dialer Mode**: When no `destination` is provided, the widget automatically shows a modern dialer interface allowing users to enter phone numbers, SIP addresses, or other destinations.
+
+5. **Responsive Design**: The widget automatically adapts to different screen sizes and orientations.
+
+6. **Best Practices for Incoming Calls**:
+
    - Use `auto-answer="false"` for agent interfaces where call screening is needed
    - Use `auto-answer="true"` for automated services or IVR systems
-2. **Window Mode**: For agent interfaces, `video+transcript` mode provides the most comprehensive call handling experience
-3. **Audio/Video Support**: Configure `support-audio` and `support-video` based on your use case:
-   ```html
-   <call-widget
-     receive-calls="true"
-     support-audio="true"
-     support-video="true"
-     window-mode="video+transcript"
-   ></call-widget>
-   ```
+   - For agent interfaces, `video+transcript` mode provides the most comprehensive call handling experience
+
+7. **Call Control**: Use the `beforeDial` event to implement custom authorization, confirmation dialogs, or call screening before calls are initiated.

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SignalWire C2C Widget</title>
+  </head>
+  <body>
+    <button id="callButton1">Call</button>
+
+    <call-widget
+      token="token"
+      support-video="true"
+      support-audio="true"
+      log-level="info"
+      window-mode="video+transcript"
+    ></call-widget>
+
+    <script type="module" src="/src/index.ts"></script>
+  </body>
+</html>
