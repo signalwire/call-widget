@@ -82,12 +82,12 @@ export default html`
       </button>
       
       <div class="audio-processing-controls">
-        <label class="audio-control">
-          <input type="checkbox" name="agcToggle" checked />
+        <label class="audio-control" title="Auto Gain Control - Enable if volume levels are inconsistent">
+          <input type="checkbox" name="agcToggle" />
           <span>AGC</span>
         </label>
-        <label class="audio-control">
-          <input type="checkbox" name="noiseToggle" checked />
+        <label class="audio-control" title="Noise Suppression - Enable if background noise is an issue">
+          <input type="checkbox" name="noiseToggle" />
           <span>Noise Suppression</span>
         </label>
       </div>

@@ -11,8 +11,8 @@ class DevicesState {
   isVideoMuted: boolean = false;
   isSpeakerMuted: boolean = false;
   currentVideoAspectRatio: number | null = null;
-  autoGainControl: boolean = true;
-  noiseSuppression: boolean = true;
+  autoGainControl: boolean = false;  // Disabled per WebRTC best practices - prevents pumping effects
+  noiseSuppression: boolean = false;  // Disabled per WebRTC best practices - prevents robotic voice
 
   get audioinput() {
     return this.devices.filter((d) => d.kind === "audioinput");
@@ -52,8 +52,15 @@ class Devices {
 
   async getPermissions(video: boolean = true) {
     try {
+      // Load audio processing settings for initial constraints
+      const audioSettings = DevicePersistence.getAudioProcessingSettings();
+      
       const stream = await WebRTC.getUserMedia({
-        audio: true,
+        audio: {
+          autoGainControl: audioSettings.autoGainControl,
+          noiseSuppression: audioSettings.noiseSuppression,
+          echoCancellation: true, // Always keep echo cancellation on
+        },
         video,
       });
 

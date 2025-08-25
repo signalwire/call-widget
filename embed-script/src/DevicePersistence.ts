@@ -265,10 +265,10 @@ export class DevicePersistence {
         error
       );
     }
-    // Return defaults
+    // Return defaults - disabled per WebRTC best practices for better voice quality
     return {
-      autoGainControl: true,
-      noiseSuppression: true,
+      autoGainControl: false,
+      noiseSuppression: false,
     };
   }
 }

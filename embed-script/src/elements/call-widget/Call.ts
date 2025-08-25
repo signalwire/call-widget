@@ -254,10 +254,17 @@ export class Call {
       ...userVariables,
     };
 
+    // Get audio processing settings from devices
+    const audioSettings = devices.state.autoGainControl !== undefined ? {
+      autoGainControl: devices.state.autoGainControl,
+      noiseSuppression: devices.state.noiseSuppression,
+      echoCancellation: true, // Always keep echo cancellation on
+    } : true;
+
     const roomSession = await this.client?.dial({
       to: finalDestination,
       rootElement: container ?? undefined,
-      audio: supportsAudio ?? undefined,
+      audio: supportsAudio ? audioSettings : undefined,
       video: supportsVideo ?? undefined,
       negotiateVideo: supportsVideo ?? undefined,
       userVariables: finalUserVariables,
