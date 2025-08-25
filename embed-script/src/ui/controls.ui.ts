@@ -14,6 +14,7 @@ export default async function createControls(
     micButton,
     speakerButton,
     hangupButton,
+    fullscreenButton,
     videoDevicesButton,
     micDevicesButton,
     speakerDevicesButton,
@@ -150,6 +151,24 @@ export default async function createControls(
   micButton.addEventListener("click", () => devices.toggleAudio());
   speakerButton.addEventListener("click", () => devices.toggleSpeaker());
   hangupButton.addEventListener("click", () => onHangup?.());
+
+  // Fullscreen toggle handler
+  let isFullscreen = false;
+  fullscreenButton?.addEventListener("click", () => {
+    const modalContainer = controlsContainer.closest('.modal-container');
+    if (modalContainer) {
+      isFullscreen = !isFullscreen;
+      modalContainer.classList.toggle('fullscreen-mode', isFullscreen);
+      
+      // Update icon visibility
+      const fullscreenIcon = fullscreenButton.querySelector('.fullscreen-icon') as HTMLElement;
+      const exitFullscreenIcon = fullscreenButton.querySelector('.exit-fullscreen-icon') as HTMLElement;
+      if (fullscreenIcon && exitFullscreenIcon) {
+        fullscreenIcon.style.display = isFullscreen ? 'none' : 'block';
+        exitFullscreenIcon.style.display = isFullscreen ? 'block' : 'none';
+      }
+    }
+  });
 
   // Audio processing toggle handlers
   agcToggle?.addEventListener("change", () => devices.toggleAutoGainControl());

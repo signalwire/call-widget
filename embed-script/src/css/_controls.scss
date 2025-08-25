@@ -74,6 +74,17 @@
   background: #ff6666;
 }
 
+.fullscreen-button {
+  border-radius: 50% !important;
+}
+
+.fullscreen-icon,
+.exit-fullscreen-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .device-menu {
   position: absolute;
   bottom: 100%;

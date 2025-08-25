@@ -17,6 +17,42 @@
     position: absolute;
     z-index: 10;
   }
+  
+  // CSS Fullscreen mode
+  &.fullscreen-mode {
+    background-color: #000 !important;
+    
+    .modal {
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: none !important;
+      max-height: none !important;
+      border-radius: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    .video-panel {
+      height: calc(100vh - 50px) !important; // Minus controls height
+      max-height: none !important;
+      border-radius: 0 !important;
+    }
+    
+    .chat-panel {
+      height: calc(100vh - 50px) !important;
+      max-height: none !important;
+      border-radius: 0 !important;
+    }
+    
+    .video-area {
+      height: 100% !important;
+      border-radius: 0 !important;
+    }
+    
+    .controls {
+      border-radius: 0 !important;
+    }
+  }
 }
 
 @keyframes fadeIn {

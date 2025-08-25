@@ -7,6 +7,8 @@ import caretUpIcon from "../icons/caret-up.svg?raw";
 import videoOffIcon from "../icons/video-off.svg?raw";
 import microphoneOffIcon from "../icons/microphone-off.svg?raw";
 import speakerOffIcon from "../icons/speaker-off.svg?raw";
+import fullscreenIcon from "../icons/fullscreen.svg?raw";
+import exitFullscreenIcon from "../icons/exit-fullscreen.svg?raw";
 
 export default html`
   <div name="controlsContainer">
@@ -76,6 +78,11 @@ export default html`
           </div>
         </div>
       </div>
+
+      <button class="control-button fullscreen-button" name="fullscreenButton" title="Toggle Fullscreen">
+        <span class="fullscreen-icon">${fullscreenIcon}</span>
+        <span class="exit-fullscreen-icon" style="display: none;">${exitFullscreenIcon}</span>
+      </button>
 
       <button class="control-button hangup" name="hangupButton">
         ${callEndIcon}
