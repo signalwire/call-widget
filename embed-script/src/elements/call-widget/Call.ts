@@ -224,7 +224,7 @@ export class Call {
     });
 
     if (!beforeDialApproved) {
-      await this.destroy();
+      // await this.destroy();
       return null;
     }
 
@@ -255,11 +255,14 @@ export class Call {
     };
 
     // Get audio processing settings from devices
-    const audioSettings = devices.state.autoGainControl !== undefined ? {
-      autoGainControl: devices.state.autoGainControl,
-      noiseSuppression: devices.state.noiseSuppression,
-      echoCancellation: true, // Always keep echo cancellation on
-    } : true;
+    const audioSettings =
+      devices.state.autoGainControl !== undefined
+        ? {
+            autoGainControl: devices.state.autoGainControl,
+            noiseSuppression: devices.state.noiseSuppression,
+            echoCancellation: true, // Always keep echo cancellation on
+          }
+        : true;
 
     const roomSession = await this.client?.dial({
       to: finalDestination,

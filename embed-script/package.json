@@ -2,7 +2,7 @@
   "name": "@signalwire/call-widget",
   "private": false,
   "public": true,
-  "version": "3.10.0",
+  "version": "3.12.0",
   "type": "module",
   "main": "./dist/c2c-widget.umd.js",
   "module": "./dist/c2c-widget.es.js",
@@ -31,10 +31,8 @@
     "push": "npm run build && npm run pushToCDN && npm run pushToCDN:dev",
     "prepublishOnly": "npm run build",
     "prepublish": "node ../verify-docs.js",
-    "demo": "npm run build && node server.js",
-    "demo:server": "node server.js",
-    "demo:build": "npm run build && npm run demo:server",
-    "ngrok": "ngrok http 3000"
+    "demo": "npm run build && npm run preview",
+    "demo:dev": "npm run dev"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",
@@ -47,7 +45,6 @@
   },
   "dependencies": {
     "@signalwire/js": "3.29.1",
-    "express": "^4.21.2",
     "nanomorph": "^5.4.3",
     "showdown": "^2.1.0"
   },

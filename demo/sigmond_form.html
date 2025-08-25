@@ -3,10 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SignalWire C2C Widget</title>
+    <title>Sigmond Form</title>
   </head>
   <body>
-    <button id="callButton1">Call Sigmond (chat only)</button>
+    <h1>Sigmond Form</h1>
+
+    <style>
+      .demo-button-disabled {
+        opacity: 0.6 !important;
+        cursor: not-allowed !important;
+      }
+    </style>
+
+    <button id="callButton1" class="demo-button-disabled">Call Sigmond</button>
 
     <call-widget
       button-id="callButton1"
@@ -18,11 +27,9 @@
       window-mode="video+transcript"
     ></call-widget>
 
-    <script type="module" src="/src/index.ts"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@signalwire/call-widget@3.12.0/dist/c2c-widget-full.umd.min.js"></script>
 
-    <script type="module">
-      import { showContactForm } from "/src/lib/contactForm.js";
-
+    <script>
       document.addEventListener("DOMContentLoaded", function () {
         const widget = document.querySelector("call-widget");
 
@@ -33,36 +40,17 @@
           // Indicate that we're listening and will handle this event
           event.detail.hasListeners = true;
 
-          showContactForm(
+          C2CWidget.showContactForm(
             {
               onSubmit: (data) => {
-                console.log("Form submitted:", data);
-
-                const payload = {
+                widget.newCallVariable({
                   email: data.email,
                   name: data.name,
                   phone: data.number,
-                };
-
-                try {
-                  fetch("http://localhost:3000/submit", {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(payload),
-                  }).catch((error) => {
-                    console.error("Form submission error:", error);
-                  });
-                } catch (error) {
-                  console.error("Form submission error:", error);
-                  // we don't want this fetch error to block the call
-                }
-
+                });
                 approve();
               },
               onCancel: () => {
-                console.log("Form cancelled");
                 reject();
               },
             },

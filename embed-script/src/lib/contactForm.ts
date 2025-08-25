@@ -19,6 +19,7 @@ class ContactFormModal {
   private shadow: ShadowRoot;
   private callbacks: ContactFormCallbacks;
   private widget?: HTMLElement;
+  private static readonly STORAGE_KEY = "signalwire-contact-form-data";
 
   constructor(options: ContactFormOptions) {
     this.callbacks = options.callbacks;
@@ -27,6 +28,51 @@ class ContactFormModal {
     this.shadow = this.element.attachShadow({ mode: "closed" });
     this.render();
     this.attachEventListeners();
+    this.loadCachedData();
+  }
+
+  private getCachedData(): ContactFormData | null {
+    try {
+      const cached = localStorage.getItem(ContactFormModal.STORAGE_KEY);
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private saveCachedData(data: ContactFormData): void {
+    try {
+      localStorage.setItem(ContactFormModal.STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      // Silently fail if localStorage is not available
+    }
+  }
+
+  private clearCachedData(): void {
+    try {
+      localStorage.removeItem(ContactFormModal.STORAGE_KEY);
+    } catch {
+      // Silently fail if localStorage is not available
+    }
+  }
+
+  private loadCachedData(): void {
+    const cachedData = this.getCachedData();
+    if (cachedData) {
+      const nameInput = this.shadow.getElementById("name") as HTMLInputElement;
+      const emailInput = this.shadow.getElementById(
+        "email"
+      ) as HTMLInputElement;
+      const numberInput = this.shadow.getElementById(
+        "number"
+      ) as HTMLInputElement;
+      const indicator = this.shadow.getElementById("cachedIndicator");
+
+      if (nameInput) nameInput.value = cachedData.name;
+      if (emailInput) emailInput.value = cachedData.email;
+      if (numberInput) numberInput.value = cachedData.number;
+      if (indicator) indicator.style.display = "block";
+    }
   }
 
   private render() {
@@ -60,12 +106,47 @@ class ContactFormModal {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 20px;
+          position: relative;
         }
 
         .modal-title {
           font-size: 18px;
           font-weight: 600;
           margin: 0;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .header-actions {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+
+        .reset-button {
+          background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+          border: none;
+          color: white;
+          padding: 4px 8px;
+          border-radius: 12px;
+          font-size: 11px;
+          cursor: pointer;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 4px rgba(238, 90, 36, 0.3);
+        }
+
+        .reset-button:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(238, 90, 36, 0.4);
+        }
+
+        .reset-button:active {
+          transform: translateY(0);
         }
 
         .close-button {
@@ -80,10 +161,30 @@ class ContactFormModal {
           display: flex;
           align-items: center;
           justify-content: center;
+          transition: all 0.2s ease;
         }
 
         .close-button:hover {
           color: #333;
+          transform: scale(1.1);
+        }
+
+        .cached-indicator {
+          position: absolute;
+          top: -8px;
+          right: -8px;
+          background: linear-gradient(135deg, #00b894, #00a085);
+          color: white;
+          font-size: 10px;
+          padding: 2px 6px;
+          border-radius: 8px;
+          font-weight: 500;
+          animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: scale(0.8); }
+          to { opacity: 1; transform: scale(1); }
         }
 
         .form-group {
@@ -99,37 +200,58 @@ class ContactFormModal {
 
         .form-input {
           width: 100%;
-          padding: 10px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
+          padding: 12px;
+          border: 2px solid transparent;
+          border-radius: 8px;
           font-size: 14px;
           box-sizing: border-box;
+          background: linear-gradient(white, white) padding-box, 
+                      linear-gradient(135deg, #667eea, #764ba2) border-box;
+          transition: all 0.3s ease;
         }
 
         .form-input:focus {
           outline: none;
-          border-color: #007bff;
+          background: linear-gradient(white, white) padding-box, 
+                      linear-gradient(135deg, #00b894, #00a085) border-box;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 184, 148, 0.15);
+        }
+
+        .form-input:not(:placeholder-shown) {
+          background: linear-gradient(#f8f9ff, white) padding-box, 
+                      linear-gradient(135deg, #667eea, #764ba2) border-box;
         }
 
         .continue-button {
           width: 100%;
           padding: 12px;
-          background-color: #007bff;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           color: white;
           border: none;
-          border-radius: 4px;
+          border-radius: 8px;
           font-size: 16px;
+          font-weight: 600;
           cursor: pointer;
           margin-top: 10px;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
         .continue-button:hover {
-          background-color: #0056b3;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .continue-button:active {
+          transform: translateY(-1px);
         }
 
         .continue-button:disabled {
-          background-color: #ccc;
+          background: #ccc;
           cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
         }
 
         @media (max-width: 480px) {
@@ -143,7 +265,11 @@ class ContactFormModal {
       <div class="modal-content">
         <div class="modal-header">
           <h2 class="modal-title">Contact Information</h2>
-          <button class="close-button" id="closeModal">&times;</button>
+          <div class="header-actions">
+            <button class="reset-button" id="resetForm">Reset</button>
+            <button class="close-button" id="closeModal">&times;</button>
+          </div>
+          <div class="cached-indicator" id="cachedIndicator" style="display: none;">Saved</div>
         </div>
         <form id="contactForm">
           <div class="form-group">
@@ -187,11 +313,16 @@ class ContactFormModal {
 
   private attachEventListeners() {
     const closeButton = this.shadow.getElementById("closeModal");
+    const resetButton = this.shadow.getElementById("resetForm");
     const form = this.shadow.getElementById("contactForm") as HTMLFormElement;
     const modalContent = this.shadow.querySelector(".modal-content");
 
     closeButton?.addEventListener("click", () => {
       this.handleCancel();
+    });
+
+    resetButton?.addEventListener("click", () => {
+      this.handleReset();
     });
 
     // Listen for clicks on the host element (backdrop)
@@ -218,6 +349,31 @@ class ContactFormModal {
     this.element.remove();
   }
 
+  private handleReset() {
+    this.clearCachedData();
+
+    const nameInput = this.shadow.getElementById("name") as HTMLInputElement;
+    const emailInput = this.shadow.getElementById("email") as HTMLInputElement;
+    const numberInput = this.shadow.getElementById(
+      "number"
+    ) as HTMLInputElement;
+    const indicator = this.shadow.getElementById("cachedIndicator");
+
+    if (nameInput) nameInput.value = "";
+    if (emailInput) emailInput.value = "";
+    if (numberInput) numberInput.value = "";
+    if (indicator) indicator.style.display = "none";
+
+    // Add a little animation feedback
+    const resetButton = this.shadow.getElementById("resetForm");
+    if (resetButton) {
+      resetButton.textContent = "Cleared!";
+      setTimeout(() => {
+        resetButton.textContent = "Reset";
+      }, 1000);
+    }
+  }
+
   private handleSubmit(form: HTMLFormElement) {
     const formData = new FormData(form);
     const data: ContactFormData = {
@@ -225,6 +381,9 @@ class ContactFormModal {
       email: formData.get("email") as string,
       number: formData.get("number") as string,
     };
+
+    // Save to cache
+    this.saveCachedData(data);
 
     // Set user variables on the widget if provided
     if (this.widget) {
