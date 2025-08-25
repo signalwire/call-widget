@@ -389,26 +389,88 @@
 }
 
 .local-video-content {
-  position: absolute;
+  position: absolute; // Absolute within modal
   bottom: 60px;
-  right: 10px;
-  width: min(230px, 22%);
-  max-height: 40%;
+  right: 75px; // Center in typical 300px chat panel (300/2 - video width/2)
+  width: 150px; // Fixed width for consistency
+  height: 112px; // 4:3 aspect ratio
   overflow: hidden;
-  z-index: 10;
+  z-index: 100; // Higher z-index to float above everything
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   cursor: pointer;
   transition: transform 0.3s ease;
-
-  @media (min-width: 801px) {
-    position: fixed;
-    bottom: 60px;
-    right: 310px;
+  border: 2px solid rgba(0, 0, 0, 0.3); // Subtle border for definition
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); // Shadow for depth
+  
+  // In fullscreen mode, position as PiP in main video area
+  .fullscreen-mode & {
+    position: fixed; // Fixed to viewport
+    z-index: 150; // Higher z-index to stay above video
+    
+    // Position in bottom-right of main video area
+    // Main video area = full width minus chat panel width
+    
+    // Default: video area = 100vw - 500px chat, PiP = 20% of video width
+    width: calc((100vw - 500px) * 0.2);
+    height: calc((100vw - 500px) * 0.15); // Maintain aspect ratio
+    bottom: 70px; // Above controls
+    right: calc(500px + 20px); // Chat width + margin
+    
+    // Scale based on screen size and chat panel width
+    @media (min-width: 2560px) {
+      // 4K: video area = 100vw - 700px
+      width: calc((100vw - 700px) * 0.18);
+      height: calc((100vw - 700px) * 0.135);
+      bottom: 90px; // Larger controls
+      right: calc(700px + 30px);
+    }
+    
+    @media (min-width: 1920px) and (max-width: 2559px) {
+      // Full HD: video area = 100vw - 600px
+      width: calc((100vw - 600px) * 0.2);
+      height: calc((100vw - 600px) * 0.15);
+      bottom: 80px;
+      right: calc(600px + 25px);
+    }
+    
+    @media (min-width: 1600px) and (max-width: 1919px) {
+      // HD+: video area = 100vw - 550px
+      width: calc((100vw - 550px) * 0.2);
+      height: calc((100vw - 550px) * 0.15);
+      bottom: 70px;
+      right: calc(550px + 20px);
+    }
+    
+    @media (max-width: 1599px) and (min-width: 1200px) {
+      // Medium: video area = 100vw - 450px
+      width: calc((100vw - 450px) * 0.22);
+      height: calc((100vw - 450px) * 0.165);
+      bottom: 70px;
+      right: calc(450px + 20px);
+    }
+    
+    @media (max-width: 1199px) and (min-width: 900px) {
+      // Small: video area = 100vw - 380px
+      width: calc((100vw - 380px) * 0.25);
+      height: calc((100vw - 380px) * 0.1875);
+      bottom: 70px;
+      right: calc(380px + 15px);
+    }
+    
+    // Mobile: hide chat, so position from right edge
+    @media (max-width: 899px) {
+      width: 25vw;
+      height: 18.75vw;
+      bottom: 60px;
+      right: 20px;
+    }
   }
 
   @media (max-width: 600px) {
     width: 40%;
+    bottom: 60px;
+    right: 10px;
   }
 
   &:hover {
