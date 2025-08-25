@@ -80,6 +80,17 @@ export default html`
       <button class="control-button hangup" name="hangupButton">
         ${callEndIcon}
       </button>
+      
+      <div class="audio-processing-controls">
+        <label class="audio-control">
+          <input type="checkbox" name="agcToggle" checked />
+          <span>AGC</span>
+        </label>
+        <label class="audio-control">
+          <input type="checkbox" name="noiseToggle" checked />
+          <span>Noise Suppression</span>
+        </label>
+      </div>
     </div>
   </div>
 `;

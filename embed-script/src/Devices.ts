@@ -11,6 +11,8 @@ class DevicesState {
   isVideoMuted: boolean = false;
   isSpeakerMuted: boolean = false;
   currentVideoAspectRatio: number | null = null;
+  autoGainControl: boolean = true;
+  noiseSuppression: boolean = true;
 
   get audioinput() {
     return this.devices.filter((d) => d.kind === "audioinput");
@@ -150,6 +152,11 @@ class Devices {
         audiooutput[0];
     }
 
+    // Load saved audio processing settings
+    const audioSettings = DevicePersistence.getAudioProcessingSettings();
+    this.state.autoGainControl = audioSettings.autoGainControl;
+    this.state.noiseSuppression = audioSettings.noiseSuppression;
+
     // Ensure selected devices are still available (device might have been unplugged)
     this.state.selectedMicrophone =
       audioinput.find(
@@ -215,6 +222,9 @@ class Devices {
         try {
           await this.call.updateMicrophone({
             deviceId: savedMicrophone.deviceId,
+            autoGainControl: this.state.autoGainControl,
+            noiseSuppression: this.state.noiseSuppression,
+            echoCancellation: true,
           });
           this.state.selectedMicrophone = savedMicrophone;
         } catch (error) {
@@ -301,7 +311,12 @@ class Devices {
     if (!device || !this.call) return false;
 
     try {
-      await this.call.updateMicrophone({ deviceId });
+      await this.call.updateMicrophone({ 
+        deviceId,
+        autoGainControl: this.state.autoGainControl,
+        noiseSuppression: this.state.noiseSuppression,
+        echoCancellation: true, // Keep echo cancellation always on
+      });
       this.state.selectedMicrophone = device;
       DevicePersistence.saveDeviceSelection("microphone", device);
       this.onChange();
@@ -461,6 +476,42 @@ class Devices {
     }
   }
 
+  async toggleAutoGainControl(): Promise<void> {
+    this.state.autoGainControl = !this.state.autoGainControl;
+    DevicePersistence.saveAudioProcessingSettings({
+      autoGainControl: this.state.autoGainControl,
+      noiseSuppression: this.state.noiseSuppression,
+    });
+    await this.applyAudioConstraints();
+    this.onChange();
+  }
+
+  async toggleNoiseSuppression(): Promise<void> {
+    this.state.noiseSuppression = !this.state.noiseSuppression;
+    DevicePersistence.saveAudioProcessingSettings({
+      autoGainControl: this.state.autoGainControl,
+      noiseSuppression: this.state.noiseSuppression,
+    });
+    await this.applyAudioConstraints();
+    this.onChange();
+  }
+
+  private async applyAudioConstraints(): Promise<void> {
+    if (!this.call || !this.state.selectedMicrophone) return;
+
+    try {
+      // Update the microphone with new constraints
+      await this.call.updateMicrophone({
+        deviceId: this.state.selectedMicrophone.deviceId,
+        autoGainControl: this.state.autoGainControl,
+        noiseSuppression: this.state.noiseSuppression,
+        echoCancellation: true, // Keep echo cancellation always on
+      });
+    } catch (error) {
+      console.error("Failed to apply audio constraints:", error);
+    }
+  }
+
   private async getSelf() {
     if (!this.call) return null;
     const members = await this.call.getMembers();
@@ -476,6 +527,14 @@ class Devices {
   }
 
   reset() {
+    // Preserve device selections and audio settings before reset
+    const savedMicrophone = this.state.selectedMicrophone;
+    const savedCamera = this.state.selectedCamera;
+    const savedSpeaker = this.state.selectedSpeaker;
+    const savedDevices = this.state.devices;
+    const savedAutoGainControl = this.state.autoGainControl;
+    const savedNoiseSuppression = this.state.noiseSuppression;
+
     if (this.deviceWatcher) {
       this.deviceWatcher.off("changed");
       this.deviceWatcher = null;
@@ -502,7 +561,17 @@ class Devices {
     }
 
     this.call = null;
+    
+    // Create new state but restore device selections and audio settings
     this.state = new DevicesState();
+    this.state.selectedMicrophone = savedMicrophone;
+    this.state.selectedCamera = savedCamera;
+    this.state.selectedSpeaker = savedSpeaker;
+    this.state.devices = savedDevices;
+    this.state.autoGainControl = savedAutoGainControl;
+    this.state.noiseSuppression = savedNoiseSuppression;
+    
+    // Reset callbacks
     this.onLoad = () => {};
     this.onChange = () => {};
     this.onAspectRatioChange = () => {};

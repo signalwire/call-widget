@@ -20,6 +20,8 @@ export default async function createControls(
     videoDevicesMenu,
     micDevicesMenu,
     speakerDevicesMenu,
+    agcToggle,
+    noiseToggle,
   } = controls();
 
   // Check if we're in audio transcript mode
@@ -54,6 +56,8 @@ export default async function createControls(
       selectedCamera,
       selectedMicrophone,
       selectedSpeaker,
+      autoGainControl,
+      noiseSuppression,
     } = devices.state;
 
     function setIconVisibility(button: HTMLElement, isMuted: boolean) {
@@ -111,6 +115,14 @@ export default async function createControls(
         "speaker"
       );
     }
+
+    // Update audio processing checkboxes
+    if (agcToggle) {
+      (agcToggle as HTMLInputElement).checked = autoGainControl;
+    }
+    if (noiseToggle) {
+      (noiseToggle as HTMLInputElement).checked = noiseSuppression;
+    }
   }
 
   function updateDeviceMenu(
@@ -138,6 +150,10 @@ export default async function createControls(
   micButton.addEventListener("click", () => devices.toggleAudio());
   speakerButton.addEventListener("click", () => devices.toggleSpeaker());
   hangupButton.addEventListener("click", () => onHangup?.());
+
+  // Audio processing toggle handlers
+  agcToggle?.addEventListener("change", () => devices.toggleAutoGainControl());
+  noiseToggle?.addEventListener("change", () => devices.toggleNoiseSuppression());
 
   // Device menu handlers
   function setupDeviceMenu(
