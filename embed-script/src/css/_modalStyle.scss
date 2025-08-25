@@ -36,6 +36,8 @@
       height: calc(100vh - 50px) !important; // Minus controls height
       max-height: none !important;
       border-radius: 0 !important;
+      background: #000 !important; // Black background in fullscreen
+      background-image: none !important; // Remove any background image
     }
     
     .chat-panel {
@@ -47,6 +49,8 @@
     .video-area {
       height: 100% !important;
       border-radius: 0 !important;
+      background: #000 !important; // Black background
+      background-image: none !important; // Remove any background image
     }
     
     .controls {
