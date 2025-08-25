@@ -30,7 +30,11 @@
     "serve": "vite preview --host",
     "push": "npm run build && npm run pushToCDN && npm run pushToCDN:dev",
     "prepublishOnly": "npm run build",
-    "prepublish": "node ../verify-docs.js"
+    "prepublish": "node ../verify-docs.js",
+    "demo": "npm run build && node server.js",
+    "demo:server": "node server.js",
+    "demo:build": "npm run build && npm run demo:server",
+    "ngrok": "ngrok http 3000"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",
@@ -43,6 +47,7 @@
   },
   "dependencies": {
     "@signalwire/js": "3.29.1",
+    "express": "^4.21.2",
     "nanomorph": "^5.4.3",
     "showdown": "^2.1.0"
   },

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Call Widget - Standalone Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .demo-container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .info {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 30px;
+    }
+    
+    .info p {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    
+    .info p:last-child {
+      margin-bottom: 0;
+    }
+    
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .call-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    .call-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .call-btn:active {
+      transform: translateY(0);
+    }
+    
+    .status {
+      margin-top: 20px;
+      padding: 10px;
+      background: #e8f5e9;
+      border-radius: 5px;
+      color: #2e7d32;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+    
+    .status.active {
+      display: block;
+    }
+    
+    .features {
+      margin-top: 30px;
+      padding-top: 30px;
+      border-top: 1px solid #e0e0e0;
+    }
+    
+    .feature-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    
+    .feature-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .feature-item {
+      font-size: 13px;
+      color: #888;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .feature-item::before {
+      content: "✓";
+      color: #667eea;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <h1>🎙️ Call Widget Demo</h1>
+    
+    <div class="info">
+      <p><strong>✅ Token:</strong> Configured and ready</p>
+      <p><strong>📍 Destination:</strong> /private/demo-1</p>
+      <p><strong>🔊 Audio Processing:</strong> AGC & Noise Suppression OFF (better quality)</p>
+    </div>
+    
+    <div class="button-group">
+      <button id="videoCallBtn" class="call-btn">
+        <span>📹</span>
+        <span>Start Video Call</span>
+      </button>
+      
+      <button id="audioCallBtn" class="call-btn">
+        <span>📞</span>
+        <span>Audio Call Only</span>
+      </button>
+      
+      <button id="dialerBtn" class="call-btn">
+        <span>📱</span>
+        <span>Open Dialer</span>
+      </button>
+    </div>
+    
+    <div id="status" class="status"></div>
+    
+    <div class="features">
+      <div class="feature-title">Widget Features:</div>
+      <div class="feature-list">
+        <div class="feature-item">Device Persistence</div>
+        <div class="feature-item">Audio Processing Controls</div>
+        <div class="feature-item">Live Transcription</div>
+        <div class="feature-item">Video Support</div>
+        <div class="feature-item">Echo Cancellation</div>
+        <div class="feature-item">Shadow DOM Isolation</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Video Call Widget -->
+  <call-widget
+    button-id="videoCallBtn"
+    token="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20iLCJ0eXAiOiJTQVQifQ..QYHghlPEOE4HjtJb.1WKLEg09c05-g3RujrS0io5h6AJ4mfpKMWtykpMIERJlMuomtOLHrU8picaFHeppbb_-593GjxHfeZiVmYdPZiIPYuNw2znqBuySuPArPfb2NMvXtZHEgfl3sXAdy5xpqSpphxFKStXwylo0EGeC91cVQgn3_lmSBcp13JvwArnu5ULltGmjPJogRbE1PrBsBbEJJioumVSZuuMH5lo7am-wE37Q5GXgou1a9iJWBiBtgk5ysmW4HTvbZ7pZHL5VcnWVy4V0OJL3J4WXl-m47L6bgFmHUijvVWxoFDu4Z7aUfx551OEhefr04F5NuJaHzTWUpgNzQ_VgWho04K96MK--wH_dEyIxtbfUHJSZyk1-Ef_dDCgFK6Rlnl2H5HM4G05gEKWcSjXGGk4tN0g6YvHsrUrAgsZiQeVQ-ggCHHRcmYX1OeXYbv1vEPml8i5JPUHAak5VvOQLYoG2ydb5kVv3WdM0oWKGHzTFPLFmjTaRxSC2b378BGbR7hCxbY9NdaLFnSn45KDkv1_a-saR9gDCBa2ZCPbkFmWRKLtGORFoiN-mLYAPTugidqZx40Ue4hav-jX178udYpVgSmun_rMHoN81t0Sb4xqMovs2i47-WLyzTwaGBK2CgLeHohGBvB9aWsFOV7F_YrZlcn7ptKo7RdNSrfBkiw7F6Sf8oIOz.426h9VZWDSVYDUIL9a1wDg"
+    destination="/private/demo-1"
+    support-audio="true"
+    support-video="true"
+    window-mode="video+transcript"
+  ></call-widget>
+
+  <!-- Audio Only Widget -->
+  <call-widget
+    button-id="audioCallBtn"
+    token="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20iLCJ0eXAiOiJTQVQifQ..QYHghlPEOE4HjtJb.1WKLEg09c05-g3RujrS0io5h6AJ4mfpKMWtykpMIERJlMuomtOLHrU8picaFHeppbb_-593GjxHfeZiVmYdPZiIPYuNw2znqBuySuPArPfb2NMvXtZHEgfl3sXAdy5xpqSpphxFKStXwylo0EGeC91cVQgn3_lmSBcp13JvwArnu5ULltGmjPJogRbE1PrBsBbEJJioumVSZuuMH5lo7am-wE37Q5GXgou1a9iJWBiBtgk5ysmW4HTvbZ7pZHL5VcnWVy4V0OJL3J4WXl-m47L6bgFmHUijvVWxoFDu4Z7aUfx551OEhefr04F5NuJaHzTWUpgNzQ_VgWho04K96MK--wH_dEyIxtbfUHJSZyk1-Ef_dDCgFK6Rlnl2H5HM4G05gEKWcSjXGGk4tN0g6YvHsrUrAgsZiQeVQ-ggCHHRcmYX1OeXYbv1vEPml8i5JPUHAak5VvOQLYoG2ydb5kVv3WdM0oWKGHzTFPLFmjTaRxSC2b378BGbR7hCxbY9NdaLFnSn45KDkv1_a-saR9gDCBa2ZCPbkFmWRKLtGORFoiN-mLYAPTugidqZx40Ue4hav-jX178udYpVgSmun_rMHoN81t0Sb4xqMovs2i47-WLyzTwaGBK2CgLeHohGBvB9aWsFOV7F_YrZlcn7ptKo7RdNSrfBkiw7F6Sf8oIOz.426h9VZWDSVYDUIL9a1wDg"
+    destination="/private/demo-1"
+    support-audio="true"
+    support-video="false"
+    window-mode="audio+transcript"
+  ></call-widget>
+
+  <!-- Dialer Widget (no destination) -->
+  <call-widget
+    button-id="dialerBtn"
+    token="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20iLCJ0eXAiOiJTQVQifQ..QYHghlPEOE4HjtJb.1WKLEg09c05-g3RujrS0io5h6AJ4mfpKMWtykpMIERJlMuomtOLHrU8picaFHeppbb_-593GjxHfeZiVmYdPZiIPYuNw2znqBuySuPArPfb2NMvXtZHEgfl3sXAdy5xpqSpphxFKStXwylo0EGeC91cVQgn3_lmSBcp13JvwArnu5ULltGmjPJogRbE1PrBsBbEJJioumVSZuuMH5lo7am-wE37Q5GXgou1a9iJWBiBtgk5ysmW4HTvbZ7pZHL5VcnWVy4V0OJL3J4WXl-m47L6bgFmHUijvVWxoFDu4Z7aUfx551OEhefr04F5NuJaHzTWUpgNzQ_VgWho04K96MK--wH_dEyIxtbfUHJSZyk1-Ef_dDCgFK6Rlnl2H5HM4G05gEKWcSjXGGk4tN0g6YvHsrUrAgsZiQeVQ-ggCHHRcmYX1OeXYbv1vEPml8i5JPUHAak5VvOQLYoG2ydb5kVv3WdM0oWKGHzTFPLFmjTaRxSC2b378BGbR7hCxbY9NdaLFnSn45KDkv1_a-saR9gDCBa2ZCPbkFmWRKLtGORFoiN-mLYAPTugidqZx40Ue4hav-jX178udYpVgSmun_rMHoN81t0Sb4xqMovs2i47-WLyzTwaGBK2CgLeHohGBvB9aWsFOV7F_YrZlcn7ptKo7RdNSrfBkiw7F6Sf8oIOz.426h9VZWDSVYDUIL9a1wDg"
+    support-audio="true"
+    support-video="true"
+  ></call-widget>
+
+  <!-- Include the widget script -->
+  <script src="./dist/c2c-widget-full.umd.js"></script>
+  
+  <script>
+    // Listen for widget events
+    document.addEventListener('DOMContentLoaded', () => {
+      const widgets = document.querySelectorAll('call-widget');
+      const status = document.getElementById('status');
+      
+      function showStatus(message) {
+        status.textContent = message;
+        status.classList.add('active');
+        setTimeout(() => {
+          status.classList.remove('active');
+        }, 3000);
+      }
+      
+      widgets.forEach(widget => {
+        widget.addEventListener('beforecall', () => {
+          showStatus('📞 Initializing call...');
+        });
+        
+        widget.addEventListener('call.joined', (e) => {
+          console.log('Call started!', e.detail);
+          showStatus('✅ Call connected!');
+        });
+        
+        widget.addEventListener('call.left', (e) => {
+          console.log('Call ended', e.detail);
+          showStatus('📴 Call ended');
+        });
+        
+        widget.addEventListener('call.incoming', (e) => {
+          console.log('Incoming call!', e.detail);
+          showStatus('📲 Incoming call!');
+        });
+      });
+    });
+  </script>
+</body>
+</html>
