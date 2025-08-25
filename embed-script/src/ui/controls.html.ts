@@ -79,7 +79,7 @@ export default html`
         </div>
       </div>
 
-      <button class="control-button fullscreen-button" name="fullscreenButton" title="Toggle Fullscreen">
+      <button class="control-button fullscreen-button" name="fullscreenButton" title="Toggle Fullscreen (F key)">
         <span class="fullscreen-icon">${fullscreenIcon}</span>
         <span class="exit-fullscreen-icon" style="display: none;">${exitFullscreenIcon}</span>
       </button>

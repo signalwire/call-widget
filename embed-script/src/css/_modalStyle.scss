@@ -30,20 +30,114 @@
       border-radius: 0 !important;
       margin: 0 !important;
       padding: 0 !important;
+      display: grid !important;
+      grid-template-columns: 1fr 500px !important; // Default: wider chat panel
+      grid-template-rows: 1fr auto !important; // Content then controls
+      gap: 0 !important;
+      
+      // 4K screens - maximum space
+      @media (min-width: 2560px) {
+        grid-template-columns: 1fr 700px !important;
+        font-size: 125% !important; // Scale up text
+      }
+      
+      // Large screens - more space to chat
+      @media (min-width: 1920px) and (max-width: 2559px) {
+        grid-template-columns: 1fr 600px !important;
+        font-size: 110% !important; // Slightly larger text
+      }
+      
+      // Standard HD screens
+      @media (min-width: 1600px) and (max-width: 1919px) {
+        grid-template-columns: 1fr 550px !important;
+      }
+      
+      // Medium screens
+      @media (max-width: 1599px) and (min-width: 1200px) {
+        grid-template-columns: 1fr 450px !important;
+      }
+      
+      // Smaller screens
+      @media (max-width: 1199px) and (min-width: 900px) {
+        grid-template-columns: 1fr 380px !important;
+        font-size: 95% !important; // Slightly smaller text
+      }
+      
+      // Mobile - hide chat panel, video only
+      @media (max-width: 899px) {
+        grid-template-columns: 1fr !important;
+        
+        .chat-panel {
+          display: none !important;
+        }
+      }
     }
     
     .video-panel {
-      height: calc(100vh - 50px) !important; // Minus controls height
+      grid-column: 1;
+      grid-row: 1;
+      width: 100% !important;
+      height: calc(100vh - 50px) !important; // Default controls height
       max-height: none !important;
       border-radius: 0 !important;
       background: #000 !important; // Black background in fullscreen
       background-image: none !important; // Remove any background image
+      
+      // Adjust height for larger controls on bigger screens
+      @media (min-width: 2560px) {
+        height: calc(100vh - 70px) !important; // 4K screens have 70px controls
+      }
+      
+      @media (min-width: 1920px) and (max-width: 2559px) {
+        height: calc(100vh - 60px) !important; // Full HD has 60px controls
+      }
     }
     
     .chat-panel {
+      grid-column: 2;
+      grid-row: 1;
+      width: 100% !important; // Takes full width of its grid column
       height: calc(100vh - 50px) !important;
+      
+      // Adjust height for larger controls on bigger screens  
+      @media (min-width: 2560px) {
+        height: calc(100vh - 70px) !important;
+      }
+      
+      @media (min-width: 1920px) and (max-width: 2559px) {
+        height: calc(100vh - 60px) !important;
+      }
+      
       max-height: none !important;
       border-radius: 0 !important;
+      position: relative !important; // Override absolute positioning
+      top: auto !important;
+      right: auto !important;
+      bottom: auto !important;
+      
+      // Scale chat text based on screen size
+      .chat {
+        @media (min-width: 2560px) {
+          font-size: 20px !important; // 4K screens
+        }
+        @media (min-width: 1920px) and (max-width: 2559px) {
+          font-size: 18px !important; // Full HD
+        }
+        @media (min-width: 1600px) and (max-width: 1919px) {
+          font-size: 16px !important; // HD+
+        }
+      }
+      
+      .message {
+        @media (min-width: 2560px) {
+          padding: 12px 16px !important;
+          margin-bottom: 8px !important;
+        }
+        @media (min-width: 1920px) and (max-width: 2559px) {
+          padding: 10px 14px !important;
+          margin-bottom: 6px !important;
+        }
+      }
     }
     
     .video-area {
@@ -54,7 +148,52 @@
     }
     
     .controls {
+      grid-column: 1 / -1; // Span full width
+      grid-row: 2;
       border-radius: 0 !important;
+      z-index: 10; // Ensure controls are on top
+      
+      // Scale controls based on screen size
+      @media (min-width: 2560px) {
+        height: 70px !important;
+        
+        .control-button {
+          width: 56px !important;
+          height: 56px !important;
+          
+          svg {
+            width: 32px !important;
+            height: 32px !important;
+          }
+        }
+        
+        .device-select-button {
+          height: 56px !important;
+          
+          svg {
+            width: 16px !important;
+            height: 16px !important;
+          }
+        }
+      }
+      
+      @media (min-width: 1920px) and (max-width: 2559px) {
+        height: 60px !important;
+        
+        .control-button {
+          width: 48px !important;
+          height: 48px !important;
+          
+          svg {
+            width: 28px !important;
+            height: 28px !important;
+          }
+        }
+        
+        .device-select-button {
+          height: 48px !important;
+        }
+      }
     }
   }
 }

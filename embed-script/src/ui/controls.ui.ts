@@ -154,19 +154,85 @@ export default async function createControls(
 
   // Fullscreen toggle handler
   let isFullscreen = false;
-  fullscreenButton?.addEventListener("click", () => {
-    const modalContainer = controlsContainer.closest('.modal-container');
-    if (modalContainer) {
-      isFullscreen = !isFullscreen;
-      modalContainer.classList.toggle('fullscreen-mode', isFullscreen);
+  
+  async function toggleFullscreen() {
+    const modalContainer = controlsContainer.closest('.modal-container') as HTMLElement;
+    if (!modalContainer) return;
+    
+    try {
+      if (!document.fullscreenElement) {
+        // Enter native fullscreen
+        await modalContainer.requestFullscreen();
+        isFullscreen = true;
+        modalContainer.classList.add('fullscreen-mode');
+      } else {
+        // Exit native fullscreen
+        await document.exitFullscreen();
+        isFullscreen = false;
+        modalContainer.classList.remove('fullscreen-mode');
+      }
       
       // Update icon visibility
-      const fullscreenIcon = fullscreenButton.querySelector('.fullscreen-icon') as HTMLElement;
-      const exitFullscreenIcon = fullscreenButton.querySelector('.exit-fullscreen-icon') as HTMLElement;
+      const fullscreenIcon = fullscreenButton?.querySelector('.fullscreen-icon') as HTMLElement;
+      const exitFullscreenIcon = fullscreenButton?.querySelector('.exit-fullscreen-icon') as HTMLElement;
       if (fullscreenIcon && exitFullscreenIcon) {
         fullscreenIcon.style.display = isFullscreen ? 'none' : 'block';
         exitFullscreenIcon.style.display = isFullscreen ? 'block' : 'none';
       }
+    } catch (err) {
+      console.error('Fullscreen error:', err);
+      // Fallback to CSS-only fullscreen if native fails
+      isFullscreen = !isFullscreen;
+      modalContainer.classList.toggle('fullscreen-mode', isFullscreen);
+      
+      const fullscreenIcon = fullscreenButton?.querySelector('.fullscreen-icon') as HTMLElement;
+      const exitFullscreenIcon = fullscreenButton?.querySelector('.exit-fullscreen-icon') as HTMLElement;
+      if (fullscreenIcon && exitFullscreenIcon) {
+        fullscreenIcon.style.display = isFullscreen ? 'none' : 'block';
+        exitFullscreenIcon.style.display = isFullscreen ? 'block' : 'none';
+      }
+    }
+  }
+  
+  fullscreenButton?.addEventListener("click", toggleFullscreen);
+  
+  // Listen for fullscreen changes (handles ESC key, etc)
+  document.addEventListener('fullscreenchange', () => {
+    const modalContainer = controlsContainer.closest('.modal-container') as HTMLElement;
+    if (!modalContainer) return;
+    
+    if (!document.fullscreenElement) {
+      // Exited fullscreen
+      isFullscreen = false;
+      modalContainer.classList.remove('fullscreen-mode');
+    } else {
+      // Entered fullscreen
+      isFullscreen = true;
+      modalContainer.classList.add('fullscreen-mode');
+    }
+    
+    // Update icon visibility
+    const fullscreenIcon = fullscreenButton?.querySelector('.fullscreen-icon') as HTMLElement;
+    const exitFullscreenIcon = fullscreenButton?.querySelector('.exit-fullscreen-icon') as HTMLElement;
+    if (fullscreenIcon && exitFullscreenIcon) {
+      fullscreenIcon.style.display = isFullscreen ? 'none' : 'block';
+      exitFullscreenIcon.style.display = isFullscreen ? 'block' : 'none';
+    }
+  });
+  
+  // Keyboard shortcuts for fullscreen
+  document.addEventListener('keydown', (e) => {
+    const modalContainer = controlsContainer.closest('.modal-container');
+    if (!modalContainer) return;
+    
+    // F key to toggle fullscreen
+    if (e.key === 'f' || e.key === 'F') {
+      // Don't trigger if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      e.preventDefault();
+      toggleFullscreen();
     }
   });
 
