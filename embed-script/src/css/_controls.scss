@@ -154,7 +154,7 @@
 .audio-processing-controls {
   position: absolute;
   right: 10px;
-  display: flex;
+  display: none; // Hidden for now
   gap: 15px;
   align-items: center;
 }
