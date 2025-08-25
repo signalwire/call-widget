@@ -23,39 +23,38 @@
       support-video="true"
       support-audio="true"
       destination="/private/demo-1"
-      log-level="info"
-      window-mode="video+transcript"
     ></call-widget>
 
     <script src="https://cdn.jsdelivr.net/npm/@signalwire/call-widget@3.12.0/dist/c2c-widget-full.umd.min.js"></script>
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        const widget = document.querySelector("call-widget");
+        const widgets = document.querySelectorAll("call-widget");
 
-        widget.addEventListener("beforeDial", function (event) {
-          const approve = event.detail.approve;
-          const reject = event.detail.reject;
+        widgets.forEach(function (widget) {
+          widget.addEventListener("beforeDial", function (event) {
+            const approve = event.detail.approve;
+            const reject = event.detail.reject;
 
-          // Indicate that we're listening and will handle this event
-          event.detail.hasListeners = true;
+            event.detail.hasListeners = true;
 
-          C2CWidget.showContactForm(
-            {
-              onSubmit: (data) => {
-                widget.newCallVariable({
-                  email: data.email,
-                  name: data.name,
-                  phone: data.number,
-                });
-                approve();
+            C2CWidget.showContactForm(
+              {
+                onSubmit: (data) => {
+                  widget.newCallVariable({
+                    email: data.email,
+                    name: data.name,
+                    phone: data.number,
+                  });
+                  approve();
+                },
+                onCancel: () => {
+                  reject();
+                },
               },
-              onCancel: () => {
-                reject();
-              },
-            },
-            widget
-          );
+              widget
+            );
+          });
         });
       });
     </script>

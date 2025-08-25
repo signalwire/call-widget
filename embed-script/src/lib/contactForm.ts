@@ -66,39 +66,46 @@ class ContactFormModal {
       const numberInput = this.shadow.getElementById(
         "number"
       ) as HTMLInputElement;
-      const indicator = this.shadow.getElementById("cachedIndicator");
 
       if (nameInput) nameInput.value = cachedData.name;
       if (emailInput) emailInput.value = cachedData.email;
       if (numberInput) numberInput.value = cachedData.number;
-      if (indicator) indicator.style.display = "block";
     }
   }
 
   private render() {
     this.shadow.innerHTML = `
       <style>
+        * {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+          box-sizing: border-box;
+        }
+
         :host {
           position: fixed;
           top: 0;
           left: 0;
           width: 100%;
           height: 100%;
-          background-color: rgba(0, 0, 0, 0.5);
+          background-color: rgba(0, 0, 0, 0.4);
           display: flex;
           justify-content: center;
           align-items: center;
           z-index: 10000;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
         }
 
         .modal-content {
-          background: white;
-          border-radius: 8px;
+          background: #ffffff !important;
+          color: #374151 !important;
+          border-radius: 6px;
           padding: 24px;
           width: 90%;
           max-width: 400px;
           position: relative;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+          border: 1px solid #e5e7eb;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
         }
 
         .modal-header {
@@ -113,10 +120,8 @@ class ContactFormModal {
           font-size: 18px;
           font-weight: 600;
           margin: 0;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          color: #374151 !important;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
         }
 
         .header-actions {
@@ -126,66 +131,47 @@ class ContactFormModal {
         }
 
         .reset-button {
-          background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+          background: #6b7280 !important;
           border: none;
-          color: white;
+          color: #ffffff !important;
           padding: 4px 8px;
-          border-radius: 12px;
+          border-radius: 4px;
           font-size: 11px;
           cursor: pointer;
           font-weight: 500;
           text-transform: uppercase;
           letter-spacing: 0.5px;
-          transition: all 0.2s ease;
-          box-shadow: 0 2px 4px rgba(238, 90, 36, 0.3);
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
         }
 
         .reset-button:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(238, 90, 36, 0.4);
+          background: #4b5563 !important;
         }
 
         .reset-button:active {
-          transform: translateY(0);
+          background: #374151 !important;
         }
 
         .close-button {
-          background: none;
+          background: none !important;
           border: none;
-          font-size: 24px;
+          font-size: 20px;
           cursor: pointer;
-          color: #666;
+          color: #6b7280 !important;
           padding: 0;
-          width: 30px;
-          height: 30px;
+          width: 24px;
+          height: 24px;
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: all 0.2s ease;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
         }
 
         .close-button:hover {
-          color: #333;
-          transform: scale(1.1);
+          color: #374151 !important;
         }
 
-        .cached-indicator {
-          position: absolute;
-          top: -8px;
-          right: -8px;
-          background: linear-gradient(135deg, #00b894, #00a085);
-          color: white;
-          font-size: 10px;
-          padding: 2px 6px;
-          border-radius: 8px;
-          font-weight: 500;
-          animation: fadeIn 0.3s ease;
-        }
 
-        @keyframes fadeIn {
-          from { opacity: 0; transform: scale(0.8); }
-          to { opacity: 1; transform: scale(1); }
-        }
 
         .form-group {
           margin-bottom: 16px;
@@ -195,63 +181,67 @@ class ContactFormModal {
           display: block;
           margin-bottom: 6px;
           font-weight: 500;
-          color: #333;
+          color: #374151 !important;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
         }
 
         .form-input {
           width: 100%;
           padding: 12px;
-          border: 2px solid transparent;
-          border-radius: 8px;
+          border: 1px solid #d1d5db;
+          border-radius: 4px;
           font-size: 14px;
           box-sizing: border-box;
-          background: linear-gradient(white, white) padding-box, 
-                      linear-gradient(135deg, #667eea, #764ba2) border-box;
-          transition: all 0.3s ease;
+          background: #ffffff !important;
+          color: #374151 !important;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+        }
+
+        .form-input::placeholder {
+          color: #9ca3af !important;
+          opacity: 1;
         }
 
         .form-input:focus {
           outline: none;
-          background: linear-gradient(white, white) padding-box, 
-                      linear-gradient(135deg, #00b894, #00a085) border-box;
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 184, 148, 0.15);
+          border-color: #4b5563;
+          box-shadow: 0 0 0 1px #4b5563;
+          background: #ffffff !important;
+          color: #374151 !important;
         }
 
         .form-input:not(:placeholder-shown) {
-          background: linear-gradient(#f8f9ff, white) padding-box, 
-                      linear-gradient(135deg, #667eea, #764ba2) border-box;
+          background: #f9fafb !important;
+          border-color: #9ca3af;
+          color: #374151 !important;
         }
 
         .continue-button {
           width: 100%;
           padding: 12px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
+          background: #374151 !important;
+          color: #ffffff !important;
           border: none;
-          border-radius: 8px;
+          border-radius: 4px;
           font-size: 16px;
-          font-weight: 600;
+          font-weight: 500;
           cursor: pointer;
           margin-top: 10px;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
         }
 
         .continue-button:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+          background: #1f2937 !important;
         }
 
         .continue-button:active {
-          transform: translateY(-1px);
+          background: #111827 !important;
         }
 
         .continue-button:disabled {
-          background: #ccc;
+          background: #d1d5db !important;
+          color: #6b7280 !important;
           cursor: not-allowed;
-          transform: none;
-          box-shadow: none;
         }
 
         @media (max-width: 480px) {
@@ -269,7 +259,6 @@ class ContactFormModal {
             <button class="reset-button" id="resetForm">Reset</button>
             <button class="close-button" id="closeModal">&times;</button>
           </div>
-          <div class="cached-indicator" id="cachedIndicator" style="display: none;">Saved</div>
         </div>
         <form id="contactForm">
           <div class="form-group">
@@ -357,12 +346,10 @@ class ContactFormModal {
     const numberInput = this.shadow.getElementById(
       "number"
     ) as HTMLInputElement;
-    const indicator = this.shadow.getElementById("cachedIndicator");
 
     if (nameInput) nameInput.value = "";
     if (emailInput) emailInput.value = "";
     if (numberInput) numberInput.value = "";
-    if (indicator) indicator.style.display = "none";
 
     // Add a little animation feedback
     const resetButton = this.shadow.getElementById("resetForm");

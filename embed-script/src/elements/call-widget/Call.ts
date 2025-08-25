@@ -130,7 +130,6 @@ export class Call {
     // @ts-ignore
     client.on("ai.transparent_barge", (params) => {
       // AI transparent barge (remove last AI speech)
-      console.log("ai.transparent_barge", params);
       const cleanText = params.combined_text;
       this.chat?.handleEvent("ai.transparent_barge", cleanText, true);
     });
@@ -378,16 +377,6 @@ export class Call {
   }
 
   reset() {
-    if (this.client) {
-      // @ts-ignore
-      this.client.off("ai.partial_result");
-      // @ts-ignore
-      this.client.off("ai.speech_detect");
-      // @ts-ignore
-      this.client.off("ai.completion");
-      // @ts-ignore
-      this.client.off("ai.response_utterance");
-    }
     this.currentCall?.hangup();
     this.currentCall = null;
     this.chat = new Chat();
