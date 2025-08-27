@@ -5,6 +5,7 @@
   height: 50px;
   justify-content: center;
   align-items: center;
+  position: relative;
 }
 
 .control-group {
@@ -71,6 +72,17 @@
 
 .hangup:hover {
   background: #ff6666;
+}
+
+.fullscreen-button {
+  border-radius: 50% !important;
+}
+
+.fullscreen-icon,
+.exit-fullscreen-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .device-menu {
@@ -147,5 +159,38 @@
     top: 100%;
     margin-bottom: 0;
     margin-top: 8px;
+  }
+}
+
+.audio-processing-controls {
+  position: absolute;
+  right: 10px;
+  display: none; // Hidden for now
+  gap: 15px;
+  align-items: center;
+}
+
+.audio-control {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+  
+  input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+  }
+  
+  span {
+    opacity: 0.9;
+    white-space: nowrap;
+  }
+  
+  &:hover span {
+    opacity: 1;
   }
 }

@@ -7,6 +7,8 @@ import caretUpIcon from "../icons/caret-up.svg?raw";
 import videoOffIcon from "../icons/video-off.svg?raw";
 import microphoneOffIcon from "../icons/microphone-off.svg?raw";
 import speakerOffIcon from "../icons/speaker-off.svg?raw";
+import fullscreenIcon from "../icons/fullscreen.svg?raw";
+import exitFullscreenIcon from "../icons/exit-fullscreen.svg?raw";
 
 export default html`
   <div name="controlsContainer">
@@ -77,9 +79,25 @@ export default html`
         </div>
       </div>
 
+      <button class="control-button fullscreen-button" name="fullscreenButton" title="Toggle Fullscreen (F key)">
+        <span class="fullscreen-icon">${fullscreenIcon}</span>
+        <span class="exit-fullscreen-icon" style="display: none;">${exitFullscreenIcon}</span>
+      </button>
+
       <button class="control-button hangup" name="hangupButton">
         ${callEndIcon}
       </button>
+      
+      <div class="audio-processing-controls">
+        <label class="audio-control" title="Auto Gain Control - Enable if volume levels are inconsistent">
+          <input type="checkbox" name="agcToggle" />
+          <span>AGC</span>
+        </label>
+        <label class="audio-control" title="Noise Suppression - Enable if background noise is an issue">
+          <input type="checkbox" name="noiseToggle" />
+          <span>Noise Suppression</span>
+        </label>
+      </div>
     </div>
   </div>
 `;

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sigmond Form</title>
+  </head>
+  <body>
+    <h1>Sigmond Form</h1>
+
+    <style>
+      .demo-button-disabled {
+        opacity: 0.6 !important;
+        cursor: not-allowed !important;
+      }
+    </style>
+
+    <button id="callButton1" class="demo-button-disabled">Call Sigmond</button>
+
+    <call-widget
+      button-id="callButton1"
+      token="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIiwiY2giOiJwdWMuc2lnbmFsd2lyZS5jb20iLCJ0eXAiOiJTQVQifQ..QYHghlPEOE4HjtJb.1WKLEg09c05-g3RujrS0io5h6AJ4mfpKMWtykpMIERJlMuomtOLHrU8picaFHeppbb_-593GjxHfeZiVmYdPZiIPYuNw2znqBuySuPArPfb2NMvXtZHEgfl3sXAdy5xpqSpphxFKStXwylo0EGeC91cVQgn3_lmSBcp13JvwArnu5ULltGmjPJogRbE1PrBsBbEJJioumVSZuuMH5lo7am-wE37Q5GXgou1a9iJWBiBtgk5ysmW4HTvbZ7pZHL5VcnWVy4V0OJL3J4WXl-m47L6bgFmHUijvVWxoFDu4Z7aUfx551OEhefr04F5NuJaHzTWUpgNzQ_VgWho04K96MK--wH_dEyIxtbfUHJSZyk1-Ef_dDCgFK6Rlnl2H5HM4G05gEKWcSjXGGk4tN0g6YvHsrUrAgsZiQeVQ-ggCHHRcmYX1OeXYbv1vEPml8i5JPUHAak5VvOQLYoG2ydb5kVv3WdM0oWKGHzTFPLFmjTaRxSC2b378BGbR7hCxbY9NdaLFnSn45KDkv1_a-saR9gDCBa2ZCPbkFmWRKLtGORFoiN-mLYAPTugidqZx40Ue4hav-jX178udYpVgSmun_rMHoN81t0Sb4xqMovs2i47-WLyzTwaGBK2CgLeHohGBvB9aWsFOV7F_YrZlcn7ptKo7RdNSrfBkiw7F6Sf8oIOz.426h9VZWDSVYDUIL9a1wDg"
+      support-video="true"
+      support-audio="true"
+      destination="/private/demo-1"
+    ></call-widget>
+
+    <script src="https://cdn.jsdelivr.net/npm/@signalwire/call-widget@3.12.0/dist/c2c-widget-full.umd.min.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const widgets = document.querySelectorAll("call-widget");
+
+        widgets.forEach(function (widget) {
+          widget.addEventListener("beforeDial", function (event) {
+            const approve = event.detail.approve;
+            const reject = event.detail.reject;
+
+            event.detail.hasListeners = true;
+
+            C2CWidget.showContactForm(
+              {
+                onSubmit: (data) => {
+                  widget.newCallVariable({
+                    email: data.email,
+                    name: data.name,
+                    phone: data.number,
+                  });
+                  approve();
+                },
+                onCancel: () => {
+                  reject();
+                },
+              },
+              widget
+            );
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

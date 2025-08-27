@@ -12,8 +12,14 @@ interface DevicePreferences {
   speaker?: StoredDeviceInfo;
 }
 
+interface AudioProcessingSettings {
+  autoGainControl: boolean;
+  noiseSuppression: boolean;
+}
+
 export class DevicePersistence {
   private static readonly STORAGE_KEY = "signalwire_device_preferences";
+  private static readonly AUDIO_SETTINGS_KEY = "signalwire_audio_processing";
   private static readonly MAX_AGE_DAYS = 30;
   private static readonly DEVICE_TYPE_MAP = {
     microphone: "audioinput" as const,
@@ -234,5 +240,35 @@ export class DevicePersistence {
         hasStoredSpeaker: false,
       };
     }
+  }
+
+  static saveAudioProcessingSettings(settings: AudioProcessingSettings): void {
+    try {
+      localStorage.setItem(this.AUDIO_SETTINGS_KEY, JSON.stringify(settings));
+    } catch (error) {
+      console.warn(
+        "DevicePersistence: Failed to save audio processing settings:",
+        error
+      );
+    }
+  }
+
+  static getAudioProcessingSettings(): AudioProcessingSettings {
+    try {
+      const stored = localStorage.getItem(this.AUDIO_SETTINGS_KEY);
+      if (stored) {
+        return JSON.parse(stored) as AudioProcessingSettings;
+      }
+    } catch (error) {
+      console.warn(
+        "DevicePersistence: Failed to load audio processing settings:",
+        error
+      );
+    }
+    // Return defaults - disabled per WebRTC best practices for better voice quality
+    return {
+      autoGainControl: false,
+      noiseSuppression: false,
+    };
   }
 }

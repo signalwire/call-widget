@@ -130,7 +130,6 @@ export class Call {
     // @ts-ignore
     client.on("ai.transparent_barge", (params) => {
       // AI transparent barge (remove last AI speech)
-      console.log("ai.transparent_barge", params);
       const cleanText = params.combined_text;
       this.chat?.handleEvent("ai.transparent_barge", cleanText, true);
     });
@@ -224,7 +223,7 @@ export class Call {
     });
 
     if (!beforeDialApproved) {
-      await this.destroy();
+      // await this.destroy();
       return null;
     }
 
@@ -254,10 +253,20 @@ export class Call {
       ...userVariables,
     };
 
+    // Get audio processing settings from devices
+    const audioSettings =
+      devices.state.autoGainControl !== undefined
+        ? {
+            autoGainControl: devices.state.autoGainControl,
+            noiseSuppression: devices.state.noiseSuppression,
+            echoCancellation: true, // Always keep echo cancellation on
+          }
+        : true;
+
     const roomSession = await this.client?.dial({
       to: finalDestination,
       rootElement: container ?? undefined,
-      audio: supportsAudio ?? undefined,
+      audio: supportsAudio ? audioSettings : undefined,
       video: supportsVideo ?? undefined,
       negotiateVideo: supportsVideo ?? undefined,
       userVariables: finalUserVariables,
@@ -368,16 +377,6 @@ export class Call {
   }
 
   reset() {
-    if (this.client) {
-      // @ts-ignore
-      this.client.off("ai.partial_result");
-      // @ts-ignore
-      this.client.off("ai.speech_detect");
-      // @ts-ignore
-      this.client.off("ai.completion");
-      // @ts-ignore
-      this.client.off("ai.response_utterance");
-    }
     this.currentCall?.hangup();
     this.currentCall = null;
     this.chat = new Chat();

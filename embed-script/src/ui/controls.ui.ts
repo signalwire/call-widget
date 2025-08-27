@@ -14,12 +14,15 @@ export default async function createControls(
     micButton,
     speakerButton,
     hangupButton,
+    fullscreenButton,
     videoDevicesButton,
     micDevicesButton,
     speakerDevicesButton,
     videoDevicesMenu,
     micDevicesMenu,
     speakerDevicesMenu,
+    agcToggle,
+    noiseToggle,
   } = controls();
 
   // Check if we're in audio transcript mode
@@ -54,6 +57,8 @@ export default async function createControls(
       selectedCamera,
       selectedMicrophone,
       selectedSpeaker,
+      autoGainControl,
+      noiseSuppression,
     } = devices.state;
 
     function setIconVisibility(button: HTMLElement, isMuted: boolean) {
@@ -111,6 +116,14 @@ export default async function createControls(
         "speaker"
       );
     }
+
+    // Update audio processing checkboxes
+    if (agcToggle) {
+      (agcToggle as HTMLInputElement).checked = autoGainControl;
+    }
+    if (noiseToggle) {
+      (noiseToggle as HTMLInputElement).checked = noiseSuppression;
+    }
   }
 
   function updateDeviceMenu(
@@ -138,6 +151,94 @@ export default async function createControls(
   micButton.addEventListener("click", () => devices.toggleAudio());
   speakerButton.addEventListener("click", () => devices.toggleSpeaker());
   hangupButton.addEventListener("click", () => onHangup?.());
+
+  // Fullscreen toggle handler
+  let isFullscreen = false;
+  
+  async function toggleFullscreen() {
+    const modalContainer = controlsContainer.closest('.modal-container') as HTMLElement;
+    if (!modalContainer) return;
+    
+    try {
+      if (!document.fullscreenElement) {
+        // Enter native fullscreen
+        await modalContainer.requestFullscreen();
+        isFullscreen = true;
+        modalContainer.classList.add('fullscreen-mode');
+      } else {
+        // Exit native fullscreen
+        await document.exitFullscreen();
+        isFullscreen = false;
+        modalContainer.classList.remove('fullscreen-mode');
+      }
+      
+      // Update icon visibility
+      const fullscreenIcon = fullscreenButton?.querySelector('.fullscreen-icon') as HTMLElement;
+      const exitFullscreenIcon = fullscreenButton?.querySelector('.exit-fullscreen-icon') as HTMLElement;
+      if (fullscreenIcon && exitFullscreenIcon) {
+        fullscreenIcon.style.display = isFullscreen ? 'none' : 'block';
+        exitFullscreenIcon.style.display = isFullscreen ? 'block' : 'none';
+      }
+    } catch (err) {
+      console.error('Fullscreen error:', err);
+      // Fallback to CSS-only fullscreen if native fails
+      isFullscreen = !isFullscreen;
+      modalContainer.classList.toggle('fullscreen-mode', isFullscreen);
+      
+      const fullscreenIcon = fullscreenButton?.querySelector('.fullscreen-icon') as HTMLElement;
+      const exitFullscreenIcon = fullscreenButton?.querySelector('.exit-fullscreen-icon') as HTMLElement;
+      if (fullscreenIcon && exitFullscreenIcon) {
+        fullscreenIcon.style.display = isFullscreen ? 'none' : 'block';
+        exitFullscreenIcon.style.display = isFullscreen ? 'block' : 'none';
+      }
+    }
+  }
+  
+  fullscreenButton?.addEventListener("click", toggleFullscreen);
+  
+  // Listen for fullscreen changes (handles ESC key, etc)
+  document.addEventListener('fullscreenchange', () => {
+    const modalContainer = controlsContainer.closest('.modal-container') as HTMLElement;
+    if (!modalContainer) return;
+    
+    if (!document.fullscreenElement) {
+      // Exited fullscreen
+      isFullscreen = false;
+      modalContainer.classList.remove('fullscreen-mode');
+    } else {
+      // Entered fullscreen
+      isFullscreen = true;
+      modalContainer.classList.add('fullscreen-mode');
+    }
+    
+    // Update icon visibility
+    const fullscreenIcon = fullscreenButton?.querySelector('.fullscreen-icon') as HTMLElement;
+    const exitFullscreenIcon = fullscreenButton?.querySelector('.exit-fullscreen-icon') as HTMLElement;
+    if (fullscreenIcon && exitFullscreenIcon) {
+      fullscreenIcon.style.display = isFullscreen ? 'none' : 'block';
+      exitFullscreenIcon.style.display = isFullscreen ? 'block' : 'none';
+    }
+  });
+  
+  // Keyboard shortcuts for fullscreen
+  document.addEventListener('keydown', (e) => {
+    const modalContainer = controlsContainer.closest('.modal-container');
+    if (!modalContainer) return;
+    
+    // F key to toggle fullscreen
+    if (e.key === 'f' || e.key === 'F') {
+      // Don't trigger if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      e.preventDefault();
+      toggleFullscreen();
+    }
+  });
+
+  // Audio processing toggle handlers
+  agcToggle?.addEventListener("change", () => devices.toggleAutoGainControl());
+  noiseToggle?.addEventListener("change", () => devices.toggleNoiseSuppression());
 
   // Device menu handlers
   function setupDeviceMenu(
