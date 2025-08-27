@@ -188,32 +188,32 @@ class ContactFormModal {
         .form-input {
           width: 100%;
           padding: 12px;
-          border: 1px solid #d1d5db;
+          border: 1px solid #d1d5db !important;
           border-radius: 4px;
           font-size: 14px;
           box-sizing: border-box;
           background: #ffffff !important;
-          color: #374151 !important;
+          color: #111827 !important;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
         }
 
         .form-input::placeholder {
           color: #9ca3af !important;
-          opacity: 1;
+          opacity: 1 !important;
         }
 
         .form-input:focus {
-          outline: none;
-          border-color: #4b5563;
-          box-shadow: 0 0 0 1px #4b5563;
+          outline: none !important;
+          border-color: #4b5563 !important;
+          box-shadow: 0 0 0 1px #4b5563 !important;
           background: #ffffff !important;
-          color: #374151 !important;
+          color: #111827 !important;
         }
 
         .form-input:not(:placeholder-shown) {
           background: #f9fafb !important;
-          border-color: #9ca3af;
-          color: #374151 !important;
+          border-color: #9ca3af !important;
+          color: #111827 !important;
         }
 
         .continue-button {

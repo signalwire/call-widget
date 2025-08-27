@@ -37,11 +37,25 @@ export class CallInfoModal extends HTMLElement {
       }
 
       .info-modal-content {
-        background: white;
+        background: #ffffff !important;
+        color: #374151 !important;
         padding: 20px;
         border-radius: 8px;
         max-width: 400px;
         text-align: center;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+      }
+
+      .info-modal-content h2 {
+        color: #374151 !important;
+        margin: 0 0 16px 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+      }
+
+      .info-modal-content p {
+        color: #374151 !important;
+        margin: 0 0 16px 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
       }
 
       .ok-button {
