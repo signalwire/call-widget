@@ -44,7 +44,7 @@
     "vite": "^6.4.1"
   },
   "dependencies": {
-    "@signalwire/js": "3.29.1",
+    "@signalwire/js": "4.0.0-dev-20260318145605",
     "nanomorph": "^5.4.3",
     "showdown": "^2.1.0"
   },

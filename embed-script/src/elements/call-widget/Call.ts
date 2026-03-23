@@ -1,13 +1,12 @@
 import {
-  FabricRoomSession,
   SignalWire,
-  SignalWireClient,
+  StaticCredentialProvider,
+  type Call as SWCall,
 } from "@signalwire/js";
 import { Chat, ChatEntry } from "./Chat";
 import html from "../../lib/html";
 import devices from "../../Devices";
 import { CallWidgetConfig } from "./CallWidgetConfig";
-import { CallParams } from "@signalwire/js/dist/js/src/fabric/interfaces";
 
 export interface UserVariables {
   userName: string;
@@ -16,15 +15,17 @@ export interface UserVariables {
 }
 
 export class Call {
-  private client: SignalWireClient | null = null;
-  private clientInitPromise: Promise<SignalWireClient> | null = null;
+  private client: InstanceType<typeof SignalWire> | null = null;
+  private clientInitPromise: Promise<InstanceType<typeof SignalWire>> | null =
+    null;
   config: CallWidgetConfig | null = null;
 
   // to dispatch events
   private widget: HTMLElement;
 
   chat: Chat | null = null;
-  currentCall: FabricRoomSession | null = null;
+  currentCall: SWCall | null = null;
+  private subscriptions: { unsubscribe: () => void }[] = [];
 
   constructor({
     config,
@@ -60,7 +61,7 @@ export class Call {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ token: embedsToken }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -71,14 +72,6 @@ export class Call {
     return data.token;
   }
 
-  getLocalVideoTrack() {
-    return this.currentCall?.localVideoTrack;
-  }
-
-  getLocalAudioTrack() {
-    return this.currentCall?.localAudioTrack;
-  }
-
   private async setupClient(config: CallWidgetConfig) {
     const token = config.getToken();
     if (!token) {
@@ -86,76 +79,22 @@ export class Call {
     }
 
     let clientToken = token;
-    if (token.startsWith("c2c_")) {
+    if (token.startsWith("c2c_") || token.startsWith("c2t_")) {
       clientToken = await this.getWidgetToken(token);
     }
-
-    const logLevel = config.getDebugMode();
-    const logWsTraffic = config.getDebugWsTraffic();
 
     // Remove all SAT keys from session storage before dial
     // github.com/signalwire/call-widget/issues/8
     ["ci-SAT", "pt-SAT", "as-SAT"].forEach((key) =>
-      sessionStorage.removeItem(key)
+      sessionStorage.removeItem(key),
     );
 
-    const client = await SignalWire({
-      token: clientToken,
-      host: config.getHost() ?? undefined,
-      logLevel: logLevel ?? undefined,
-      debug: logWsTraffic ? { logWsTraffic } : undefined,
-    });
+    const client = new SignalWire(
+      new StaticCredentialProvider({ token: clientToken }),
+    );
 
     // @ts-ignore
-    client.on("ai.partial_result", (params) => {
-      // AI partial result (typing indicator)
-      this.chat?.handleEvent(
-        "ai.partial_result",
-        params.text ?? "",
-        params.barged ?? false
-      );
-    });
-
-    // @ts-ignore
-    client.on("ai.speech_detect", (params) => {
-      // AI speech detection (user speaking)
-      const cleanText = params.text.replace(/\{confidence=[\d.]+\}/, "");
-      this.chat?.handleEvent(
-        "ai.speech_detect",
-        cleanText,
-        params.type !== "normal" // this also doesn't seem to have type=barged, but leaving here for now
-      );
-    });
-
-    // @ts-ignore
-    client.on("ai.transparent_barge", (params) => {
-      // AI transparent barge (remove last AI speech)
-      const cleanText = params.combined_text;
-      this.chat?.handleEvent("ai.transparent_barge", cleanText, true);
-    });
-
-    // @ts-ignore
-    client.on("ai.completion", (params) => {
-      // AI completion (final response)
-      this.chat?.handleEvent(
-        "ai.completion",
-        params.text ?? "",
-        params.type === "barged"
-      );
-    });
-
-    // @ts-ignore
-    client.on("ai.response_utterance", (params) => {
-      // AI response utterance (spoken response)
-      this.chat?.handleEvent(
-        "ai.response_utterance",
-        params.utterance ?? "",
-        false // this doesn't have barged yet
-      );
-    });
-
-    // @ts-ignore
-    client.on("user_event", (params) => {
+    client.on?.("user_event", (params: any) => {
       console.log("user_event", params);
       const userEvent = new CustomEvent("user_event", {
         detail: params,
@@ -165,41 +104,61 @@ export class Call {
     });
 
     if (config.getReceiveCalls()) {
-      client.online({
-        incomingCallHandlers: {
-          websocket: (callInvite) => {
-            console.log("incoming call", callInvite);
+      const incomingSub = client.session.incomingCalls$.subscribe(
+        (incomingCalls: SWCall[]) => {
+          const ringingCall = incomingCalls.find(
+            (c: any) => c.status === "ringing",
+          );
+          if (ringingCall) {
             const incomingCallEvent = new CustomEvent("call.incoming", {
               detail: {
-                callInvite,
+                call: ringingCall,
                 caller: {
-                  name: callInvite.invite.details?.caller_id_name,
-                  number: callInvite.invite.details?.caller_id_number,
+                  name: (ringingCall as any).address?.displayName,
+                  number: (ringingCall as any).address?.id,
                 },
-                accept: async (params: CallParams) => {
-                  const roomSession = await callInvite.invite.accept(params);
-                  this.currentCall = roomSession;
-                  return roomSession;
+                accept: async (params: any) => {
+                  ringingCall.answer(params); // answer() is synchronous in v4
+                  this.currentCall = ringingCall;
+                  return ringingCall;
                 },
-                reject: () => callInvite.invite.reject(),
+                reject: () => ringingCall.reject(), // reject() is synchronous in v4
               },
               bubbles: true,
             });
             this.widget.dispatchEvent(incomingCallEvent);
-          },
+          }
         },
-      });
+      );
+      this.subscriptions.push(incomingSub);
     }
 
     this.client = client;
     return client;
   }
 
+  private waitForConnection(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this.client) {
+        reject(new Error("Client is not initialized"));
+        return;
+      }
+      let done = false;
+      const sub = this.client.isConnected$.subscribe((connected: boolean) => {
+        if (connected && !done) {
+          done = true;
+          resolve();
+        }
+      });
+      if (done) sub.unsubscribe();
+    });
+  }
+
   async dial(
     container: HTMLElement | undefined,
     onChatChange: (chatHistory: ChatEntry[]) => void,
     onLocalVideo: (localVideo: HTMLVideoElement) => void,
-    destination?: string
+    destination?: string,
   ) {
     if (!this.client && this.clientInitPromise) {
       await this.clientInitPromise;
@@ -223,15 +182,14 @@ export class Call {
     });
 
     if (!beforeDialApproved) {
-      // await this.destroy();
       return null;
     }
-
-    console.log(this.client);
 
     if (!this.client) {
       throw new Error("Client is not initialized");
     }
+
+    await this.waitForConnection();
 
     this.chat = new Chat();
     this.chat.onUpdate = () => {
@@ -253,103 +211,188 @@ export class Call {
       ...userVariables,
     };
 
-    // Get audio processing settings from devices
-    const audioSettings =
-      devices.state.autoGainControl !== undefined
-        ? {
-            autoGainControl: devices.state.autoGainControl,
-            noiseSuppression: devices.state.noiseSuppression,
-            echoCancellation: true, // Always keep echo cancellation on
-          }
-        : true;
+    // Audio constraints passed via inputAudioDeviceConstraints
+    const audioConstraints: MediaTrackConstraints = {
+      autoGainControl: devices.state.autoGainControl,
+      noiseSuppression: devices.state.noiseSuppression,
+      echoCancellation: true, // Always keep echo cancellation on
+    };
 
-    const roomSession = await this.client?.dial({
-      to: finalDestination,
-      rootElement: container ?? undefined,
-      audio: supportsAudio ? audioSettings : undefined,
-      video: supportsVideo ?? undefined,
-      negotiateVideo: supportsVideo ?? undefined,
-      userVariables: finalUserVariables,
+    const call = await this.client.dial(finalDestination, {
+      audio: supportsAudio ?? false,
+      video: supportsVideo ?? false,
+      receiveAudio: supportsAudio ?? false,
+      receiveVideo: supportsVideo ?? false,
+      inputAudioDeviceConstraints: supportsAudio ? audioConstraints : undefined,
     });
-    this.currentCall = roomSession;
+
+    // Set user variables after dial (v4 API)
+    call.userVariables = finalUserVariables;
+
+    this.currentCall = call;
 
     console.info(
       "Call started",
       this.currentCall,
       "with user variables",
-      finalUserVariables
+      finalUserVariables,
     );
 
-    roomSession.on("call.joined", async () => {
-      const callStartedEvent = new CustomEvent("call.joined", {
-        detail: {
-          call: this.currentCall,
-          client: this.client,
-        },
-        bubbles: true,
-      });
-      this.widget.dispatchEvent(callStartedEvent);
-      // @ts-ignore
-      window.call = roomSession;
-      if (roomSession?.localStream) {
-        devices.updateVideoAspectRatio();
-        const { localVideo } = html`<video
-          autoplay
-          playsinline
-          muted
-          name="localVideo"
-        ></video>`();
+    // Subscribe to AI events via the session-level stream.
+    // call.signalingEvent$ is derived from call.callEvent$ which filters out ai.* events.
+    // The raw session stream includes all events; we filter to this call by call_id/room_session_id.
+    const callId = call.id;
+    const signalingEventSub = (this.client as any).session.signalingEvent$.subscribe((event: any) => {
+      const p = event?.params ?? {};
+      if (p.call_id !== callId && p.room_session_id !== callId) return;
 
-        (localVideo as HTMLVideoElement).onloadedmetadata = () => {
-          devices.onAspectRatioChange(
-            (localVideo as HTMLVideoElement).videoWidth /
-              (localVideo as HTMLVideoElement).videoHeight
+      const eventType: string = event.event_type ?? "";
+      const params = p;
+
+      switch (eventType) {
+        case "ai.partial_result":
+          this.chat?.handleEvent(
+            "ai.partial_result",
+            params.text ?? "",
+            params.barged ?? false,
           );
-        };
+          break;
+        case "ai.speech_detect": {
+          const cleanText = (params.text ?? "").replace(
+            /\{confidence=[\d.]+\}/,
+            "",
+          );
+          this.chat?.handleEvent(
+            "ai.speech_detect",
+            cleanText,
+            params.type !== "normal",
+          );
+          break;
+        }
+        case "ai.transparent_barge":
+          this.chat?.handleEvent(
+            "ai.transparent_barge",
+            params.combined_text ?? "",
+            true,
+          );
+          break;
+        case "ai.completion":
+          this.chat?.handleEvent(
+            "ai.completion",
+            params.text ?? "",
+            params.type === "barged",
+          );
+          break;
+        case "ai.response":
+        case "ai.response_utterance":
+          this.chat?.handleEvent(
+            "ai.response_utterance",
+            params.response ?? params.utterance ?? "",
+            false,
+          );
+          break;
+        case "user_event": {
+          console.log("user_event", params);
+          const userEvent = new CustomEvent("user_event", {
+            detail: params,
+            bubbles: true,
+          });
+          this.widget.dispatchEvent(userEvent);
+          break;
+        }
+      }
+    });
+    this.subscriptions.push(signalingEventSub);
 
-        (localVideo as HTMLVideoElement).srcObject = roomSession.localStream;
-        onLocalVideo(localVideo as HTMLVideoElement);
+    // Subscribe to local stream for local video display
+    const localStreamSub = call.localStream$.subscribe(
+      (stream: MediaStream | null) => {
+        if (stream) {
+          devices.updateVideoAspectRatio(stream);
+          const { localVideo } = html`<video
+            autoplay
+            playsinline
+            muted
+            name="localVideo"
+          ></video>`();
+
+          (localVideo as HTMLVideoElement).onloadedmetadata = () => {
+            devices.onAspectRatioChange(
+              (localVideo as HTMLVideoElement).videoWidth /
+                (localVideo as HTMLVideoElement).videoHeight,
+            );
+          };
+
+          (localVideo as HTMLVideoElement).srcObject = stream;
+          onLocalVideo(localVideo as HTMLVideoElement);
+        }
+      },
+    );
+    this.subscriptions.push(localStreamSub);
+
+    // Subscribe to remote stream and attach to container
+    if (container) {
+      let remoteVideoEl: HTMLVideoElement | null = null;
+      const remoteStreamSub = call.remoteStream$.subscribe(
+        (stream: MediaStream | null) => {
+          if (stream) {
+            if (!remoteVideoEl) {
+              remoteVideoEl = document.createElement("video");
+              remoteVideoEl.autoplay = true;
+              remoteVideoEl.playsInline = true;
+              container.appendChild(remoteVideoEl);
+            }
+            remoteVideoEl.srcObject = stream;
+          }
+        },
+      );
+      this.subscriptions.push(remoteStreamSub);
+    }
+
+    // Subscribe to call status
+    const statusSub = call.status$.subscribe(async (status: string) => {
+      if (status === "connected") {
+        const callStartedEvent = new CustomEvent("call.joined", {
+          detail: {
+            call: this.currentCall,
+            client: this.client,
+          },
+          bubbles: true,
+        });
+        this.widget.dispatchEvent(callStartedEvent);
+        // @ts-ignore
+        window.call = call;
+        // Apply saved device preferences now that call is fully joined
+        await devices.onCallStarted();
       }
 
-      // Apply saved device preferences now that call is fully joined
-      await devices.onCallStarted();
-    });
+      if (status === "destroyed" || status === "failed") {
+        const callEndedEvent = new CustomEvent("call.left", {
+          detail: { call: this.currentCall },
+          bubbles: true,
+        });
+        this.widget.dispatchEvent(callEndedEvent);
 
-    roomSession.on("call.left", () => {
-      const callEndedEvent = new CustomEvent("call.left", {
-        detail: {
-          call: this.currentCall,
-        },
-        bubbles: true,
-      });
-      this.widget.dispatchEvent(callEndedEvent);
+        const destroyEvent = new CustomEvent("destroy", {
+          detail: { call: this.currentCall },
+          bubbles: true,
+        });
+        this.widget.dispatchEvent(destroyEvent);
+      }
     });
+    this.subscriptions.push(statusSub);
 
-    roomSession.on("destroy", () => {
-      const callEndedEvent = new CustomEvent("destroy", {
-        detail: {
-          call: this.currentCall,
-        },
-        bubbles: true,
-      });
-      this.widget.dispatchEvent(callEndedEvent);
-    });
-
-    return roomSession;
+    return call;
   }
 
-  async start() {
-    if (!this.client) {
-      throw new Error("Client is not set");
-    }
-    await this.currentCall?.start();
-  }
+  // No-op: calls start automatically in the new SDK
+  async start() {}
 
   async hangup() {
     if (!this.currentCall) {
       throw new Error("Call is not set");
     }
-    await this.currentCall?.hangup();
+    await this.currentCall.hangup();
   }
 
   async destroy() {
@@ -357,18 +400,11 @@ export class Call {
       await this.currentCall.hangup();
     }
 
-    if (this.client) {
-      // @ts-ignore
-      this.client.off("ai.partial_result");
-      // @ts-ignore
-      this.client.off("ai.speech_detect");
-      // @ts-ignore
-      this.client.off("ai.completion");
-      // @ts-ignore
-      this.client.off("ai.response_utterance");
-      // @ts-ignore
+    this.subscriptions.forEach((s) => s.unsubscribe());
+    this.subscriptions = [];
 
-      this.client.disconnect();
+    if (this.client) {
+      this.client.destroy();
       this.client = null;
     }
 

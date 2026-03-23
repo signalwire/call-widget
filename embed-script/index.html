@@ -1,47 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SignalWire C2C Widget</title>
-  </head>
-  <body>
-    <button id="callButton1">Call Sigmond (chat only)</button>
 
-    <div
-      style="
-        position: fixed;
-        top: 120px;
-        left: 50px;
-        width: 800px;
-        height: 600px;
-        border: 2px solid #ccc;
-        background: #f0f0f0;
-      "
-    >
-      <call-widget
-        button-id="callButton1"
-        token="token"
-        support-video="true"
-        support-audio="true"
-        log-level="info"
-        window-mode="video+transcript"
-        user-variables='{"house": "Gryffindor"}'
-        contained="true"
-      ></call-widget>
-    </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SignalWire C2C Widget</title>
+</head>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const widget = document.querySelector("call-widget");
-        widget.newCallVariable({
-          name: "John Doe",
-          email: "john.doe@example.com",
-          phone: "+9779845862777",
-        });
-      });
-    </script>
+<body>
+  <button id="callButton1">Call Sigmond </button>
 
-    <script type="module" src="/src/index.ts"></script>
-  </body>
+
+  <call-widget button-id="callButton1" token="c2t_87e339bcac70f3385362fab0cd62879b" destination="/private/robot_v1"
+    support-video="true" support-audio="true" log-level="info" user-variables='{"house": "Gryffindor"}'></call-widget>
+
+  <script type="module" src="/src/index.ts"></script>
+</body>
+
 </html>

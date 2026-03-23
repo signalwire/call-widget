@@ -99,10 +99,7 @@ export class Chat {
         break;
 
       case "ai.transparent_barge":
-        // Only clear the current partial AI result since that's what's being interrupted
         this.aiPartialResult = null;
-
-        // Add the user's interruption
         this.state.entries.push({
           type: "user",
           text,

@@ -6,7 +6,7 @@ import createControls from "../../ui/controls.ui.ts";
 import { ChatEntry } from "./Chat.ts";
 import createChatUI from "../../ui/chat.ui.ts";
 import { style } from "../../Style.ts";
-import { FabricRoomSession } from "@signalwire/js";
+import { type Call as SWCall } from "@signalwire/js";
 import { ButtonObserver } from "./ButtonObserver.ts";
 import { CallWidgetConfig } from "./CallWidgetConfig.ts";
 import { LoadingManager } from "./LoadingManager.ts";
@@ -228,7 +228,7 @@ export default class CallWidget extends HTMLElement {
       return;
     }
 
-    let callInstance: FabricRoomSession | null = null;
+    let callInstance: SWCall | null = null;
 
     try {
       callInstance =
@@ -286,22 +286,29 @@ export default class CallWidget extends HTMLElement {
       }
     );
 
-    callInstance?.on("destroy", async () => {
-      if (this.activeInfoModal) {
-        // Wait for the info modal to be dismissed before closing
-        const observer = new MutationObserver(() => {
-          if (!this.activeInfoModal) {
-            observer.disconnect();
-            this.closeModal();
-          }
-        });
+    // Subscribe to call status for destroy/close handling
+    callInstance.status$.subscribe(async (status: string) => {
+      if (status === "destroyed" || status === "failed") {
+        if (this.activeInfoModal) {
+          // Wait for the info modal to be dismissed before closing
+          const observer = new MutationObserver(() => {
+            if (!this.activeInfoModal) {
+              observer.disconnect();
+              this.closeModal();
+            }
+          });
 
-        observer.observe(this.modalContainer!, {
-          childList: true,
-          subtree: true,
-        });
-      } else {
-        this.closeModal();
+          observer.observe(this.modalContainer!, {
+            childList: true,
+            subtree: true,
+          });
+        } else {
+          this.closeModal();
+        }
+      }
+
+      if (status === "connected") {
+        this.loadingManager?.setLoading(false);
       }
     });
 
@@ -321,8 +328,6 @@ export default class CallWidget extends HTMLElement {
       this.closeModal();
       return;
     }
-
-    this.loadingManager?.setLoading(false);
 
     // Apply saved device preferences now that call is fully started
     try {
@@ -346,7 +351,6 @@ export default class CallWidget extends HTMLElement {
 
     if (this.config.getAutoAnswer()) {
       callReceivePromptAnswer = "accept";
-      // callInstance = await eventDetails.accept({ rootElement: videoArea });
     } else {
       const incomingCallModal = new IncomingCallModal();
       this.containerElement?.appendChild(incomingCallModal);
@@ -395,6 +399,7 @@ export default class CallWidget extends HTMLElement {
     this.loadingManager?.setLoading(true);
 
     const supportsVideo = this.config.getSupportVideo();
+    const supportsAudio = this.config.getSupportAudio();
 
     const permissionResult = await devices.getPermissions(
       supportsVideo ?? false
@@ -410,35 +415,42 @@ export default class CallWidget extends HTMLElement {
       return;
     }
 
-    let callInstance: FabricRoomSession | null = null;
+    let callInstance: SWCall | null = null;
 
     if (callReceivePromptAnswer === "accept") {
-      callInstance = await eventDetails.accept({ rootElement: videoArea });
+      callInstance = await eventDetails.accept({
+        audio: supportsAudio ?? true,
+        video: supportsVideo ?? false,
+        receiveAudio: supportsAudio ?? true,
+        receiveVideo: supportsVideo ?? false,
+      });
     } else {
       await eventDetails.reject();
     }
 
-    callInstance?.on("call.joined", () => {
-      console.log("Call joined from Notification");
-    });
-    callInstance?.on("room.joined", () => {
-      console.log("Room joined from Notification");
+    if (!callInstance) {
+      this.closeModal();
+      return;
+    }
+
+    // Set up remote video stream in videoArea
+    let remoteVideoEl: HTMLVideoElement | null = null;
+    callInstance.remoteStream$.subscribe((stream: MediaStream | null) => {
+      if (stream && videoArea) {
+        if (!remoteVideoEl) {
+          remoteVideoEl = document.createElement("video");
+          remoteVideoEl.autoplay = true;
+          remoteVideoEl.playsInline = true;
+          videoArea.appendChild(remoteVideoEl);
+        }
+        remoteVideoEl.srcObject = stream;
+      }
     });
 
-    callInstance?.on("room.joined", async () => {
-      console.log("Call Joined from Notification");
-      const callStartedEvent = new CustomEvent("call.joined", {
-        detail: {
-          call: callInstance,
-          fromNotification: true,
-        },
-        bubbles: true,
-      });
-      this.dispatchEvent(callStartedEvent);
-      // @ts-ignore
-      window.call = callInstance;
-      if (callInstance?.localStream) {
-        devices.updateVideoAspectRatio();
+    // Set up local video stream
+    callInstance.localStream$.subscribe((stream: MediaStream | null) => {
+      if (stream) {
+        devices.updateVideoAspectRatio(stream);
         const { localVideo } = html`<video
           autoplay
           playsinline
@@ -453,17 +465,48 @@ export default class CallWidget extends HTMLElement {
           );
         };
 
-        (localVideo as HTMLVideoElement).srcObject = callInstance.localStream;
+        (localVideo as HTMLVideoElement).srcObject = stream;
         localVideoArea.appendChild(localVideo);
       }
-
-      // Apply saved device preferences now that call is fully joined
-      await devices.onCallStarted();
     });
 
-    if (callInstance) {
-      await devices.setup(callInstance);
-    }
+    // Handle call status
+    callInstance.status$.subscribe(async (status: string) => {
+      if (status === "connected") {
+        console.log("Call joined from Notification");
+        const callStartedEvent = new CustomEvent("call.joined", {
+          detail: {
+            call: callInstance,
+            fromNotification: true,
+          },
+          bubbles: true,
+        });
+        this.dispatchEvent(callStartedEvent);
+        // @ts-ignore
+        window.call = callInstance;
+        await devices.onCallStarted();
+        this.loadingManager?.setLoading(false);
+      }
+
+      if (status === "destroyed" || status === "failed") {
+        if (this.activeInfoModal) {
+          const observer = new MutationObserver(() => {
+            if (!this.activeInfoModal) {
+              observer.disconnect();
+              this.closeModal();
+            }
+          });
+          observer.observe(this.modalContainer!, {
+            childList: true,
+            subtree: true,
+          });
+        } else {
+          this.closeModal();
+        }
+      }
+    });
+
+    await devices.setup(callInstance);
 
     devices.onAspectRatioChange = (aspectRatio: number | null) => {
       if (aspectRatio && localVideoArea) {
@@ -486,28 +529,7 @@ export default class CallWidget extends HTMLElement {
       }
     );
 
-    callInstance?.on("destroy", async () => {
-      if (this.activeInfoModal) {
-        // Wait for the info modal to be dismissed before closing
-        const observer = new MutationObserver(() => {
-          if (!this.activeInfoModal) {
-            observer.disconnect();
-            this.closeModal();
-          }
-        });
-
-        observer.observe(this.modalContainer!, {
-          childList: true,
-          subtree: true,
-        });
-      } else {
-        this.closeModal();
-      }
-    });
-
     controlsPanel.appendChild(control);
-
-    this.loadingManager?.setLoading(false);
   }
 
   disconnectedCallback() {

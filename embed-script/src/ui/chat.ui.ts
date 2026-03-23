@@ -1,4 +1,4 @@
-import { ChatEntry } from "../Chat";
+import { ChatEntry } from "../elements/call-widget/Chat";
 import tail from "../icons/chat-tail.svg?raw";
 import nanomorph from "nanomorph";
 import showdown from "showdown";

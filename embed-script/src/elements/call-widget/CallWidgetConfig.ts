@@ -1,5 +1,3 @@
-import { SignalWireClientParams } from "@signalwire/js";
-
 type AttributeDefinition<T> = {
   name: string;
   parser: (value: string) => T;
@@ -92,14 +90,14 @@ export class CallWidgetConfig {
     },
     logLevel: {
       name: "log-level",
-      parser: (value: string): SignalWireClientParams["logLevel"] => {
+      parser: (value: string): string => {
         const validLevels = ["debug", "info", "warn", "error"];
         if (!validLevels.includes(value.toLowerCase())) {
           throw new Error(
             `Invalid log level. Must be one of: ${validLevels.join(", ")}`
           );
         }
-        return value as SignalWireClientParams["logLevel"];
+        return value as string;
       },
       required: false,
     },
@@ -247,7 +245,7 @@ export class CallWidgetConfig {
     return this.getAttribute(CallWidgetConfig.attributeDefinitions.host);
   }
 
-  getDebugMode(): SignalWireClientParams["logLevel"] | null {
+  getDebugMode(): string | null {
     return this.getAttribute(CallWidgetConfig.attributeDefinitions.logLevel);
   }
 

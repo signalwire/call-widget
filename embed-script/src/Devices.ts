@@ -1,4 +1,4 @@
-import { FabricRoomSession, WebRTC } from "@signalwire/js";
+import { type Call as SWCall, type CallSelfParticipant } from "@signalwire/js";
 import { DevicePersistence } from "./DevicePersistence";
 
 class DevicesState {
@@ -11,8 +11,8 @@ class DevicesState {
   isVideoMuted: boolean = false;
   isSpeakerMuted: boolean = false;
   currentVideoAspectRatio: number | null = null;
-  autoGainControl: boolean = false;  // Disabled per WebRTC best practices - prevents pumping effects
-  noiseSuppression: boolean = false;  // Disabled per WebRTC best practices - prevents robotic voice
+  autoGainControl: boolean = false; // Disabled per WebRTC best practices - prevents pumping effects
+  noiseSuppression: boolean = false; // Disabled per WebRTC best practices - prevents robotic voice
 
   get audioinput() {
     return this.devices.filter((d) => d.kind === "audioinput");
@@ -27,19 +27,15 @@ class DevicesState {
   }
 }
 
-// usage:
-
-// const devices = new Devices();
-// devices.getPermissions();
-// initialize call
-// devices.setup(call);
-
 class Devices {
   private static instance: Devices;
   state: DevicesState = new DevicesState();
-  call: FabricRoomSession | null = null;
-  private deviceWatcher: any = null;
+  call: SWCall | null = null;
+  private currentSelf: CallSelfParticipant | null = null;
+  private localStream: MediaStream | null = null;
+  private deviceChangeHandler: (() => void) | null = null;
   private permissionStream: MediaStream | null = null;
+  private callSubscriptions: { unsubscribe: () => void }[] = [];
 
   private constructor() {}
 
@@ -52,14 +48,13 @@ class Devices {
 
   async getPermissions(video: boolean = true) {
     try {
-      // Load audio processing settings for initial constraints
       const audioSettings = DevicePersistence.getAudioProcessingSettings();
-      
-      const stream = await WebRTC.getUserMedia({
+
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           autoGainControl: audioSettings.autoGainControl,
           noiseSuppression: audioSettings.noiseSuppression,
-          echoCancellation: true, // Always keep echo cancellation on
+          echoCancellation: true,
         },
         video,
       });
@@ -82,7 +77,7 @@ class Devices {
     }
   }
 
-  async setup(call: FabricRoomSession) {
+  async setup(call: SWCall) {
     if (this.permissionStream) {
       this.permissionStream.getTracks().forEach((track) => track.stop());
       this.permissionStream = null;
@@ -94,15 +89,54 @@ class Devices {
     try {
       await this._updateDevicesList();
       await this._updateSelectedDevices();
-      this.updateVideoAspectRatio();
 
-      this.deviceWatcher = await WebRTC.createDeviceWatcher();
-      this.deviceWatcher.on("changed", async () => {
-        await this._updateDevicesList();
-        await this._updateSelectedDevices();
-        this.updateVideoAspectRatio();
+      // Track local stream for aspect ratio and cleanup
+      const localStreamSub = (call as any).localStream$.subscribe(
+        (stream: MediaStream | null) => {
+          this.localStream = stream;
+          if (stream) {
+            this.updateVideoAspectRatio(stream);
+          }
+        }
+      );
+      this.callSubscriptions.push(localStreamSub);
+
+      // Track self participant for mute/device controls
+      const selfSub = (call as any).self$.subscribe((self: any) => {
+        if (!self) return;
+        this.currentSelf = self;
+
+        this.state.isAudioMuted = self.audioMuted ?? false;
+        this.state.isVideoMuted = self.videoMuted ?? false;
+        this.state.isSpeakerMuted = self.deaf ?? false;
+
+        self.audioMuted$?.subscribe((muted: boolean) => {
+          this.state.isAudioMuted = muted;
+          this.onChange();
+        });
+        self.videoMuted$?.subscribe((muted: boolean) => {
+          this.state.isVideoMuted = muted;
+          this.onChange();
+        });
+        self.deaf$?.subscribe((deaf: boolean) => {
+          this.state.isSpeakerMuted = deaf;
+          this.onChange();
+        });
+
         this.onChange();
       });
+      this.callSubscriptions.push(selfSub);
+
+      // Watch for device changes
+      this.deviceChangeHandler = async () => {
+        await this._updateDevicesList();
+        await this._updateSelectedDevices();
+        this.onChange();
+      };
+      navigator.mediaDevices.addEventListener(
+        "devicechange",
+        this.deviceChangeHandler
+      );
 
       this.state.loading = false;
       this.onLoad();
@@ -113,29 +147,7 @@ class Devices {
   }
 
   private async _updateDevicesList() {
-    const devices = await WebRTC.enumerateDevices();
-    this.state.devices = devices;
-
-    // Check if we need to remute any tracks after device changes
-    if (this.call) {
-      if (this.state.isVideoMuted) {
-        const videoTrack =
-          this.call.localVideoTrack ||
-          this.call.localStream?.getVideoTracks()?.[0];
-        if (videoTrack) {
-          videoTrack.enabled = false;
-        }
-      }
-
-      if (this.state.isAudioMuted) {
-        const audioTrack =
-          this.call.localAudioTrack ||
-          this.call.localStream?.getAudioTracks()?.[0];
-        if (audioTrack) {
-          audioTrack.enabled = false;
-        }
-      }
-    }
+    this.state.devices = await navigator.mediaDevices.enumerateDevices();
   }
 
   private async _updateSelectedDevices() {
@@ -159,12 +171,10 @@ class Devices {
         audiooutput[0];
     }
 
-    // Load saved audio processing settings
     const audioSettings = DevicePersistence.getAudioProcessingSettings();
     this.state.autoGainControl = audioSettings.autoGainControl;
     this.state.noiseSuppression = audioSettings.noiseSuppression;
 
-    // Ensure selected devices are still available (device might have been unplugged)
     this.state.selectedMicrophone =
       audioinput.find(
         (d) => d.deviceId === this.state.selectedMicrophone?.deviceId
@@ -187,10 +197,11 @@ class Devices {
       null;
   }
 
-  updateVideoAspectRatio() {
-    if (!this.call?.localStream) return;
+  updateVideoAspectRatio(stream?: MediaStream) {
+    const localStream = stream || this.localStream;
+    if (!localStream) return;
 
-    const videoTrack = this.call.localStream.getVideoTracks()[0];
+    const videoTrack = localStream.getVideoTracks()[0];
     if (!videoTrack) return;
 
     const settings = videoTrack.getSettings();
@@ -200,83 +211,42 @@ class Devices {
         ? settings.width / settings.height
         : null);
 
-    // turns out, this aspect ratio reported by videoTrack.getSettings is not accurate (for phones, sensor aspect ratio is reported rather than the actual stream aspect ratio)
-    // so we need to kind of bypass this function in `Call` class when the video metadata loads. Sorry for the hack.
-
     if (newAspectRatio !== this.state.currentVideoAspectRatio) {
       this.state.currentVideoAspectRatio = newAspectRatio;
       this.onAspectRatioChange(newAspectRatio ? newAspectRatio : null);
     }
   }
 
-  // Apply saved device preferences after call is established
   async applySavedDevicePreferences(): Promise<void> {
-    if (!this.call) {
-      return;
-    }
+    if (!this.currentSelf) return;
 
-    // Apply saved microphone - force apply if we have a saved one
     const savedMicrophone = DevicePersistence.findBestMatch(
       "microphone",
       this.state.devices
     );
-
     if (savedMicrophone) {
-      const callMicId = (this.call as any).microphoneId;
-      const needsChange = callMicId !== savedMicrophone.deviceId;
-
-      if (needsChange) {
-        try {
-          await this.call.updateMicrophone({
-            deviceId: savedMicrophone.deviceId,
-            autoGainControl: this.state.autoGainControl,
-            noiseSuppression: this.state.noiseSuppression,
-            echoCancellation: true,
-          });
-          this.state.selectedMicrophone = savedMicrophone;
-        } catch (error) {
-          console.warn("Failed to apply saved microphone:", error);
-        }
+      try {
+        this.currentSelf.selectAudioInputDevice(savedMicrophone);
+        this.state.selectedMicrophone = savedMicrophone;
+      } catch (error) {
+        console.warn("Failed to apply saved microphone:", error);
       }
     }
 
-    // Apply saved camera - force apply if we have a saved one
     const savedCamera = DevicePersistence.findBestMatch(
       "camera",
       this.state.devices
     );
-
     if (savedCamera) {
-      const callCamId = (this.call as any).cameraId;
-      const needsChange = callCamId !== savedCamera.deviceId;
-
-      if (needsChange) {
-        try {
-          await this.call.updateCamera({ deviceId: savedCamera.deviceId });
-          this.state.selectedCamera = savedCamera;
-          this.updateVideoAspectRatio();
-        } catch (error) {
-          console.warn("Failed to apply saved camera:", error);
-        }
-      }
-    }
-
-    // Apply saved speaker - always force apply since we can't check call state
-    const savedSpeaker = DevicePersistence.findBestMatch(
-      "speaker",
-      this.state.devices
-    );
-
-    if (savedSpeaker) {
       try {
-        await this.call.updateSpeaker({ deviceId: savedSpeaker.deviceId });
-        this.state.selectedSpeaker = savedSpeaker;
+        this.currentSelf.selectVideoInputDevice(savedCamera);
+        this.state.selectedCamera = savedCamera;
+        if (this.localStream) this.updateVideoAspectRatio(this.localStream);
       } catch (error) {
-        console.warn("Failed to apply saved speaker:", error);
+        console.warn("Failed to apply saved camera:", error);
       }
     }
 
-    // Update UI after applying preferences
     this.onChange();
   }
 
@@ -287,7 +257,6 @@ class Devices {
     console.log("onAspectRatioChange", aspectRatio);
   }
 
-  // Call this after the call is started to apply saved device preferences
   async onCallStarted(): Promise<void> {
     await this.applySavedDevicePreferences();
   }
@@ -296,13 +265,13 @@ class Devices {
     const device = this.state.devices.find(
       (d) => d.deviceId === deviceId && d.kind === "videoinput"
     );
-    if (!device || !this.call) return false;
+    if (!device || !this.currentSelf) return false;
 
     try {
-      await this.call.updateCamera({ deviceId });
+      this.currentSelf.selectVideoInputDevice(device);
       this.state.selectedCamera = device;
       DevicePersistence.saveDeviceSelection("camera", device);
-      this.updateVideoAspectRatio();
+      if (this.localStream) this.updateVideoAspectRatio(this.localStream);
       this.onChange();
       return true;
     } catch (error) {
@@ -315,15 +284,10 @@ class Devices {
     const device = this.state.devices.find(
       (d) => d.deviceId === deviceId && d.kind === "audioinput"
     );
-    if (!device || !this.call) return false;
+    if (!device || !this.currentSelf) return false;
 
     try {
-      await this.call.updateMicrophone({ 
-        deviceId,
-        autoGainControl: this.state.autoGainControl,
-        noiseSuppression: this.state.noiseSuppression,
-        echoCancellation: true, // Keep echo cancellation always on
-      });
+      this.currentSelf.selectAudioInputDevice(device);
       this.state.selectedMicrophone = device;
       DevicePersistence.saveDeviceSelection("microphone", device);
       this.onChange();
@@ -338,10 +302,14 @@ class Devices {
     const device = this.state.devices.find(
       (d) => d.deviceId === deviceId && d.kind === "audiooutput"
     );
-    if (!device || !this.call) return false;
+    if (!device) return false;
 
     try {
-      await this.call.updateSpeaker({ deviceId });
+      // @ts-ignore - speaker selection may not be in types
+      if (this.currentSelf?.selectAudioOutputDevice) {
+        // @ts-ignore
+        this.currentSelf.selectAudioOutputDevice(device);
+      }
       this.state.selectedSpeaker = device;
       DevicePersistence.saveDeviceSelection("speaker", device);
       this.onChange();
@@ -353,133 +321,35 @@ class Devices {
   }
 
   async toggleVideo(): Promise<void> {
-    if (!this.call) return;
-
+    if (!this.currentSelf) return;
     try {
-      const self = await this.getSelf();
-      if (self?.videoMuted) {
-        await this.call.videoUnmute();
-      } else {
-        await this.call.videoMute();
-      }
+      await this.currentSelf.toggleMuteVideo();
       this.state.isVideoMuted = !this.state.isVideoMuted;
       this.onChange();
     } catch (error) {
-      console.error(
-        "Failed to toggle video via call method, trying fallback:",
-        error
-      );
-
-      try {
-        // Try local video track
-        const localTrack = this.call.localVideoTrack;
-        if (localTrack) {
-          localTrack.enabled = this.state.isVideoMuted;
-          this.state.isVideoMuted = !this.state.isVideoMuted;
-          this.onChange();
-          return;
-        }
-
-        // If no local track, try stream
-        const localStream = this.call.localStream;
-        const videoTrack = localStream?.getVideoTracks()?.[0];
-        if (videoTrack) {
-          videoTrack.enabled = this.state.isVideoMuted;
-          this.state.isVideoMuted = !this.state.isVideoMuted;
-          this.onChange();
-          return;
-        }
-
-        console.error("No video track available for fallback muting");
-      } catch (fallbackError) {
-        console.error(
-          "Failed to toggle video via fallback method:",
-          fallbackError
-        );
-      }
+      console.error("Failed to toggle video:", error);
     }
   }
 
   async toggleAudio(): Promise<void> {
-    if (!this.call) return;
-
+    if (!this.currentSelf) return;
     try {
-      const self = await this.getSelf();
-      if (self?.audioMuted) {
-        await this.call.audioUnmute();
-      } else {
-        await this.call.audioMute();
-      }
+      await this.currentSelf.toggleMute();
       this.state.isAudioMuted = !this.state.isAudioMuted;
       this.onChange();
     } catch (error) {
-      console.error(
-        "Failed to toggle audio via call method, trying fallback:",
-        error
-      );
-
-      try {
-        // Try local audio track
-        const localTrack = this.call.localAudioTrack;
-        if (localTrack) {
-          localTrack.enabled = this.state.isAudioMuted;
-          this.state.isAudioMuted = !this.state.isAudioMuted;
-          this.onChange();
-          return;
-        }
-
-        // If no local track, try stream
-        const localStream = this.call.localStream;
-        const audioTrack = localStream?.getAudioTracks()?.[0];
-        if (audioTrack) {
-          audioTrack.enabled = this.state.isAudioMuted;
-          this.state.isAudioMuted = !this.state.isAudioMuted;
-          this.onChange();
-          return;
-        }
-
-        console.error("No audio track available for fallback muting");
-      } catch (fallbackError) {
-        console.error(
-          "Failed to toggle audio via fallback method:",
-          fallbackError
-        );
-      }
+      console.error("Failed to toggle audio:", error);
     }
   }
 
   async toggleSpeaker(): Promise<void> {
-    if (!this.call) return;
-
+    if (!this.currentSelf) return;
     try {
-      const self = await this.getSelf();
-      if (self?.deaf) {
-        await this.call.undeaf();
-      } else {
-        await this.call.deaf();
-      }
+      await this.currentSelf.toggleDeaf();
       this.state.isSpeakerMuted = !this.state.isSpeakerMuted;
       this.onChange();
     } catch (error) {
-      console.error(
-        "Failed to toggle speaker via deaf/undeaf, trying fallback:",
-        error
-      );
-
-      try {
-        // @ts-ignore
-        if (this.call.audioEl) {
-          // @ts-ignore
-          this.call.audioEl.muted = !this.state.isSpeakerMuted;
-          this.state.isSpeakerMuted = !this.state.isSpeakerMuted;
-          this.onChange();
-        }
-      } catch (fallbackError) {
-        console.error(
-          "Failed to toggle speaker via fallback method:",
-          fallbackError
-        );
-      }
+      console.error("Failed to toggle speaker:", error);
     }
   }
 
@@ -489,7 +359,15 @@ class Devices {
       autoGainControl: this.state.autoGainControl,
       noiseSuppression: this.state.noiseSuppression,
     });
-    await this.applyAudioConstraints();
+    if (this.currentSelf) {
+      try {
+        if (this.currentSelf.autoGain !== this.state.autoGainControl) {
+          await this.currentSelf.toggleAudioInputAutoGain();
+        }
+      } catch (error) {
+        console.error("Failed to toggle auto gain:", error);
+      }
+    }
     this.onChange();
   }
 
@@ -499,30 +377,16 @@ class Devices {
       autoGainControl: this.state.autoGainControl,
       noiseSuppression: this.state.noiseSuppression,
     });
-    await this.applyAudioConstraints();
-    this.onChange();
-  }
-
-  private async applyAudioConstraints(): Promise<void> {
-    if (!this.call || !this.state.selectedMicrophone) return;
-
-    try {
-      // Update the microphone with new constraints
-      await this.call.updateMicrophone({
-        deviceId: this.state.selectedMicrophone.deviceId,
-        autoGainControl: this.state.autoGainControl,
-        noiseSuppression: this.state.noiseSuppression,
-        echoCancellation: true, // Keep echo cancellation always on
-      });
-    } catch (error) {
-      console.error("Failed to apply audio constraints:", error);
+    if (this.currentSelf) {
+      try {
+        if (this.currentSelf.noiseSuppression !== this.state.noiseSuppression) {
+          await this.currentSelf.toggleNoiseSuppression();
+        }
+      } catch (error) {
+        console.error("Failed to toggle noise suppression:", error);
+      }
     }
-  }
-
-  private async getSelf() {
-    if (!this.call) return null;
-    const members = await this.call.getMembers();
-    return members?.members.find((m) => m.id === this.call?.memberId);
+    this.onChange();
   }
 
   clearDevicePreferences() {
@@ -534,7 +398,6 @@ class Devices {
   }
 
   reset() {
-    // Preserve device selections and audio settings before reset
     const savedMicrophone = this.state.selectedMicrophone;
     const savedCamera = this.state.selectedCamera;
     const savedSpeaker = this.state.selectedSpeaker;
@@ -542,9 +405,15 @@ class Devices {
     const savedAutoGainControl = this.state.autoGainControl;
     const savedNoiseSuppression = this.state.noiseSuppression;
 
-    if (this.deviceWatcher) {
-      this.deviceWatcher.off("changed");
-      this.deviceWatcher = null;
+    this.callSubscriptions.forEach((s) => s.unsubscribe());
+    this.callSubscriptions = [];
+
+    if (this.deviceChangeHandler) {
+      navigator.mediaDevices.removeEventListener(
+        "devicechange",
+        this.deviceChangeHandler
+      );
+      this.deviceChangeHandler = null;
     }
 
     if (this.permissionStream) {
@@ -552,24 +421,14 @@ class Devices {
       this.permissionStream = null;
     }
 
-    if (this.call?.localStream) {
-      const tracks = this.call.localStream.getTracks();
-      tracks.forEach((track) => {
-        track.stop();
-      });
-    }
-
-    if (this.call?.localVideoTrack) {
-      this.call.localVideoTrack.stop();
-    }
-
-    if (this.call?.localAudioTrack) {
-      this.call.localAudioTrack.stop();
+    if (this.localStream) {
+      this.localStream.getTracks().forEach((track) => track.stop());
+      this.localStream = null;
     }
 
     this.call = null;
-    
-    // Create new state but restore device selections and audio settings
+    this.currentSelf = null;
+
     this.state = new DevicesState();
     this.state.selectedMicrophone = savedMicrophone;
     this.state.selectedCamera = savedCamera;
@@ -577,8 +436,7 @@ class Devices {
     this.state.devices = savedDevices;
     this.state.autoGainControl = savedAutoGainControl;
     this.state.noiseSuppression = savedNoiseSuppression;
-    
-    // Reset callbacks
+
     this.onLoad = () => {};
     this.onChange = () => {};
     this.onAspectRatioChange = () => {};
